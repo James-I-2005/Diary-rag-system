@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+data/diary.db
+data/chroma/
+.env
+data/diary/

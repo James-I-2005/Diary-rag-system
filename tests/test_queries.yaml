@@ -1,0 +1,50 @@
+﻿# 检索型
+- id: ret_food_01
+  question: "这个月所有关于吃饭的内容"
+  type: retrieval
+  expect:
+    min_results: 3
+    must_contain_dates: ["2025-06-15"]
+    keywords_in_results: ["火锅", "饭团", "吃"]
+
+- id: ret_friend_01
+  question: "和朋友在一起的记录"
+  type: retrieval
+  expect:
+    min_results: 1
+
+# 统计型
+- id: stat_touching_01
+  question: "感动瞬间有多少次"
+  type: statistical
+  expect:
+    metric: touching_moments
+    count_min: 1
+    count_max: 20
+
+- id: stat_hotpot_01
+  question: "吃了几次火锅"
+  type: statistical
+  expect:
+    count_min: 0
+    count_max: 10
+
+# 归纳型
+- id: sum_activity_01
+  question: "这个月最喜欢做的事情是什么"
+  type: summarization
+  expect:
+    top_activity_contains: ["散步", "火锅", "看电影", "加班", "吃火锅"]
+
+# 边界情况
+- id: edge_empty_01
+  question: "我去火星旅行的记录"
+  type: retrieval
+  expect:
+    max_results: 0
+
+- id: edge_classify_01
+  question: "有没有让人感动的时候"
+  type: statistical
+  expect:
+    metric: touching_moments

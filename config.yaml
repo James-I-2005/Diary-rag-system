@@ -1,0 +1,30 @@
+﻿# 路径
+data:
+  diary_dir: "data/diary"
+  db_path: "data/diary.db"
+  chroma_dir: "data/chroma"
+
+# 切块
+chunking:
+  max_chars: 500
+  overlap_chars: 50
+
+# 嵌入
+embedding:
+  model: "BAAI/bge-small-zh-v1.5"
+  batch_size: 32
+
+# 检索
+retrieval:
+  top_k: 20
+
+# LLM（标签提取 & 回答生成）
+llm:
+  provider: "ollama"           # ollama | openai
+  model: "qwen2.5:7b"
+  base_url: "http://localhost:11434/v1"
+  api_key: "ollama"
+
+# 日记格式
+diary:
+  date_pattern: "^# (\\d{4}-\\d{2}-\\d{2})"
