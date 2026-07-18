@@ -82,25 +82,24 @@ python scripts/check_env.py
 
 ---
 
-## 三、配置本地 LLM（Ollama）
+## 三、配置 LLM（OpenRouter · Gemini）
 
-1. 安装：[https://ollama.com](https://ollama.com)
-2. 拉取与 `config.yaml` 一致的模型：
+切块 / 嵌入仍本地；**标签提取**与**回答生成**默认走 [OpenRouter](https://openrouter.ai) 的 `google/gemini-2.5-flash`。
 
-```powershell
-ollama pull qwen2.5:7b
-ollama list
-```
-
-3. 确认服务在跑（默认 `http://localhost:11434`）：
+1. 在 OpenRouter 创建 API Key。
+2. 复制环境变量模板并填写：
 
 ```powershell
-ollama run qwen2.5:7b "你好"
+Copy-Item .env.example .env
+# 编辑 .env：OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-若连接失败，在另一终端执行 `ollama serve` 后再试。
+3. 模型与端点在 `config.yaml` 的 `llm.tags` / `llm.answer`（可分开换成 Pro 等）。改动说明见 [doc/OpenRouter接入-函数输入输出示例.md](doc/OpenRouter接入-函数输入输出示例.md)。
 
-默认 LLM 配置在 `config.yaml` 的 `llm` 段（`provider: ollama`、`model: qwen2.5:7b`）。若改用 OpenAI 兼容 API，改 `provider` / `base_url` / `api_key` / `model` 即可。
+```powershell
+pip install -r requirements.txt   # 需含 python-dotenv
+python scripts/check_env.py       # 会检查是否读到 Key
+```
 
 ---
 

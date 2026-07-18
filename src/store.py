@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).parent.parent
+load_dotenv(ROOT / ".env")
 
 
 def load_config() -> dict:
@@ -16,7 +19,18 @@ def load_config() -> dict:
 
 
 def resolve_path(relative: str) -> Path:
-    return ROOT / relative
+    """相对 My_rag 根目录解析路径；若已是绝对路径则原样返回。"""
+    p = Path(relative)
+    return p if p.is_absolute() else ROOT / relative
+
+
+def resolve_diary_dir() -> Path:
+    """日记目录：优先 .env 的 DIARY_DIR，否则 config.yaml 的 data.diary_dir。"""
+    override = os.getenv("DIARY_DIR", "").strip()
+    if override:
+        return resolve_path(override)
+    cfg = load_config()
+    return resolve_path(cfg["data"]["diary_dir"])
 
 
 def get_db() -> sqlite3.Connection:
@@ -52,8 +66,31 @@ def _init_tables(conn: sqlite3.Connection) -> None:
             people TEXT,
             is_touching_moment INTEGER DEFAULT 0,
             touching_summary TEXT,
+            keywords TEXT,
+            tag_method TEXT,
             extracted_at TEXT DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS chunk_term (
+            term TEXT NOT NULL,
+            chunk_id TEXT NOT NULL,
+            weight REAL NOT NULL DEFAULT 0,
+            PRIMARY KEY (term, chunk_id),
+            FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_chunk_term_term ON chunk_term(term);
+        CREATE INDEX IF NOT EXISTS idx_chunk_term_chunk ON chunk_term(chunk_id);
+
+        CREATE TABLE IF NOT EXISTS chunk_entity (
+            chunk_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            entity_type TEXT NOT NULL,
+            tf INTEGER NOT NULL DEFAULT 1,
+            PRIMARY KEY (chunk_id, name, entity_type),
+            FOREIGN KEY (chunk_id) REFERENCES chunks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_chunk_entity_name ON chunk_entity(name);
+        CREATE INDEX IF NOT EXISTS idx_chunk_entity_type ON chunk_entity(entity_type);
 
         CREATE TABLE IF NOT EXISTS ingest_log (
             source_file TEXT PRIMARY KEY,
@@ -63,6 +100,14 @@ def _init_tables(conn: sqlite3.Connection) -> None:
         );
         """
     )
+    # 兼容旧库：补列
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(chunk_tags)").fetchall()}
+    if "keywords" not in cols:
+        conn.execute("ALTER TABLE chunk_tags ADD COLUMN keywords TEXT")
+    if "tag_method" not in cols:
+        conn.execute("ALTER TABLE chunk_tags ADD COLUMN tag_method TEXT")
+    if "entities" not in cols:
+        conn.execute("ALTER TABLE chunk_tags ADD COLUMN entities TEXT")
     conn.commit()
 
 
@@ -88,6 +133,12 @@ def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
     if not ids:
         return
     placeholders = ",".join("?" * len(ids))
+    conn.execute(
+        f"DELETE FROM chunk_entity WHERE chunk_id IN ({placeholders})", ids
+    )
+    conn.execute(
+        f"DELETE FROM chunk_term WHERE chunk_id IN ({placeholders})", ids
+    )
     conn.execute(
         f"DELETE FROM chunk_tags WHERE chunk_id IN ({placeholders})", ids
     )

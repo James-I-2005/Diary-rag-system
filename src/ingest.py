@@ -11,7 +11,7 @@ from src.store import (
     delete_chunks_by_source,
     get_db,
     load_config,
-    resolve_path,
+    resolve_diary_dir,
     save_chunks,
 )
 
@@ -103,7 +103,7 @@ def entry_to_chunks(entry: DiaryEntry, max_chars: int, overlap: int) -> list[Chu
 
 def ingest_all() -> int:
     cfg = load_config()
-    diary_dir = resolve_path(cfg["data"]["diary_dir"])
+    diary_dir = resolve_diary_dir()
     diary_dir.mkdir(parents=True, exist_ok=True)
     max_chars = cfg["chunking"]["max_chars"]
     overlap = cfg["chunking"]["overlap_chars"]
@@ -142,7 +142,7 @@ def file_hash(filepath: Path) -> str:
 def ingest_incremental() -> list[str]:
     """只处理新增或变更的日记文件，返回新增 chunk id 列表。"""
     cfg = load_config()
-    diary_dir = resolve_path(cfg["data"]["diary_dir"])
+    diary_dir = resolve_diary_dir()
     diary_dir.mkdir(parents=True, exist_ok=True)
     max_chars = cfg["chunking"]["max_chars"]
     overlap = cfg["chunking"]["overlap_chars"]

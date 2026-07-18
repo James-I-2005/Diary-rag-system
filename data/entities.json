@@ -1,0 +1,3617 @@
+{
+  "built_at": "2026-07-18T04:26:14.604265+00:00",
+  "n_docs": 92,
+  "n_entities": 514,
+  "by_type": {
+    "person": 375,
+    "place": 100,
+    "org": 39
+  },
+  "entities": [
+    {
+      "name": "碧蓮",
+      "entity_type": "person",
+      "df": 19,
+      "total_tf": 25
+    },
+    {
+      "name": "台南",
+      "entity_type": "place",
+      "df": 13,
+      "total_tf": 15
+    },
+    {
+      "name": "明星",
+      "entity_type": "person",
+      "df": 7,
+      "total_tf": 10
+    },
+    {
+      "name": "唐山",
+      "entity_type": "person",
+      "df": 6,
+      "total_tf": 7
+    },
+    {
+      "name": "台北",
+      "entity_type": "place",
+      "df": 6,
+      "total_tf": 7
+    },
+    {
+      "name": "上海",
+      "entity_type": "place",
+      "df": 5,
+      "total_tf": 7
+    },
+    {
+      "name": "三連兄",
+      "entity_type": "person",
+      "df": 5,
+      "total_tf": 6
+    },
+    {
+      "name": "華北",
+      "entity_type": "place",
+      "df": 5,
+      "total_tf": 6
+    },
+    {
+      "name": "日本",
+      "entity_type": "place",
+      "df": 5,
+      "total_tf": 5
+    },
+    {
+      "name": "朝華",
+      "entity_type": "org",
+      "df": 4,
+      "total_tf": 10
+    },
+    {
+      "name": "岳父",
+      "entity_type": "person",
+      "df": 4,
+      "total_tf": 6
+    },
+    {
+      "name": "天津",
+      "entity_type": "place",
+      "df": 4,
+      "total_tf": 6
+    },
+    {
+      "name": "蘭洲",
+      "entity_type": "place",
+      "df": 4,
+      "total_tf": 5
+    },
+    {
+      "name": "淑英",
+      "entity_type": "person",
+      "df": 4,
+      "total_tf": 4
+    },
+    {
+      "name": "北京",
+      "entity_type": "place",
+      "df": 4,
+      "total_tf": 4
+    },
+    {
+      "name": "江海",
+      "entity_type": "place",
+      "df": 4,
+      "total_tf": 4
+    },
+    {
+      "name": "朝華君",
+      "entity_type": "person",
+      "df": 3,
+      "total_tf": 4
+    },
+    {
+      "name": "肇嘉哥",
+      "entity_type": "place",
+      "df": 3,
+      "total_tf": 4
+    },
+    {
+      "name": "金川",
+      "entity_type": "place",
+      "df": 3,
+      "total_tf": 4
+    },
+    {
+      "name": "耀星",
+      "entity_type": "org",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "有德君",
+      "entity_type": "person",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "饒君",
+      "entity_type": "person",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "中南",
+      "entity_type": "place",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "台灣",
+      "entity_type": "place",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "滿洲",
+      "entity_type": "place",
+      "df": 3,
+      "total_tf": 3
+    },
+    {
+      "name": "江河",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 6
+    },
+    {
+      "name": "基隆",
+      "entity_type": "org",
+      "df": 2,
+      "total_tf": 3
+    },
+    {
+      "name": "燕生",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 3
+    },
+    {
+      "name": "月1",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 3
+    },
+    {
+      "name": "青木",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 3
+    },
+    {
+      "name": "慶華",
+      "entity_type": "org",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "金庫",
+      "entity_type": "org",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "乾兄",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "千里兄",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "吳國信",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "子文",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "宗仁",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "張太太",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "張星賢",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "晨基流君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "梁君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "梅崎",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "楊子文",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "炎秋兄",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "王習孔",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "王雲龍君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "瑞麟兄",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "簡文",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "賴耀奎",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "金川君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "陳仲凱君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "陳金榟君",
+      "entity_type": "person",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "中平",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "江南",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "福利",
+      "entity_type": "place",
+      "df": 2,
+      "total_tf": 2
+    },
+    {
+      "name": "合豐行",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "華光",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "劉會",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "周秘書",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "嘉哥",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "娟娟",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "星賢",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "楊縣長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "泰成",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "玉燕",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "老居",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "華光",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "藍局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "饒江河君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "馬家溝",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "麻竹",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "黃清水君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "唐山",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "啟川",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "坤鐘",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "山林",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "朝華",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "羅東",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "重慶",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "金海",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "馬家溝",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "高島",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 2
+    },
+    {
+      "name": "中國共產黨",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "中華日報",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "南豐行",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "台銀俱樂部",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "和盛",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "回唐",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "大戰",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "天真",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "天華",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "岡田",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "建裕",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "愛戀",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "抗戰",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "政務委員會",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "新世界",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "新中華",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "新俱樂部",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "柯文",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "永仔",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "海戰",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "福委會",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "統制協會",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "維命",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "美味",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "聊天",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "聯登",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "華南銀行",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "華森",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "華裕",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "通盛",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金銀",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黨員",
+      "entity_type": "org",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "Paramont",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "Victoria",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "disney",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "letter",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "三原課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "三點新局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上井上君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上朝華君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上渡邊君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上與沙兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上藤田君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上金源君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上鐘副處長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "世鴻",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "中平氏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "乾仔嫂",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "乾兄夫",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "京屋君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "人模君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "他與乾兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "付潮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "仲介",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "仲凱",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "仲屏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "仲岑",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "伯埏君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "伯齡",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "但潮君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "何輝玉",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "作社某君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "俊芬",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "保健",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "信夫兩君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "信託部經理",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "借啟川兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "借桂瑞兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "元禧",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "元禧兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "元龍君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "內事務局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "兩位許君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "兩君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "列寧",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "別元禧君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "劉喜陽氏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "劉林發",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "劉頤",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "劒清兩兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "加王",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "千里君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "午三連兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "午伯埏君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "午我軍太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "午金榟君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "半與沙兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "協會副課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "南夫婦",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "南豐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "史豪",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "司的許君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "吉見宅",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "吳國楨",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "吳宅",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "吹田主任",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "周修曾",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "周先生",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "周文仙小姐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "周旋",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "周耀星兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "唐榮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "唐榮許",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "啟全君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "啟川兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "喻仔",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "嘉義",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "嚴令碧蓮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "四點在尚崑宅與尚",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "園與沙兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "坐張處長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "基哲兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "基樫君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "堂千里君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "多有德君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "大佐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "大材兩兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "天朝華君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "天華君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "她對乾兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "好信夫君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "孤獨",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "宋秘書敏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "宜蘭縣主任",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "家由余課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "家等饒君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "封信",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "小園",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "小憩",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "小林",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "小邱",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "少佐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "尚崑兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "尚崑等君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "山內局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "岳母",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "川上課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "廖史豪",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "廖太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "延齡等兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "建德",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "建材兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "弗庵",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張兩君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張和貴強",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張國健",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張大材",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張業務課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張煥三君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "張秋海君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "徐炳",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "徐炳南",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "徐炳南君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "徐秘書",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "徐鄂雲兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "德君求",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "慶華",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "慶銣君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "我與藍局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "我軍兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "拉客",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "拉蒙特",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "招仙閣",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "拜託藍局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "振德",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "據伯昭君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "敦燦兩兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "料土山課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "昌昶",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "明朝兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "星賢君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "星賢夫",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "春陽樓",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "時仲凱君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "晨伯埏君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "晨千里君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "晨江海兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "晨見新局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "曉芳",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "曹長帶",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "有福的小姐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "朝琴等兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "本來黃君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "本尋道君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "朱啟全君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "朱龍引",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李副經理",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李增禮君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李宜蘭",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李時權君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李曉芳君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李炳森",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李瑛局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李賜卿君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "李進添君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "松波君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "松齡",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林卓章",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林朝權太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林榮等兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林江海君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林泉君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林澤章",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林直",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林茂生君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "林雙霜",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "柯文寶兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "梅崎氏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "森森",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "楊天賦",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "楊小姐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "楊建德君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "楊朝華君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "楊永茂君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "毛昭江君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "江崎書記官",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "江河君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "江海流兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "池田",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "汪仲嘗",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "沈榮律",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "油谷書記官",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "洪桃婆",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "洪炎秋",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "洪炎秋兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "清棟",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "清漂兩太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "潮君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "火斐兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "為請任處長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "玉華",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王代書",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王子",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王弟",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王松波兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王民寧",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王為清君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王耀東君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "王軍",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "當作潮君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "發現饒君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "益謙",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "石律師",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "石純兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "石錫純",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮乘",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮來",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮別",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮小姐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮常",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮本",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "碧蓮閒",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "祝賀",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "秦皇",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "紹鐘副處長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "終於",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "綾部理事",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "綿引氏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "羅克典",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "翁先生",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "翁太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "耀奎等兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "耀星兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "耀東君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "老沙",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "耿耿",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "胡同",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "英姨",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "荻華",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "莊世英",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "莊晨耀君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "莊運轉主任",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "華裕登",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "華輝",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "葉仔",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "蔡伯",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "蔡培火兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "蕭夫婦",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "藍振德",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "蘇小姐",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "蘭洲兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "袁琮兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "袁總理",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "討姨太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許兩君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許可",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許工務處長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許建裕",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許建裕君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許法規書記官",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "許碧蓮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "說新周經理",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "謝華輝",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "謝金贏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "貞操",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賀禮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴天穎君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴宅",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴宅與尚",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴尚崑兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴武明",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴祺祥",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "賴茂生兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "趙兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "趙明儀",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "路軍宋秘書",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "車帶張太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "辦事處主任",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "迎賓樓",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "造訪沙兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "遊羅東",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "邱世鴻",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "邱世鴻君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "邱君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "郎局長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "郭國基",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "郭欽禮君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "鄧二君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "鄧輝二君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "鄭君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金海兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金源兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金源君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金鐘",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "金鐘夫",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "錫卿兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "長弗庵君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "關於",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "阿蓮",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陰天",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳主任秘書",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳仲凱",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳墩樹",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳天順",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳東成",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳步武君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳瑞棠",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳誠",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳鶴",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "陳麗生君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "顏有福",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "顏木杞君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "顏欽賢",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "顧及愛",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "館見曾太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "馬克思",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "高升",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "高島君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黃宗",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黃明日君",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黃朝琴",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黃演渥氏",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "黃烈火兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點一清兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點到袁總理",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點多廖太太",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點炎秋兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點由余課長",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點綾部理事",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點耀勳兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "點金榟兄",
+      "entity_type": "person",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "三原",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "上林",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "並得到14",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "並替我暫墊20",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "中國",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "中山堂",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "中西",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "二來是21",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "亞洲",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "京津",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "今宵是16",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "仲凱君的以205",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "余畜生要求20",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "入口",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "八卦山",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "北港",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "千古",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "南華",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "台中",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "台中市",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "史豪已經被判7",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "合豐",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "因20",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "土山",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "基隆港",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "太原",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "存一個月後為1",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "官三個人要求60",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "宜蘭",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "山城",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "山本",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "岡田",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "川上",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "我提起舊18",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "接到碧蓮寄來1",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "據說糖一包60",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "新來廠的1414",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "新竹",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "暫時可以接受912",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "月4",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "朝倉",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "朝華君",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "未知6",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "杞君",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "東京",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "東山",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "東西",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "松屋",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "松本",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "江崎",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "治縣",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "渡邊",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "渥氏",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "礁溪",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "福建",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "米國",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "耀東",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "而且他2",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "聊台灣",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "興亞",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "菲律賓",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "解決水泥一噸950",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "說改為28",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "請他2",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "豐原",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "豐原縣",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "開灤",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "雲龍",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "青島",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    },
+    {
+      "name": "馬鞍寮",
+      "entity_type": "place",
+      "df": 1,
+      "total_tf": 1
+    }
+  ],
+  "people": [
+    "碧蓮",
+    "明星",
+    "唐山",
+    "三連兄",
+    "岳父",
+    "淑英",
+    "朝華君",
+    "有德君",
+    "饒君",
+    "燕生",
+    "乾兄",
+    "千里兄",
+    "吳國信",
+    "子文",
+    "宗仁",
+    "張太太",
+    "張星賢",
+    "晨基流君",
+    "梁君",
+    "梅崎",
+    "楊子文",
+    "炎秋兄",
+    "王習孔",
+    "王雲龍君",
+    "瑞麟兄",
+    "簡文",
+    "賴耀奎",
+    "金川君",
+    "陳仲凱君",
+    "陳金榟君",
+    "劉會",
+    "周秘書",
+    "嘉哥",
+    "娟娟",
+    "星賢",
+    "楊縣長",
+    "泰成",
+    "玉燕",
+    "老居",
+    "華光",
+    "藍局長",
+    "饒江河君",
+    "馬家溝",
+    "麻竹",
+    "黃清水君",
+    "Paramont",
+    "Victoria",
+    "disney",
+    "letter",
+    "三原課長",
+    "三點新局長",
+    "上井上君",
+    "上朝華君",
+    "上渡邊君",
+    "上與沙兄",
+    "上藤田君",
+    "上金源君",
+    "上鐘副處長",
+    "世鴻",
+    "中平氏",
+    "乾仔嫂",
+    "乾兄夫",
+    "京屋君",
+    "人模君",
+    "他與乾兄",
+    "付潮",
+    "仲介",
+    "仲凱",
+    "仲屏",
+    "仲岑",
+    "伯埏君",
+    "伯齡",
+    "但潮君",
+    "何輝玉",
+    "作社某君",
+    "俊芬",
+    "保健",
+    "信夫兩君",
+    "信託部經理",
+    "借啟川兄",
+    "借桂瑞兄",
+    "元禧",
+    "元禧兄",
+    "元龍君",
+    "內事務局長",
+    "兩位許君",
+    "兩君",
+    "列寧",
+    "別元禧君",
+    "劉喜陽氏",
+    "劉林發",
+    "劉頤",
+    "劒清兩兄",
+    "加王",
+    "千里君",
+    "午三連兄",
+    "午伯埏君",
+    "午我軍太太",
+    "午金榟君",
+    "半與沙兄",
+    "協會副課長",
+    "南夫婦",
+    "南豐",
+    "史豪",
+    "司的許君",
+    "吉見宅",
+    "吳國楨",
+    "吳宅",
+    "吹田主任",
+    "周修曾",
+    "周先生",
+    "周文仙小姐",
+    "周旋",
+    "周耀星兄",
+    "唐榮",
+    "唐榮許",
+    "啟全君",
+    "啟川兄",
+    "喻仔",
+    "嘉義",
+    "嚴令碧蓮",
+    "四點在尚崑宅與尚",
+    "園與沙兄",
+    "坐張處長",
+    "基哲兄",
+    "基樫君",
+    "堂千里君",
+    "多有德君",
+    "大佐",
+    "大材兩兄",
+    "天朝華君",
+    "天華君",
+    "她對乾兄",
+    "好信夫君",
+    "孤獨",
+    "宋秘書敏",
+    "宜蘭縣主任",
+    "家由余課長",
+    "家等饒君",
+    "封信",
+    "小園",
+    "小憩",
+    "小林",
+    "小邱",
+    "少佐",
+    "尚崑兄",
+    "尚崑等君",
+    "山內局長",
+    "岳母",
+    "川上課長",
+    "廖史豪",
+    "廖太太",
+    "延齡等兄",
+    "建德",
+    "建材兄",
+    "弗庵",
+    "張兩君",
+    "張和貴強",
+    "張國健",
+    "張大材",
+    "張業務課長",
+    "張煥三君",
+    "張秋海君",
+    "徐炳",
+    "徐炳南",
+    "徐炳南君",
+    "徐秘書",
+    "徐鄂雲兄",
+    "德君求",
+    "慶華",
+    "慶銣君",
+    "我與藍局長",
+    "我軍兄",
+    "拉客",
+    "拉蒙特",
+    "招仙閣",
+    "拜託藍局長",
+    "振德",
+    "據伯昭君",
+    "敦燦兩兄",
+    "料土山課長",
+    "昌昶",
+    "明朝兄",
+    "星賢君",
+    "星賢夫",
+    "春陽樓",
+    "時仲凱君",
+    "晨伯埏君",
+    "晨千里君",
+    "晨江海兄",
+    "晨見新局長",
+    "曉芳",
+    "曹長帶",
+    "有福的小姐",
+    "朝琴等兄",
+    "本來黃君",
+    "本尋道君",
+    "朱啟全君",
+    "朱龍引",
+    "李副經理",
+    "李增禮君",
+    "李宜蘭",
+    "李局長",
+    "李時權君",
+    "李曉芳君",
+    "李炳森",
+    "李瑛局長",
+    "李賜卿君",
+    "李進添君",
+    "松波君",
+    "松齡",
+    "林卓章",
+    "林朝權太太",
+    "林榮等兄",
+    "林江海君",
+    "林泉君",
+    "林澤章",
+    "林直",
+    "林茂生君",
+    "林雙霜",
+    "柯文寶兄",
+    "梅崎氏",
+    "森森",
+    "楊天賦",
+    "楊小姐",
+    "楊建德君",
+    "楊朝華君",
+    "楊永茂君",
+    "毛昭江君",
+    "江崎書記官",
+    "江河君",
+    "江海流兄",
+    "池田",
+    "汪仲嘗",
+    "沈榮律",
+    "油谷書記官",
+    "洪桃婆",
+    "洪炎秋",
+    "洪炎秋兄",
+    "清棟",
+    "清漂兩太太",
+    "潮君",
+    "火斐兄",
+    "為請任處長",
+    "玉華",
+    "王代書",
+    "王子",
+    "王弟",
+    "王松波兄",
+    "王民寧",
+    "王為清君",
+    "王耀東君",
+    "王軍",
+    "當作潮君",
+    "發現饒君",
+    "益謙",
+    "石律師",
+    "石純兄",
+    "石錫純",
+    "碧蓮乘",
+    "碧蓮來",
+    "碧蓮別",
+    "碧蓮小姐",
+    "碧蓮常",
+    "碧蓮本",
+    "碧蓮閒",
+    "祝賀",
+    "秦皇",
+    "紹鐘副處長",
+    "終於",
+    "綾部理事",
+    "綿引氏",
+    "羅克典",
+    "翁先生",
+    "翁太太",
+    "耀奎等兄",
+    "耀星兄",
+    "耀東君",
+    "老沙",
+    "耿耿",
+    "胡同",
+    "英姨",
+    "荻華",
+    "莊世英",
+    "莊晨耀君",
+    "莊運轉主任",
+    "華裕登",
+    "華輝",
+    "葉仔",
+    "蔡伯",
+    "蔡培火兄",
+    "蕭夫婦",
+    "藍振德",
+    "蘇小姐",
+    "蘭洲兄",
+    "袁琮兄",
+    "袁總理",
+    "討姨太太",
+    "許兩君",
+    "許可",
+    "許工務處長",
+    "許建裕",
+    "許建裕君",
+    "許法規書記官",
+    "許碧蓮",
+    "說新周經理",
+    "謝華輝",
+    "謝金贏",
+    "貞操",
+    "賀禮",
+    "賴天穎君",
+    "賴宅",
+    "賴宅與尚",
+    "賴尚崑兄",
+    "賴武明",
+    "賴祺祥",
+    "賴茂生兄",
+    "趙兄",
+    "趙明儀",
+    "路軍宋秘書",
+    "車帶張太太",
+    "辦事處主任",
+    "迎賓樓",
+    "造訪沙兄",
+    "遊羅東",
+    "邱世鴻",
+    "邱世鴻君",
+    "邱君",
+    "郎局長",
+    "郭國基",
+    "郭欽禮君",
+    "鄧二君",
+    "鄧輝二君",
+    "鄭君",
+    "金海兄",
+    "金源兄",
+    "金源君",
+    "金鐘",
+    "金鐘夫",
+    "錫卿兄",
+    "長弗庵君",
+    "關於",
+    "阿蓮",
+    "陰天",
+    "陳主任秘書",
+    "陳仲凱",
+    "陳墩樹",
+    "陳天順",
+    "陳東成",
+    "陳步武君",
+    "陳瑞棠",
+    "陳誠",
+    "陳鶴",
+    "陳麗生君",
+    "顏有福",
+    "顏木杞君",
+    "顏欽賢",
+    "顧及愛",
+    "館見曾太太",
+    "馬克思",
+    "高升",
+    "高島君",
+    "黃宗",
+    "黃明日君",
+    "黃朝琴",
+    "黃演渥氏",
+    "黃烈火兄",
+    "點一清兄",
+    "點到袁總理",
+    "點多廖太太",
+    "點炎秋兄",
+    "點由余課長",
+    "點綾部理事",
+    "點耀勳兄",
+    "點金榟兄"
+  ],
+  "places": [
+    "台南",
+    "台北",
+    "上海",
+    "華北",
+    "日本",
+    "天津",
+    "蘭洲",
+    "北京",
+    "江海",
+    "肇嘉哥",
+    "金川",
+    "中南",
+    "台灣",
+    "滿洲",
+    "江河",
+    "月1",
+    "青木",
+    "中平",
+    "江南",
+    "福利",
+    "唐山",
+    "啟川",
+    "坤鐘",
+    "山林",
+    "朝華",
+    "羅東",
+    "重慶",
+    "金海",
+    "馬家溝",
+    "高島",
+    "三原",
+    "上林",
+    "並得到14",
+    "並替我暫墊20",
+    "中國",
+    "中山堂",
+    "中西",
+    "二來是21",
+    "亞洲",
+    "京津",
+    "今宵是16",
+    "仲凱君的以205",
+    "余畜生要求20",
+    "入口",
+    "八卦山",
+    "北港",
+    "千古",
+    "南華",
+    "台中",
+    "台中市",
+    "史豪已經被判7",
+    "合豐",
+    "因20",
+    "土山",
+    "基隆港",
+    "太原",
+    "存一個月後為1",
+    "官三個人要求60",
+    "宜蘭",
+    "山城",
+    "山本",
+    "岡田",
+    "川上",
+    "我提起舊18",
+    "接到碧蓮寄來1",
+    "據說糖一包60",
+    "新來廠的1414",
+    "新竹",
+    "暫時可以接受912",
+    "月4",
+    "朝倉",
+    "朝華君",
+    "未知6",
+    "杞君",
+    "東京",
+    "東山",
+    "東西",
+    "松屋",
+    "松本",
+    "江崎",
+    "治縣",
+    "渡邊",
+    "渥氏",
+    "礁溪",
+    "福建",
+    "米國",
+    "耀東",
+    "而且他2",
+    "聊台灣",
+    "興亞",
+    "菲律賓",
+    "解決水泥一噸950",
+    "說改為28",
+    "請他2",
+    "豐原",
+    "豐原縣",
+    "開灤",
+    "雲龍",
+    "青島",
+    "馬鞍寮"
+  ],
+  "orgs": [
+    "朝華",
+    "耀星",
+    "基隆",
+    "慶華",
+    "金庫",
+    "合豐行",
+    "華光",
+    "中國共產黨",
+    "中華日報",
+    "南豐行",
+    "台銀俱樂部",
+    "和盛",
+    "回唐",
+    "大戰",
+    "天真",
+    "天華",
+    "岡田",
+    "建裕",
+    "愛戀",
+    "抗戰",
+    "政務委員會",
+    "新世界",
+    "新中華",
+    "新俱樂部",
+    "柯文",
+    "永仔",
+    "海戰",
+    "福委會",
+    "統制協會",
+    "維命",
+    "美味",
+    "聊天",
+    "聯登",
+    "華南銀行",
+    "華森",
+    "華裕",
+    "通盛",
+    "金銀",
+    "黨員"
+  ],
+  "source": "merge_chunk_entities"
+}

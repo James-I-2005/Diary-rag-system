@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 data/diary.db
+data/lexicon.db
 data/chroma/
 .env
 data/diary/
+data/diary_sinica/

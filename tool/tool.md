@@ -22,14 +22,57 @@ python --version
 python scripts/check_env.py
 ```
 
-### Ollama（本地 LLM）
+### 中研院日记语料（sinica_ith_diary_corpus）
 
 ```powershell
-ollama pull qwen2.5:7b
-ollama list
-ollama serve                          # 若未自动启动
-ollama run qwen2.5:7b "你好"
+# .env 示例：
+# DIARY_DIR=data/diary_sinica
+# SINICA_CORPUS_PATH=../sinica_ith_diary_corpus/diary_corpus.csv
+# SINICA_AUTHOR=楊基振日記
+
+python scripts/import_sinica.py              # CSV → .md（写入 DIARY_DIR）
+python scripts/import_sinica.py --author ""  # 导出全部 9 位作者（体积大）
+python main.py ingest
+python main.py index
+python main.py tags
 ```
+
+### OpenRouter（标签 / 问答）
+
+```powershell
+Copy-Item .env.example .env
+# 编辑 .env 填入 OPENROUTER_API_KEY=sk-or-v1-...
+python scripts/check_env.py
+python scripts/demo_tokenize.py
+python scripts/demo_tokenize.py "我和 Jenny 约会那天的回忆"
+python -m src.tokenize
+
+# v0.1 候选词表（需先 ingest；含 LLM 自学习停用词；同步写 JSON + lexicon.db）
+python scripts/build_vocabulary.py
+# 调参：.env 设 VOCAB_MAX_DF_RATIO=0.45；关闭 LLM 评估设 VOCAB_REVIEW_ENABLED=false
+
+# 按全局 V 为每个 chunk 打 TF-IDF keywords（DB + JSON）
+python scripts/build_chunk_keywords.py
+# KEYWORDS_PER_CHUNK=15 可调 Top-K
+
+# chunk 实体（出现即收录）→ 规则+LLM 清洗 → 合并全局；--ratio 0.05 抽样试跑
+python scripts/build_chunk_entities.py --ratio 0.05
+python scripts/build_chunk_entities.py
+# tag 召回评分试跑（不走向量，省加载时间）
+python -m src.query
+# 或：python -c "from src.query import query; print(query('碧蓮', use_vector=False))"
+
+# 词表/停用词库：导入现有 JSON/txt、状态、PG 增补
+python scripts/sync_lexicon_db.py status
+python scripts/sync_lexicon_db.py import
+python scripts/sync_lexicon_db.py upsert-stopword --term 可以 --term 已經 --source manual
+python scripts/sync_lexicon_db.py upsert-term --term 中秋 --df 10 --tf 12 --score 8.5
+python scripts/sync_lexicon_db.py upsert-entity --type person --term 楊基振 --df 5
+# 切 PostgreSQL：.env 设 LEXICON_DB_BACKEND=postgres 与 LEXICON_DATABASE_URL=postgresql://...
+
+```
+
+嵌入仍用本地 `sentence-transformers`；Ollama 已非默认依赖。
 
 ---
 

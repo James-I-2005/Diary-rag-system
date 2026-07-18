@@ -1,29 +1,110 @@
 ﻿# 路径
+# diary_dir 可被 .env 的 DIARY_DIR 覆盖（支持相对/绝对路径）
 data:
   diary_dir: "data/diary"
   db_path: "data/diary.db"
   chroma_dir: "data/chroma"
 
-# 切块
+# 中研院日记语料（scripts/import_sinica.py）
+# 也可用环境变量 SINICA_CORPUS_PATH / SINICA_AUTHOR
+sinica:
+  corpus_csv: "../sinica_ith_diary_corpus/diary_corpus.csv"
+  author: "楊基振日記"   # 留空表示导出全部作者；首次建议先单人试跑
+
+# 切块（本地）
 chunking:
   max_chars: 500
   overlap_chars: 50
 
-# 嵌入
+# 嵌入（本地 sentence-transformers）
 embedding:
   model: "BAAI/bge-small-zh-v1.5"
   batch_size: 32
 
-# 检索
+# 检索（tag + 向量并联；参数可用环境变量覆盖）
 retrieval:
   top_k: 20
+  w_vector: 0.7             # 合并时向量分权重
+  w_tag: 0.3                # 合并时 tag 分权重
+  tag_score:
+    # tag_score = entity_weight * n_entity + entity_hit_bonus*(n_entity>0)
+    #           + keyword_weight * n_keyword   （或 Σ tfidf，见 use_keyword_tfidf）
+    entity_weight: 10.0     # 每个重合实体加分（应远大于 keyword）
+    keyword_weight: 1.0     # 每个重合关键词加分
+    entity_hit_bonus: 5.0   # 只要有任意实体重合再额外加
+    use_keyword_tfidf: false  # true 时用 chunk_term.weight 累加代替纯个数
+    min_score: 0.0
+    top_k: 50               # tag 路召回上限，再与向量合并
 
-# LLM（标签提取 & 回答生成）
+# v0.1 分词与实体（src/tokenize.py）
+tokenize:
+  stopwords_file: "data/stopwords_zh.txt"
+
+# 词表 / 停用词库（JSON/txt 仍保留供人审；DB 供查询与增补）
+# backend: sqlite（默认 data/lexicon.db）| postgres（需 LEXICON_DATABASE_URL）
+lexicon:
+  db:
+    backend: "sqlite"
+    sqlite_path: "data/lexicon.db"
+    # database_url: ""   # 或用环境变量 LEXICON_DATABASE_URL / DATABASE_URL
+
+# v0.1 候选词表 V（scripts/build_vocabulary.py）
+# 环境变量可覆盖：VOCAB_SIZE, VOCAB_MIN_DF_RATIO, VOCAB_MAX_DF_RATIO,
+# VOCAB_MIN_DF_ABS, VOCAB_MIN_TOTAL_TF, VOCAB_SORT_BY, VOCAB_OUTPUT_PATH 等
+vocabulary:
+  vocab_size: 5000
+  min_df_ratio: 0.03        # 至少 3% chunk（略收紧，减少偶发词）
+  max_df_ratio: 0.50        # >50% chunk 视为过泛（原 0.80 太松）
+  min_df_abs: 3
+  min_total_tf: 3
+  min_token_len: 2
+  max_token_len: 12
+  exclude_single_char: true
+  sort_by: "tf_idf"
+  output_path: "data/vocabulary.json"
+  entities_output_path: "data/entities.json"  # 全局：由 chunk 实体合并
+  chunk_entities_output: "data/chunk_entities.json"
+  entity_sample_ratio: 1.0    # 试跑可设 0.05；或环境变量 ENTITY_SAMPLE_RATIO
+  # 实体清洗：规则去粘连 + 轻量 LLM（seed-flash）
+  entity_review:
+    enabled: true
+    llm_role: "tags"
+    batch_size: 40
+    apply_rule_filters: true
+  exclude_entity_terms: true
+  keywords_per_chunk: 20      # 每 chunk TF-IDF Top-K（仅 V 内词）
+  chunk_keywords_output: "data/chunk_keywords.json"
+  keywords_min_weight: 0.0
+  # 建表后轻量 LLM 评估 → 无意义词追加到 stopwords_zh.txt（自学习）
+  review:
+    enabled: true
+    llm_role: "tags"        # 用 seed-1.6-flash，成本低
+    batch_size: 40
+    rebuild_after_learn: true
+    append_stopwords: true
+    apply_rule_filters: true  # 时间点/泛称谓规则预过滤
+
+# LLM：标签提取 / 回答生成 可分开配置
+# api_key 留空或填 env → 从环境变量 api_key_env 读取（建议写在 .env）
 llm:
-  provider: "ollama"           # ollama | openai
-  model: "qwen2.5:7b"
-  base_url: "http://localhost:11434/v1"
-  api_key: "ollama"
+  tags:
+    provider: "openrouter"
+    # 豆包/Seed：批量标签用更快更便宜的
+    model: "bytedance-seed/seed-1.6-flash"
+    base_url: "https://openrouter.ai/api/v1"
+    api_key: "env"
+    api_key_env: "OPENROUTER_API_KEY"
+    http_referer: "https://github.com/James-I-2005/Diary-rag-system"
+    x_title: "Personal Diary RAG"
+  answer:
+    provider: "openrouter"
+    # 豆包/Seed：问答用通用版
+    model: "bytedance-seed/seed-1.6"
+    base_url: "https://openrouter.ai/api/v1"
+    api_key: "env"
+    api_key_env: "OPENROUTER_API_KEY"
+    http_referer: "https://github.com/James-I-2005/Diary-rag-system"
+    x_title: "Personal Diary RAG"
 
 # 日记格式
 diary:

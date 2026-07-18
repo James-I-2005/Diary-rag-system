@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import json
 
-from openai import OpenAI
-
-from src.store import get_db, load_config
+from src.llm import get_llm_client, get_llm_model
+from src.store import get_db
 
 TAG_SCHEMA = {
     "topics": [],
@@ -46,18 +45,13 @@ EXTRACT_PROMPT = """分析以下日记片段，提取结构化信息。
 """
 
 
-def get_llm_client() -> OpenAI:
-    cfg = load_config()["llm"]
-    return OpenAI(base_url=cfg["base_url"], api_key=cfg["api_key"])
-
-
 def extract_tags_for_chunk(text: str, date: str) -> dict:
-    client = get_llm_client()
-    cfg = load_config()["llm"]
+    """调用 llm.tags（默认 OpenRouter Gemini）提取单条 chunk 的结构化标签。"""
+    client = get_llm_client("tags")
     prompt = EXTRACT_PROMPT.format(text=text, date=date)
 
     kwargs = {
-        "model": cfg["model"],
+        "model": get_llm_model("tags"),
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.1,
     }
@@ -67,7 +61,7 @@ def extract_tags_for_chunk(text: str, date: str) -> dict:
             response_format={"type": "json_object"},
         )
     except Exception:
-        # 部分 Ollama 模型不支持 JSON mode
+        # 部分后端不支持 JSON mode
         response = client.chat.completions.create(**kwargs)
 
     raw = response.choices[0].message.content or "{}"

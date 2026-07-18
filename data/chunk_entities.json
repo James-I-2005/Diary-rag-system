@@ -1,0 +1,3895 @@
+{
+  "built_at": "2026-07-18T04:26:14.592157+00:00",
+  "sample_ratio": 0.05,
+  "n_chunks": 92,
+  "n_with_entities": 89,
+  "review": {
+    "reviewed_at": "2026-07-18T04:25:22.030335+00:00",
+    "n_ops": 643,
+    "n_keep": 520,
+    "n_rewrite": 122,
+    "n_drop": 1,
+    "examples": [
+      "與吹田主任→吹田主任(rewrite/rule)",
+      "與李局長→李局長(rewrite/rule)",
+      "與油谷書記官→油谷書記官(rewrite/rule)",
+      "與金川君→金川君(rewrite/rule)",
+      "到三原課長→三原課長(rewrite/rule)",
+      "陪金川君→金川君(rewrite/rule)",
+      "與江崎書記官→江崎書記官(rewrite/rule)",
+      "與朝華君→朝華君(rewrite/rule)",
+      "給三連兄→三連兄(rewrite/rule)",
+      "請饒君→饒君(rewrite/rule)",
+      "與山內局長→山內局長(rewrite/rule)",
+      "向三連兄→三連兄(rewrite/rule)"
+    ]
+  },
+  "chunks": [
+    {
+      "chunk_id": "1944-10-14_0",
+      "date": "1944-10-14",
+      "preview": "電話意外提早通話，很是開心。全靠賴天穎君的幫忙。號碼是北局－1624。十一點半拜訪華北氮肥料土山課長與吹田主任，請對方撥出些許石膏做為青島的學校用白粉筆。晚上被…",
+      "entities": [
+        {
+          "name": "楊縣長",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "吹田主任",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "料土山課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李瑛局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "毛昭江君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴天穎君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "京津",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "土山",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "華北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "青島",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1944-11-21_0",
+      "date": "1944-11-21",
+      "preview": "下午一點在中央公園與沙兄、周秘書到「上林春」與油谷書記官、綾部理事、山內事務局長會面，討論江南機械的金子換算問題，但沒有結論。飯後在公園散步，之後到滿洲中央銀行…",
+      "entities": [
+        {
+          "name": "周秘書",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "付潮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "內事務局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "園與沙兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "少佐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "油谷書記官",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "綾部理事",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "袁總理",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金川君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金川",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "上林",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "中西",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "北京",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "江南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "滿洲",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "華北",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1944-11-24_0",
+      "date": "1944-11-24",
+      "preview": "下午三點李增禮君來訪，提到要把一萬噸的煤炭送往上海交換物資，請我想想輸送的問題，為此商量許多對策，還麻煩到三原課長。",
+      "entities": [
+        {
+          "name": "三原課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李增禮君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "三原",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "上海",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1944-12-01_0",
+      "date": "1944-12-01",
+      "preview": "進入十二月，只剩一個月就又要多添一歲了。下午兩點到「亞洲會館」看菲律賓海戰的記錄片，在激烈的戰鬥下，日本神風特攻隊一個一個粉身碎骨、以身報國的行為讓我感受至深。…",
+      "entities": [
+        {
+          "name": "海戰",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "聊天",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "Paramont",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上藤田君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上金源君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "拉蒙特",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李時權君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金川君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "亞洲",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "天津",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "日本",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "華北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "菲律賓",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "金川",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1944-12-05_0",
+      "date": "1944-12-05",
+      "preview": "九點半與沙兄、川上課長會面，正式要我務必解決水泥一噸950圓的事。眼看華北目前經濟情勢未必樂觀，但暫時可以接受912圓的申請價。我提出水泥出貨的貨車問題、火藥問…",
+      "entities": [
+        {
+          "name": "上渡邊君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "但潮君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "半與沙兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "川上課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江崎書記官",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "玉華",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王弟",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "當作潮君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "華北",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "岡田",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "川上",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "暫時可以接受912",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "江崎",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "渡邊",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "解決水泥一噸950",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-01-01_0",
+      "date": "1945-01-01",
+      "preview": "早上九點起床後馬上告別元禧君與陳姊夫，前往李金源家拜訪、吃早餐。目的是要促他合作，請饒君取消出售「明星」、「新中央」兩戲院，以及設置規定方針的通商事務鼓勵合作。…",
+      "entities": [
+        {
+          "name": "朝華",
+          "entity_type": "org",
+          "tf": 3
+        },
+        {
+          "name": "美味",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "朝華君",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "Victoria",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "三連兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上朝華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "別元禧君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "周先生",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "家等饒君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "清棟",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "發現饒君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "造訪沙兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "饒君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-01-06_0",
+      "date": "1945-01-06",
+      "preview": "下午三點與中平大佐、趙明儀、山城昌昶三人討論請託購買鐵屑、銅一事，情況似乎很棘手。下午五點被朝倉主幹找去談運費更正一事，可以的話真想辭掉這工作。晚上與沙兄拜訪李…",
+      "entities": [
+        {
+          "name": "上與沙兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "大佐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "昌昶",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "胡同",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "趙明儀",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "中平",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "山城",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "朝倉",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-02-24_0",
+      "date": "1945-02-24",
+      "preview": "今天終於向政務委員會、軍、大使館、開發提出申請書，但運費改正許可一事的前景仍然渾沌，又是困擾的一天。晚上六點綾部理事與山內局長來訪，與仲屏、沙、幼呈、仲岑一起研…",
+      "entities": [
+        {
+          "name": "政務委員會",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "仲屏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "仲岑",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "山內局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "終於",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "荻華",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許可",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點綾部理事",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-03-15_0",
+      "date": "1945-03-15",
+      "preview": "昨晚在金源家過夜，早上到天津通盛銀號，準備付給朝華與饒江河君支票所需要的資金，之後向三連兄報告許多並演練對策。下午兩點到「明星」等朝華與江河君，但沒人出現，三點…",
+      "entities": [
+        {
+          "name": "朝華",
+          "entity_type": "org",
+          "tf": 3
+        },
+        {
+          "name": "通盛",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "饒江河君",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "三連兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "朝華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江河君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "饒君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "天津",
+          "entity_type": "place",
+          "tf": 3
+        },
+        {
+          "name": "江河",
+          "entity_type": "place",
+          "tf": 3
+        },
+        {
+          "name": "入口",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "朝華君",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-03-16_1",
+      "date": "1945-03-16",
+      "preview": "明天的啟新之企畫委員會組織委員一事交換意見。晚上七點被邀請到沙宅與進之、汪仲嘗、周修曾用餐、打麻將。周文仙小姐也來了，大夥熱熱鬧鬧地打牌。但我心裡對於今天朝華君…",
+      "entities": [
+        {
+          "name": "朝華",
+          "entity_type": "org",
+          "tf": 2
+        },
+        {
+          "name": "周修曾",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "周文仙小姐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "天朝華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "汪仲嘗",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-03-31_0",
+      "date": "1945-03-31",
+      "preview": "早上井上君來訪，一起到他的工廠與新工廠視察。看到他的工廠在短短五、六年間就如此成功，實在羨慕不已。中飯又與溪如一同被他請吃飯。我搭下午兩點的「鳩」前往大連，溪如…",
+      "entities": [
+        {
+          "name": "上井上君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳仲凱君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-04-11_0",
+      "date": "1945-04-11",
+      "preview": "一整天都待在家休息。晚上九點到袁總理家造訪，報告滿洲出差情形。短短兩週不見，淑英竟病成這樣，但也讓我對她更加憐愛。",
+      "entities": [
+        {
+          "name": "淑英",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點到袁總理",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "滿洲",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-04-13_0",
+      "date": "1945-04-13",
+      "preview": "早上整理滿洲的出差報告。十二點洪炎秋兄來訪，陪他聊工作與他家中的心煩事。下午三點一清兄來訪，討論工作進展，但發現他一點也不如想像中的爽快，讓我很失望。最近金銀股…",
+      "entities": [
+        {
+          "name": "金銀",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "元禧兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "徐炳南",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "洪炎秋兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點一清兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "滿洲",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-04-20_0",
+      "date": "1945-04-20",
+      "preview": "早上搭「興亞」，為解決「明星戲院」一事前往天津。先與金源君討論大體方針，但他非常失望，完全沒有精力，東山再起的可能性很小。一個人悶悶不樂地前往啟新，剛好袁、陳總…",
+      "entities": [
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "三連兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "仲介",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "我與藍局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "拜託藍局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊朝華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金源君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "唐山",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "天津",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "東山",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "興亞",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-04-28_0",
+      "date": "1945-04-28",
+      "preview": "早上十點前往「明星」，與朝華、江河為解決「明星戲院」一事進行最後談判。他們兩個帶了尾首、青木兩位律師來，我原拒絕他們兩人出席、希望三人共同圓滿解決，但最後態度還…",
+      "entities": [
+        {
+          "name": "朝華",
+          "entity_type": "org",
+          "tf": 2
+        },
+        {
+          "name": "三連兄",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "藍局長",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "朝華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "梅崎",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金源兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "饒君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江河",
+          "entity_type": "place",
+          "tf": 3
+        },
+        {
+          "name": "朝華",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "青木",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "合豐",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-05-01_0",
+      "date": "1945-05-01",
+      "preview": "早上舉行警備分科會。剛好高島石油統制協會副課長自北京而來，與趙技師帶他在廠內巡視。中午在工廠用餐，中平氏也來了，熱鬧地吃了一餐。下午出席資材分科會。晚上六點到松…",
+      "entities": [
+        {
+          "name": "統制協會",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "中平氏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "協會副課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "明星",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "梅崎",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "梅崎氏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "潮君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "秦皇",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "綿引氏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "高島君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "高島",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "中平",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "北京",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "松屋",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "青木",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-05-20_0",
+      "date": "1945-05-20",
+      "preview": "早上林茂生君與劉會長來訪，把要匯給劉會長的股金繳齊。十一點林坤鐘與謝金贏兩人自上海來訪，談到許多上海的情勢與時局變化，之後在我軍兄家被他請吃中餐。同席的有上海來…",
+      "entities": [
+        {
+          "name": "劉會",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "我軍兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林茂生君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "淑英",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "翁先生",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "翁太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "謝金贏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳鶴",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上海",
+          "entity_type": "place",
+          "tf": 3
+        },
+        {
+          "name": "坤鐘",
+          "entity_type": "place",
+          "tf": 2
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-06-16_0",
+      "date": "1945-06-16",
+      "preview": "上午到兵器部拜訪目黑少尉，請他支援資材並結算天津兵器部分局的水泥價格。聽目黑少尉說平松大尉高升回東京，有點失望。與他相識以來，他總是全力支持啟新，對我尤其信任與…",
+      "entities": [
+        {
+          "name": "岡田",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "高升",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "北京",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "天津",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "東京",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-07-22_0",
+      "date": "1945-07-22",
+      "preview": "早上聽各科長報告不在時的業務狀況，整頓公事。新來廠的1414部隊小林曹長帶池田前來打招呼。開灤的劉頤拿履歷表前來，拜託我介紹他朋友進啟新。中飯後想休息調養一下來…",
+      "entities": [
+        {
+          "name": "劉頤",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "小林",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "曹長帶",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊小姐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "池田",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳瑞棠",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "北京",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "新來廠的1414",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "開灤",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-08-25_0",
+      "date": "1945-08-25",
+      "preview": "十點開廠務會議，議題的中心是廠的保衛問題。是不是請先遣軍派一中隊駐廠好，談論中蕭副科長來報告八路軍六十多人已經進廠，唐山廠的空氣很緊張，趕快對華新日軍與高射砲隊…",
+      "entities": [
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-09-19_0",
+      "date": "1945-09-19",
+      "preview": "弗庵今早到平，昨晚想我不在中，他與八路軍連絡的工作報告甚細，覺得很滿意。今天對趙、杜二位報告在平、津所接洽的一切事宜。中秋前夜的月亮真美，徘徊於小園花間，思想這…",
+      "entities": [
+        {
+          "name": "小園",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "弗庵",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "日本",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-09-26_0",
+      "date": "1945-09-26",
+      "preview": "早晨八點與徐副部長弗庵君以朱龍引導到馬家溝會見八路軍宋秘書敏之、鄧輝二君，今天冒這幾個危，親身臨八路軍勢力地，一來是為求八路軍對啟新之立場諒解，二來是21日為八…",
+      "entities": [
+        {
+          "name": "中國共產黨",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "黨員",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "馬家溝",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "列寧",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "宋秘書敏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "朱龍引",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蘇小姐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "路軍宋秘書",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "鄧二君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "鄧輝二君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "長弗庵君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "馬克思",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "馬家溝",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "二來是21",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-11-25_0",
+      "date": "1945-11-25",
+      "preview": "今天起不來了，一會涼，一會熱，真難受。下午三點到金子部長公館拜訪他，又與他談些日本之將來問題，又到松本尋道君家去，聽說他三月失妻、八月亡國，也很可憐。今天接到老…",
+      "entities": [
+        {
+          "name": "本尋道君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "老沙",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "說新周經理",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "日本",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "松本",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1945-12-15_0",
+      "date": "1945-12-15",
+      "preview": "早晨到公司與周協理、趙廠長談論唐廠的改組問題，結論是總所比較要大規模的改組，是唐山委任廠長，看情形在必要的最小限度改組。下午與趙廠長稍微商量唐廠的改組方針，他主…",
+      "entities": [
+        {
+          "name": "合豐行",
+          "entity_type": "org",
+          "tf": 2
+        },
+        {
+          "name": "回唐",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "新俱樂部",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "玉燕",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "三連兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "兩君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "唐山",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張秋海君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "松波君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王松波兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "趙兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "東西",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-02-23_0",
+      "date": "1946-02-23",
+      "preview": "早晨徐炳南君來訪，因這幾天東北的問題日趨緊張，使鄉胞不得在平安居，他來商量對時局的意見，我表現為東北不會再引起第三次大戰。下午張、許兩大夫來訪。據伯昭君來信說東…",
+      "entities": [
+        {
+          "name": "大戰",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "基樫君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張兩君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "徐炳南君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "據伯昭君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "炎秋兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點炎秋兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "華北",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-03-02_0",
+      "date": "1946-03-02",
+      "preview": "下午三點耀勳兄、許、張兩大夫、徐炳南夫婦來訪。下午五點與姊夫、姊姊、耀勳夫婦、蕭夫婦、周大夫到陳步武君宅押牌九，熱鬧了一夜。",
+      "entities": [
+        {
+          "name": "南夫婦",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "徐炳",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蕭夫婦",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳步武君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點耀勳兄",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-03-08_0",
+      "date": "1946-03-08",
+      "preview": "外邊又下雪，春到人間，可是天氣始終不轉晴，陰天森森，好似替自己悲嘆目前的厄運，實在最近二個多月來，痛心的事，多麼難受啊！",
+      "entities": [
+        {
+          "name": "森森",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陰天",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-03-15_0",
+      "date": "1946-03-15",
+      "preview": "今天接到元龍君來信，報告淑英病狀，更加嚴重，心都要碎了。受不了孤獨，下午兩點，到「中央」看話劇「重慶二十四小時」去，戰時的重慶的知識分子的生活相當困苦，尤其對抗…",
+      "entities": [
+        {
+          "name": "抗戰",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "元龍君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "孤獨",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "淑英",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "重慶",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "米國",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-03-24_0",
+      "date": "1946-03-24",
+      "preview": "早上睡覺。晚上六點左右與吳姊夫造訪京屋君，京屋君請客。雖然心情鬱悶，但還是一起玩到十二點多。",
+      "entities": [
+        {
+          "name": "京屋君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1946-04-02_0",
+      "date": "1946-04-02",
+      "preview": "早上整理昨日未完的相簿。下午三連兄、火斐兄、尚崑兄前來追悼。原本就沉重的心情更是怎麼也好不起來。真是無盡的憂鬱啊！下午我軍太太前來聊了許多。",
+      "entities": [
+        {
+          "name": "午三連兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "午我軍太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "尚崑兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "火斐兄",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-04-26_0",
+      "date": "1947-04-26",
+      "preview": "早晨找林朝權太太去，因她要給介入台中顏有福的小姐，因先到吉見宅耽誤，未得見著，聽說昨日她帶她到家裡。十點的會報確定我之赴日，又很想去又不太想去。晚上拜訪周耀星兄…",
+      "entities": [
+        {
+          "name": "耀星",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "吉見宅",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "周耀星兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "有福的小姐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林朝權太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "顏有福",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台中",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-06-06_0",
+      "date": "1947-06-06",
+      "preview": "午飯到中南，接到碧蓮小姐來信，知道在台南上訴也不收，她說明天要到台北來，想不到這麼快就能再見面，下午馬上給她回信。三點陳仲凱君到處來訪，與他相離整兩年，啊！這兩…",
+      "entities": [
+        {
+          "name": "碧蓮小姐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳仲凱君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "中南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-06-28_0",
+      "date": "1947-06-28",
+      "preview": "早晨寫信給阿蓮，今天的信完全變為Love　letter，十幾年來沒有寫過，未知她頭一封信要寫甚麼內容的信來，好幾天都沒看公報，下雨就看公報。今天鄭委員來訪，要借…",
+      "entities": [
+        {
+          "name": "letter",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "借桂瑞兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "阿蓮",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-07-04_0",
+      "date": "1947-07-04",
+      "preview": "今天在公司接到碧蓮來信，她表明對我拒絕求婚，未知何故，恐怕是有比我還好條件的對象，我也不並想勉強她，因愛情決不能強迫的。我最不懂的，她決心不與我結婚未知何時決定…",
+      "entities": [
+        {
+          "name": "淑英",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮來",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許建裕君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "中南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "今宵是16",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "千古",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-07-27_0",
+      "date": "1947-07-27",
+      "preview": "早晨接到碧蓮兩封信（一封是昨天寄到中南來的）說改為28日夜快車到北來，這幾天她的信都是平淡得很，未知何故，也許因為她弟妹病，未能顧及愛情，或者心裡有何變化，與她…",
+      "entities": [
+        {
+          "name": "愛戀",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "吳國信",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "封信",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "顧及愛",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "中南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "說改為28",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-08-04_0",
+      "date": "1947-08-04",
+      "preview": "早晨乘七點二十分的車與碧蓮、櫻櫻、燕生南下，中途燕生在大甲下車，碰見賦仔哥自清水上車，給碧蓮介紹認識，並且告訴他將要與她訂婚。彰化下車，管理委員會與包工某人在車…",
+      "entities": [
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 4
+        },
+        {
+          "name": "燕生",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "招仙閣",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-11-01_0",
+      "date": "1947-11-01",
+      "preview": "早晨乘九點四十分的車到台中，見了華南銀行信託部經理劉喜陽氏商量台中市土地委任經營事，得他快諾。十一點到了泰成行見朱啟全君，再訪問張煥三君，午飯在「泰成」與煥三、…",
+      "entities": [
+        {
+          "name": "華南銀行",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "泰成",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "黃清水君",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "信夫兩君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "信託部經理",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "劉喜陽氏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "啟全君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張煥三君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "本來黃君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "朱啟全君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "中國",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台中市",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "官三個人要求60",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-11-08_0",
+      "date": "1947-11-08",
+      "preview": "早晨乘快車到台南，車中碰見獻堂、金海兩先生，與金海兄輕談之中，他請我給介紹有為青年，馬上想起信夫事，託他代為設法引進彰銀。車到了新營，有德君上來，覺得很失望，碧…",
+      "entities": [
+        {
+          "name": "嚴令碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "德君求",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "慶華",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "有德君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮本",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "貞操",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金海兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金海",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "余畜生要求20",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台灣",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-11-15_0",
+      "date": "1947-11-15",
+      "preview": "早晨七點四十分到台南，碧蓮到車站來迎接，一同吃早餐，十一點找沈榮律師去，據說慶華沒來，很意外。與碧蓮別後到黃谿泉公館找蘭洲兄去，沒在，在「崔」吃午餐後回旅館閒談…",
+      "entities": [
+        {
+          "name": "慶華",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "小憩",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "沈榮律",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮別",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蘭洲兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "蘭洲",
+          "entity_type": "place",
+          "tf": 2
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-12-07_0",
+      "date": "1947-12-07",
+      "preview": "好幾個禮拜沒有在家裡過著禮拜，今天天氣特別好，買了幾株鮮花來家裡，碧盛的秋天真爽快，整天整理障子。十一點李進添君來訪，晚餐後到廖太太公館，本想提燕生親事，因耀星…",
+      "entities": [
+        {
+          "name": "耀星",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "廖太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李進添君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "燕生",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-12-15_0",
+      "date": "1947-12-15",
+      "preview": "早晨七點的快車帶張太太、碧蓮到北港，先到曾人模公館見曾太太，好幾天沒見，她老多了。憶起過去與人模君的熱烈友誼，曾太太也誠心歡迎我，在她家裡吃午餐，舊學友顏木杞君…",
+      "entities": [
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 3
+        },
+        {
+          "name": "人模君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "嘉義",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴祺祥",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "車帶張太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "顏木杞君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "館見曾太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "北港",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "杞君",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-12-20_0",
+      "date": "1947-12-20",
+      "preview": "早晨乘八點半的汽油車到基隆港務局會同張業務課長與張警務局員調查福建農林公司被扣枕木一事，很簡單就在警察局第三科檔案裡找出兩張證據，斷定是農林公司的。午餐被糖業公…",
+      "entities": [
+        {
+          "name": "基隆",
+          "entity_type": "org",
+          "tf": 2
+        },
+        {
+          "name": "張業務課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林雙霜",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賀禮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "辦事處主任",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "郭欽禮君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "上海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台灣",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "基隆港",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "福建",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1947-12-27_0",
+      "date": "1947-12-27",
+      "preview": "今天本來想找孫院長、程首席檢察官去，但因暴風大雨裡無法出去，整天在家裡與旭昇先生、碧蓮閒談。十點多有德君來訪，我提起舊18日訂婚，2月1日結婚事，請他務必幫忙，…",
+      "entities": [
+        {
+          "name": "多有德君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮閒",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "我提起舊18",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "月1",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-01-07_0",
+      "date": "1948-01-07",
+      "preview": "早晨九點給石純兄借啟川兄汽車回家帶母親看病去，先到太原街洪桃婆上找漢藥先生去，再到保健館照X光線，又到共濟醫院見莊醫院長徹底檢查，結果判明是動脈硬化症。午餐被林…",
+      "entities": [
+        {
+          "name": "保健",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "借啟川兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "宗仁",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張和貴強",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林澤章",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "洪桃婆",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王耀東君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "石純兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "太原",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "福利",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-01-24_0",
+      "date": "1948-01-24",
+      "preview": "今天本欲搭快車歸北，但未見啟川兄，本想請他擔任媒人，有必要與他見面討論，因此延後出發。早上到工商銀行拜訪林亦佑，請他2月1日同行，並替我暫墊20萬的聘金，他爽快…",
+      "entities": [
+        {
+          "name": "啟川兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "啟川",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "月1",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "並替我暫墊20",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "而且他2",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "請他2",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-01-27_0",
+      "date": "1948-01-27",
+      "preview": "整天忙著福委會事，陰雨又連綿地下，晚上與以德、敦燦兩兄閒談。",
+      "entities": [
+        {
+          "name": "福委會",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "敦燦兩兄",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-04-16_0",
+      "date": "1948-04-16",
+      "preview": "十點半看少年棒球去，午餐與李曉芳君被吳姊夫請於「迎賓樓」，中餐後參觀新開的國貨公司去，建台的帽蓆零售也在裡頭。下午又看少年棒球。今天母親因牙齒痛更顯衰弱，又加一…",
+      "entities": [
+        {
+          "name": "李曉芳君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "迎賓樓",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-04-21_0",
+      "date": "1948-04-21",
+      "preview": "整天看書覺得很累，下午一點到「國際」看電影「火牛陣」，毫無意思。晚餐後與碧蓮到國際飯店參加舞會，哲民、劒清兩兄也帶了不少人在那邊，因人太擠，沒有多大意思。今宵月…",
+      "entities": [
+        {
+          "name": "劒清兩兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-04-22_0",
+      "date": "1948-04-22",
+      "preview": "這幾天晚上的勞苦，使我早晨無法上班，吃午飯後才上班。午下〔下午〕四點半徐鄂雲兄來訪，因碧蓮常說要回台南，整夜覺得很不痛快。",
+      "entities": [
+        {
+          "name": "徐鄂雲兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮常",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-06-13_0",
+      "date": "1948-06-13",
+      "preview": "早上張岳父從台南來訪，我到車站迎接。律師檢驗一事，只有他沒收到法院通知，所以早一步上台北。早餐過後一同拜訪陳墩樹、蔡伯汾律師。下午一家集合前往北投台銀俱樂部一遊…",
+      "entities": [
+        {
+          "name": "台銀俱樂部",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "岳父",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蔡伯",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳墩樹",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "黃演渥氏",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "渥氏",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "聊台灣",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-06-23_0",
+      "date": "1948-06-23",
+      "preview": "原稿不明",
+      "entities": []
+    },
+    {
+      "chunk_id": "1948-07-05_0",
+      "date": "1948-07-05",
+      "preview": "碧蓮今天乘八點的快車到台南去，一個□□□手術去，實在心裡過意不去，晚餐被吳姊夫請，在「新中華」，因天求、天華君來台，同席尚有王民寧、楊天賦、張國健、□處長、許法…",
+      "entities": [
+        {
+          "name": "天華",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "新中華",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "坐張處長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "天華君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張國健",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊天賦",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王民寧",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許法規書記官",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "黃明日君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-10-07_0",
+      "date": "1948-10-07",
+      "preview": "今天陳東成代表前來，為三重埔機房的價格而來，但他前幾天的態度讓我耿耿於懷，所以拒絕他了。下午許建裕帶新竹送貨公司的許君前來，聊了許多。晚上被附屬病院的楊建德君招…",
+      "entities": [
+        {
+          "name": "兩位許君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "司的許君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊建德君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "耿耿",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "莊晨耀君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許建裕",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳東成",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "新竹",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "福利",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-12-10_0",
+      "date": "1948-12-10",
+      "preview": "早晨等何校長，一同到陳麗生君去，請他做賣主，但他怎樣都不肯，一同找市政府王代書去，結果公契上他可以做賣主，但私合同還是我做賣主，如此耽誤到一點多方解決。馬上到合…",
+      "entities": [
+        {
+          "name": "柯文",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "永仔",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "喻仔",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "柯文寶兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王代書",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳金榟君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳麗生君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1948-12-28_0",
+      "date": "1948-12-28",
+      "preview": "早晨華森運送店來訪，閒談一會兒就走了。十一點回公司，接到碧蓮寄來1,070萬元，自彰銀領後，拜訪賴茂生兄，存一個月後為1,400萬元，並得到14萬周旋料。晚餐後…",
+      "entities": [
+        {
+          "name": "華森",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "周旋",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴尚崑兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴茂生兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "並得到14",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "存一個月後為1",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "接到碧蓮寄來1",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-01-11_0",
+      "date": "1949-01-11",
+      "preview": "早晨到合作金庫領昨天許可出來的借款，同時仲凱君名義借的兩仟萬元也今天借出來，因20日須給房錢，暫時放款，仲凱君的以205萬一兩買金子十兩。下午回去睡覺。晚餐後曉…",
+      "entities": [
+        {
+          "name": "金庫",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "時仲凱君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "曉芳",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林泉君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "仲凱君的以205",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "因20",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-01-30_0",
+      "date": "1949-01-30",
+      "preview": "早晨拜訪娟娟，祝賀她生男孩子去，八點半三孩子、英姨、繁、淑慎、淑茹、淑珠登八卦山去，又想起當日……回家中途丟了宗仁、繁，頗為著急，但他們自己回家，才放心。午餐娟…",
+      "entities": [
+        {
+          "name": "岳父",
+          "entity_type": "person",
+          "tf": 3
+        },
+        {
+          "name": "娟娟",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "作社某君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "元禧",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "宗仁",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "明朝兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "石錫純",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "祝賀",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "英姨",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳天順",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "八卦山",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-03-04_0",
+      "date": "1949-03-04",
+      "preview": "早晨見新局長，九點半拜訪任顯群，約他禮拜聚餐。下午三點新局長訓辭，下午為請任處長到處奔走，晚上簡文發、李炳森、王習孔來訪，談些關於工會最近的動向，林直中一派又要…",
+      "entities": [
+        {
+          "name": "三點新局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨見新局長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李炳森",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林直",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "為請任處長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王習孔",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "簡文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "郎局長",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-03-28_0",
+      "date": "1949-03-28",
+      "preview": "禮拜三〔五〕電匯台南的錢，沒有接到，很生氣。工會又惱事。早晨吳國信、簡文發、王習孔等來訪。……。",
+      "entities": [
+        {
+          "name": "吳國信",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王習孔",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "簡文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-03-31_0",
+      "date": "1949-03-31",
+      "preview": "早晨六點起床，七點在招待所一共九人吃早餐（路局五人，加王之一中華日報記者、基隆許站長、莊運轉主任、余課長）。八點由余課長引導，先到八仙山林廠見正、副廠長，並聽取…",
+      "entities": [
+        {
+          "name": "中華日報",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "和盛",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "基隆",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "麻竹",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "加王",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "家由余課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "拉客",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "莊運轉主任",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點由余課長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "山林",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "豐原",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "馬鞍寮",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-04-23_0",
+      "date": "1949-04-23",
+      "preview": "肇嘉哥九點半來訪，與他談兩小時，都是無聊的話，愈來愈沒有意思，往後絕對不想與他談政治問題，他的政見、人格都叫人失望。與碧蓮乘十二點半的快車赴台南，車中與顏欽賢、…",
+      "entities": [
+        {
+          "name": "乾仔嫂",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "基哲兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "她對乾兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "朝琴等兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮乘",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "討姨太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "顏欽賢",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "黃朝琴",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台灣",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "肇嘉哥",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-04-27_0",
+      "date": "1949-04-27",
+      "preview": "早晨與有德君出門，接到彰化來電話，據說糖一包60萬，希望能早日匯款，但現在未知是否可以領到？大姊與葉仔來訪。下班後有德君帶千里兄來訪，正好信夫君也來訪，就打牌消…",
+      "entities": [
+        {
+          "name": "千里兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "好信夫君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "有德君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "葉仔",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "據說糖一包60",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-05-27_0",
+      "date": "1949-05-27",
+      "preview": "早晨九點到華光，知道一億元不是價格，而是標賣的保證金，很失望。下班後叫信夫來，與有德君三人商量對華光的態度，去張售讓支票。下午到公司見建材兄打聽華裕事，這也很困…",
+      "entities": [
+        {
+          "name": "華光",
+          "entity_type": "org",
+          "tf": 2
+        },
+        {
+          "name": "華裕",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "金庫",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "華光",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "建材兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "有德君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "月4",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "未知6",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-06-17_0",
+      "date": "1949-06-17",
+      "preview": "早晨辦登記台中土地的各種證明書。下午整理信件，碧蓮到華裕登記去。昨天發表幣制改革，今天發表公務員待遇改善。晚上對面的日本姑娘來訪，看她可能是肺病。",
+      "entities": [
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "華裕登",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "日本",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-07-01_0",
+      "date": "1949-07-01",
+      "preview": "整天整理信。下午下大雨，沒上班。晚餐後到公司散步。",
+      "entities": []
+    },
+    {
+      "chunk_id": "1949-07-11_0",
+      "date": "1949-07-11",
+      "preview": "早晨與詹岳父到糧食局，今天叫陳金榟君到旅行社為美櫻事見李副經理，結果還是不行。十二點到興安行吃午餐。一點半又開始打牌，今天因人多，分兩桌，打到十二點多，自打牌還…",
+      "entities": [
+        {
+          "name": "千里君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "岳父",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李副經理",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳金榟君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-08-01_0",
+      "date": "1949-08-01",
+      "preview": "下班後早吃晚餐，帶淑慎、三個孩子到「新世界」看disreny[disney]的漫畫去。碧蓮因生孩之兆，十點到鐵路醫院，我也十點由電影院趕到醫院，碧蓮自十點就陣痛…",
+      "entities": [
+        {
+          "name": "新世界",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "disney",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-08-27_0",
+      "date": "1949-08-27",
+      "preview": "早晨金鐘夫婦來訪，談時局問題。下午賴、張太太、邱、維椷、蘭洲、小邱、來受等很多人來訪，打牌消遣。",
+      "entities": [
+        {
+          "name": "小邱",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金鐘夫",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蘭洲",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-09-27_0",
+      "date": "1949-09-27",
+      "preview": "早晨到炎秋兄宅，他今天尚未釋放。下午又到南豐行，今天空氣大變。會散後另與金鐘、振德、江海流兄商量辦法。六點到興安行，與蘭洲、清漂等友吃晚餐並打牌消遣。",
+      "entities": [
+        {
+          "name": "南豐行",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "振德",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江海流兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "炎秋兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "金鐘",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "蘭洲",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-11-10_0",
+      "date": "1949-11-10",
+      "preview": "早晨帶益謙、建裕拜訪肇嘉哥，今天在《新生報》看見藍振德、林江海新聞記事，對於南豐行要單獨行動。中午伯埏君來訪，談諸問題，談到五點多。晚餐後帶碧蓮拜訪星賢君、瑞麟…",
+      "entities": [
+        {
+          "name": "建裕",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "午伯埏君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "南豐",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "星賢君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "瑞麟兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "益謙",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "藍振德",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "肇嘉哥",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-11-17_0",
+      "date": "1949-11-17",
+      "preview": "下午又開清理委員會，討論又沒有甚麼結果。四點在賴宅打牌。",
+      "entities": [
+        {
+          "name": "賴宅",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1949-11-23_0",
+      "date": "1949-11-23",
+      "preview": "身體已經回復，早晨上班。繼續寫下去。",
+      "entities": []
+    },
+    {
+      "chunk_id": "1949-12-17_0",
+      "date": "1949-12-17",
+      "preview": "早晨到興安行，蘭洲、俊芬、金川等攻擊新人事很厲害，先拜訪林江海君，一同拜訪羅克典去，沒在。下午三點又去了，告訴他肇嘉哥堅辭省委，並且攻擊此次人事很厲害，他馬上連…",
+      "entities": [
+        {
+          "name": "嘉哥",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "俊芬",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林江海君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "羅克典",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "肇嘉哥",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "江海",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "蘭洲",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "金川",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-01-14_0",
+      "date": "1950-01-14",
+      "preview": "早晨江海兄來訪，談得很多關於最近的政潮。下午楊永茂君來訪，想找任廳長去，沒在。下午四點半楊子文、張星賢夫婦、邱世鴻君等來打牌，打到一點多。",
+      "entities": [
+        {
+          "name": "張星賢",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨江海兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊子文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊永茂君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "邱世鴻君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "關於",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "江海",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-01-28_0",
+      "date": "1950-01-28",
+      "preview": "早晨在家睡覺。中餐後，星賢、清漂兩太太、王雲龍君等來訪。下午四點仲凱、子文、世鴻、星賢夫婦等來打牌，因昨夜沒睡，我打一會兒就睡覺去。晚上黃維椷、賴耀奎等兄來訪。",
+      "entities": [
+        {
+          "name": "星賢",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "世鴻",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "仲凱",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "子文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "清漂兩太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王雲龍君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "耀奎等兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴耀奎",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-02-05_0",
+      "date": "1950-02-05",
+      "preview": "早晨睡覺，下午莊世英、張我軍、洪炎秋、楊子文、邱世鴻、陳建德、陳仲凱、賴耀奎、張太太、黃維椷等來訪，分兩桌打牌。心神都覺得很累。今天進仔辭職，在家半年多也頗精勤…",
+      "entities": [
+        {
+          "name": "建德",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "楊子文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "洪炎秋",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "莊世英",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴耀奎",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "邱世鴻",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳仲凱",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-02-07_0",
+      "date": "1950-02-07",
+      "preview": "早晨基流君等來訪，告訴他與乾兄的紛爭應予中止，他抗辯很多，留他在家裡吃晚餐。下午金榟君來訪，留他吃晚餐。晚上鐘副處長來訪，談得很多的問題。乾兄也來訪，談到十二點…",
+      "entities": [
+        {
+          "name": "上鐘副處長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "他與乾兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "午金榟君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨基流君",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-03-15_0",
+      "date": "1950-03-15",
+      "preview": "早晨千里君為保結事來訪。今天繼續寫稿。耀東君為免票事來訪。下午六點黃烈火兄來訪，閒談。七點到彰化銀行二樓陪宴任顯群廳長，主人是南華以德、雲龍、敦禮、延齡等兄，客…",
+      "entities": [
+        {
+          "name": "延齡等兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨千里君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "耀東君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "袁琮兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳主任秘書",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "黃烈火兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "南華",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "耀東",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "雲龍",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-03-24_0",
+      "date": "1950-03-24",
+      "preview": "早晨洗澡後，早餐，到山本公園看花去，九點半回台北。中餐在國貨公司七樓被千里兄招待，尚有程、張大材兩兄，喝得相當醉。下午三點林卓章、邱君、黃宗焜、林以德、王雲龍君…",
+      "entities": [
+        {
+          "name": "千里兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "堂千里君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "大材兩兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張大材",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "張星賢",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林卓章",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王雲龍君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴武明",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "邱君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "黃宗",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "中山堂",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "台北",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "山本",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-04-13_0",
+      "date": "1950-04-13",
+      "preview": "早晨基流君來訪，商量到日本去事。十點秀鳳也來，據說她的小孩王為清君被扣，叫碧蓮與歐先生連絡刑警大隊。乘十二點五十分的車到彰化，車內與天賦家、慶華、郭國基談得很有…",
+      "entities": [
+        {
+          "name": "慶華",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "老居",
+          "entity_type": "person",
+          "tf": 2
+        },
+        {
+          "name": "乾兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "岳父",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨基流君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "林榮等兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王為清君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "郭國基",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "錫卿兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "日本",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-06-19_0",
+      "date": "1950-06-19",
+      "preview": "今天端午節，台南寄來肉粽。下午放假半天，晚餐後帶碧蓮散步去，並拜訪瑞麟兄。早晨伯埏君帶唐榮許工務處長為卯〔鉚〕釘事到路局來與材料處接洽。",
+      "entities": [
+        {
+          "name": "唐榮許",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "晨伯埏君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "瑞麟兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許工務處長",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-06-21_0",
+      "date": "1950-06-21",
+      "preview": "今天乾兄夫婦由台中來訪，維命也為了基實的案子來訪，給他介紹何輝玉組長。下午五點多，昨天的人又來打牌。",
+      "entities": [
+        {
+          "name": "維命",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "乾兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "乾兄夫",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "何輝玉",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-06-26_0",
+      "date": "1950-06-26",
+      "preview": "早上九點五十分的車送碧蓮、宗義回台南。下午基實的次男又為信誼案來訪。下午四點在尚崑宅與尚崑、子文、徐秘書、謝華輝等打牌，璃莉因病到醫院。",
+      "entities": [
+        {
+          "name": "四點在尚崑宅與尚",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "子文",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "徐秘書",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "謝華輝",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "台南",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-08-06_0",
+      "date": "1950-08-06",
+      "preview": "早晨唐榮徐、許兩君、伯埏君等為拖船事來訪。下午三點華輝、鄭君、維椷、尚崑等君來訪，打牌消遣。下午七點在吳宅請王軍法處首席檢察官吃飯，今天與他談信義案、謝女士、廖…",
+      "entities": [
+        {
+          "name": "伯埏君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "吳宅",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "唐榮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "尚崑等君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "廖史豪",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "松齡",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王軍",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "華輝",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "許兩君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "鄭君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "治縣",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-08-16_0",
+      "date": "1950-08-16",
+      "preview": "達真是一個不良少年，如果他合格借住家裡很頭痛。下午梁君、慶銣君等來訪。晚八點多廖太太來訪，史豪已經被判7年，她來商量對策。晚十一點多天賦哥來訪，據說關於區域劃分…",
+      "entities": [
+        {
+          "name": "史豪",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "吳國楨",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "慶銣君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "梁君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "蔡培火兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "陳誠",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點多廖太太",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "史豪已經被判7",
+          "entity_type": "place",
+          "tf": 1
+        },
+        {
+          "name": "豐原縣",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-09-12_0",
+      "date": "1950-09-12",
+      "preview": "十一點全家到醫院洗眼睛。聯登、梁君等來訪。下午六點到吳姊夫家吃晚餐，宴後與耀星兄等談時局問題。",
+      "entities": [
+        {
+          "name": "耀星",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "聯登",
+          "entity_type": "org",
+          "tf": 1
+        },
+        {
+          "name": "梁君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "耀星兄",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-09-28_0",
+      "date": "1950-09-28",
+      "preview": "早晨下大雨，因昨夜睡不好，不想上班，與碧蓮又睡下去。下午四點金榟兄來訪，與他約禮拜六到宜蘭一玩。",
+      "entities": [
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "點金榟兄",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "宜蘭",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-10-11_0",
+      "date": "1950-10-11",
+      "preview": "早晨吳專員來訪、閒談。十一點謀榜來訪，一同找石律師去，都沒有什麼結果。中餐一同在「春陽樓」吃。下午五點在賴宅與尚崑、星賢夫婦、維椷等打牌消遣，一敗塗地，整夜很不…",
+      "entities": [
+        {
+          "name": "星賢夫",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "春陽樓",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "石律師",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "賴宅與尚",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-10-21_0",
+      "date": "1950-10-21",
+      "preview": "早晨乘十一點二十五分的車帶岳母、碧蓮到羅東一遊。下午三點多到蘇澳，由李宜蘭縣主任引導，遊海岸，遊羅東，晚餐由劉林發站長請的，晚車到礁溪，由站長熱烈招待案內，住俱…",
+      "entities": [
+        {
+          "name": "劉林發",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "宜蘭縣主任",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "岳母",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "李宜蘭",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "遊羅東",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "羅東",
+          "entity_type": "place",
+          "tf": 2
+        },
+        {
+          "name": "礁溪",
+          "entity_type": "place",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-10-27_0",
+      "date": "1950-10-27",
+      "preview": "房屋的修理遲遲不進，這幾天真是悶得很。",
+      "entities": [
+        {
+          "name": "天真",
+          "entity_type": "org",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-11-29_0",
+      "date": "1950-11-29",
+      "preview": "早晨基文為清野職業事、伯齡為信義一案來訪。這幾天自覺這樣生活下去，毫無意義，未知如何來解決自己，生活真蕭條。晚餐後帶碧蓮到「文化戲院」看「風流女情」，還不錯。",
+      "entities": [
+        {
+          "name": "伯齡",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    },
+    {
+      "chunk_id": "1950-12-13_0",
+      "date": "1950-12-13",
+      "preview": "早晨李賜卿君為枕木事來訪，給他介紹鐘副處長。晚餐後帶碧蓮到「文化戲院」看「乞食王子」去，還不錯。",
+      "entities": [
+        {
+          "name": "李賜卿君",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "王子",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "碧蓮",
+          "entity_type": "person",
+          "tf": 1
+        },
+        {
+          "name": "紹鐘副處長",
+          "entity_type": "person",
+          "tf": 1
+        }
+      ]
+    }
+  ]
+}

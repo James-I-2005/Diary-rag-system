@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from openai import OpenAI
-
+from src.llm import get_llm_client, get_llm_model
 from src.query import query
-from src.store import load_config
 
 RETRIEVAL_ANSWER_PROMPT = """你是个人日记分析助手。根据以下日记片段回答用户问题。
 
@@ -56,11 +54,6 @@ SUMMARIZATION_ANSWER_PROMPT = """你是个人日记分析助手。根据以下�
 用户问题：{question}
 
 回答："""
-
-
-def get_llm_client() -> OpenAI:
-    cfg = load_config()["llm"]
-    return OpenAI(base_url=cfg["base_url"], api_key=cfg["api_key"])
 
 
 def format_chunks_context(chunks: list[dict], max_chars: int = 6000) -> str:
@@ -154,11 +147,10 @@ def generate_answer(question: str) -> str:
     if prompt is None:
         return fallback_answer(result)
 
-    client = get_llm_client()
-    cfg = load_config()["llm"]
+    client = get_llm_client("answer")
     try:
         response = client.chat.completions.create(
-            model=cfg["model"],
+            model=get_llm_model("answer"),
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
         )
@@ -175,10 +167,9 @@ def generate_answer_stream(question: str):
         print(fallback_answer(result))
         return
 
-    client = get_llm_client()
-    cfg = load_config()["llm"]
+    client = get_llm_client("answer")
     stream = client.chat.completions.create(
-        model=cfg["model"],
+        model=get_llm_model("answer"),
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         stream=True,

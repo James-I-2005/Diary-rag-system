@@ -1,4 +1,4 @@
-"""查询路由：分类 → 执行 → 返回结构化结果。"""
+"""查询：v0.1 统一召回（tag 评分 + 向量并联）；旧路由函数降级保留。"""
 
 from __future__ import annotations
 
@@ -8,6 +8,12 @@ from datetime import datetime, timedelta
 
 from src.embed import search_similar
 from src.store import get_db
+from src.tag_retrieve import (
+    extract_query_tags,
+    merge_vector_and_tag,
+    resolve_retrieval_config,
+    tag_match,
+)
 
 
 def classify_query(question: str) -> str:
@@ -25,7 +31,7 @@ def classify_query(question: str) -> str:
 
 
 def infer_tag_filters(question: str) -> dict:
-    """从问题推断标签过滤条件。"""
+    """从问题推断标签过滤条件。（v0 遗留，主路径不再使用）"""
     filters: dict = {}
     if any(w in question for w in ["吃饭", "吃", "美食", "餐厅", "食物"]):
         filters["has_food"] = True
@@ -65,29 +71,36 @@ def filter_by_tags(filters: dict) -> list[dict]:
     return [{"id": r["id"], "date": r["date"], "text": r["text"]} for r in rows]
 
 
-def retrieve_chunks(question: str, top_k: int = 20) -> list[dict]:
-    """检索型：标签过滤 + 向量检索，合并去重。"""
-    results_by_id: dict = {}
+def retrieve_chunks(
+    question: str,
+    top_k: int | None = None,
+    *,
+    use_vector: bool = True,
+) -> list[dict]:
+    """
+    v0.1 主召回：tag_match（entity 高权重 + keyword 计数）∪ 向量检索，加权合并。
+    """
+    retrieval_cfg = resolve_retrieval_config()
+    if top_k is not None:
+        retrieval_cfg.top_k = top_k
 
-    tag_filters = infer_tag_filters(question)
-    if tag_filters:
-        sql_results = filter_by_tags(tag_filters)
-        for r in sql_results:
-            results_by_id[r["id"]] = r
+    qside = extract_query_tags(question)
+    tag_hits = tag_match(question, cfg=retrieval_cfg.tag_score, query_side=qside)
 
-    vec_results = search_similar(question, top_k=top_k)
-    for r in vec_results:
-        if r["id"] not in results_by_id:
-            results_by_id[r["id"]] = r
-        else:
-            results_by_id[r["id"]]["score"] = r.get("score", 0)
+    vec_hits: list[dict] = []
+    if use_vector:
+        try:
+            vec_hits = search_similar(question, top_k=retrieval_cfg.top_k)
+        except Exception as exc:
+            print(f"  [warn] 向量检索失败，仅用 tag 路: {exc}")
 
-    merged = sorted(results_by_id.values(), key=lambda x: x.get("date", ""))
-    return merged
+    if use_vector and vec_hits:
+        return merge_vector_and_tag(vec_hits, tag_hits, retrieval_cfg=retrieval_cfg)
+    return tag_hits[: retrieval_cfg.top_k]
 
 
 def statistical_query(question: str) -> dict:
-    """统计型：SQL 聚合，返回数字 + 明细。"""
+    """统计型：SQL 聚合，返回数字 + 明细。（v0 遗留）"""
     conn = get_db()
 
     if any(w in question for w in ["感动", "温暖"]):
@@ -133,7 +146,7 @@ def statistical_query(question: str) -> dict:
 
 
 def summarization_query(question: str) -> dict:
-    """归纳型：聚合标签频次 + 取向量相关片段。"""
+    """归纳型：聚合标签频次 + 取向量相关片段。（v0 遗留）"""
     conn = get_db()
     rows = conn.execute(
         """
@@ -174,36 +187,40 @@ def parse_date_range(question: str) -> tuple[str, str] | None:
     return None
 
 
-def query(question: str) -> dict:
-    """统一查询入口。"""
-    qtype = classify_query(question)
-
-    if qtype == "statistical":
-        return statistical_query(question)
-    if qtype == "summarization":
-        return summarization_query(question)
-
-    chunks = retrieve_chunks(question)
+def query(question: str, *, use_vector: bool = True) -> dict:
+    """
+    v0.1 统一查询入口：一律走 retrieve_chunks。
+    旧 statistical / summarization 路由不再作为默认分支。
+    """
+    qside = extract_query_tags(question)
+    chunks = retrieve_chunks(question, use_vector=use_vector)
     return {
         "type": "retrieval",
         "count": len(chunks),
         "chunks": chunks,
+        "query_tags": {
+            "entities": qside.entities,
+            "keywords": qside.keywords,
+            "people": qside.people,
+            "places": qside.places,
+            "orgs": qside.orgs,
+        },
     }
 
 
 if __name__ == "__main__":
     tests = [
-        "这个月所有关于吃饭的内容",
-        "感动瞬间有多少次",
-        "这个月最喜欢做的事情是什么",
+        "碧蓮做了什么",
+        "中秋節去天壇",
+        "討論水泥定價",
     ]
     for q in tests:
-        result = query(q)
+        result = query(q, use_vector=False)
         print(f"\nQ: {q}")
-        print(f"类型: {result['type']}")
-        if result["type"] == "statistical":
-            print(f"计数: {result.get('count')}")
-        elif result["type"] == "retrieval":
-            print(f"召回: {result['count']} 条")
-        elif result["type"] == "summarization":
-            print(f"Top活动: {result.get('top_activities', [])[:3]}")
+        print(f"query_tags: {result['query_tags']}")
+        print(f"召回: {result['count']} 条")
+        for c in result["chunks"][:3]:
+            print(
+                f"  [{c.get('date')}] score={c.get('score'):.2f} "
+                f"ent={c.get('entity_hits')} kw={c.get('keyword_hits')}"
+            )
