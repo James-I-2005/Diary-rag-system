@@ -7,3 +7,6 @@ data/chroma/
 .env
 data/diary/
 data/diary_sinica/
+data/retrieval_runs/
+data/last_context.json
+data/last_retrieval.json

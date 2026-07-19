@@ -21,11 +21,15 @@ embedding:
   model: "BAAI/bge-small-zh-v1.5"
   batch_size: 32
 
-# 检索（tag + 向量并联；参数可用环境变量覆盖）
+# 检索（Engine Plan：可组合 Operator；参数可用环境变量覆盖）
 retrieval:
   top_k: 20
-  w_vector: 0.7             # 合并时向量分权重
-  w_tag: 0.3                # 合并时 tag 分权重
+  plan: ["tag", "embedding"]  # 可选 embedding,tag / 仅 tag / 仅 embedding
+  w_vector: 0.7             # 保留：旧加权合并参考（当前并集取 max）
+  w_tag: 0.3
+  save_json: true           # 每次召回写入 JSON，便于审阅
+  log_path: "data/last_retrieval.json"
+  history_dir: "data/retrieval_runs"  # 同时按时间戳留一份；空则不留历史
   tag_score:
     # tag_score = entity_weight * n_entity + entity_hit_bonus*(n_entity>0)
     #           + keyword_weight * n_keyword   （或 Σ tfidf，见 use_keyword_tfidf）
@@ -34,7 +38,26 @@ retrieval:
     entity_hit_bonus: 5.0   # 只要有任意实体重合再额外加
     use_keyword_tfidf: false  # true 时用 chunk_term.weight 累加代替纯个数
     min_score: 0.0
-    top_k: 50               # tag 路召回上限，再与向量合并
+    top_k: 50               # TagOperator 召回上限
+
+# Context Engine（对话与 Memory 解耦；召回记忆仅本轮进入 Prompt）
+context:
+  system_prompt: |
+    你是个人日记记忆助手。根据「召回记忆」与对话上下文回答用户。
+    仅基于给定材料，标注日期 [YYYY-MM-DD]，不足则说明；召回记忆勿当作永久聊天事实。
+  recent_message_turns: 8
+  total_token_budget: 8000
+  budget:
+    system: 0.10
+    summary: 0.15
+    recent: 0.25
+    memories: 0.40
+    query: 0.10
+  memory_min_score: 0.0
+  memory_max_items: 20
+  summarize_after_messages: 20
+  save_debug_json: true
+  debug_path: "data/last_context.json"
 
 # v0.1 分词与实体（src/tokenize.py）
 tokenize:

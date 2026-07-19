@@ -1,19 +1,17 @@
-"""查询：v0.1 统一召回（tag 评分 + 向量并联）；旧路由函数降级保留。"""
+"""查询：v0.2 Engine Plan 召回 + hydrate；旧路由函数降级保留。"""
 
 from __future__ import annotations
 
 import json
+import os
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from src.embed import search_similar
-from src.store import get_db
-from src.tag_retrieve import (
-    extract_query_tags,
-    merge_vector_and_tag,
-    resolve_retrieval_config,
-    tag_match,
-)
+from src.engine import PlanExecutor, build_plan, build_plan_from_config
+from src.store import get_db, load_config, resolve_path
+from src.tag_retrieve import extract_query_tags, resolve_retrieval_config
 
 
 def classify_query(question: str) -> str:
@@ -71,32 +69,69 @@ def filter_by_tags(filters: dict) -> list[dict]:
     return [{"id": r["id"], "date": r["date"], "text": r["text"]} for r in rows]
 
 
+def hydrate_candidates(candidates: list, *, top_k: int | None = None) -> list[dict]:
+    """Candidate → 带 date/text 的 chunk dict（Engine 之外补全文）。"""
+    if not candidates:
+        return []
+    retrieval_cfg = resolve_retrieval_config()
+    k = top_k if top_k is not None else retrieval_cfg.top_k
+    ordered = candidates[:k]
+    ids = [c.chunk_id for c in ordered]
+    conn = get_db()
+    try:
+        placeholders = ",".join("?" * len(ids))
+        rows = {
+            r["id"]: r
+            for r in conn.execute(
+                f"SELECT id, date, text FROM chunks WHERE id IN ({placeholders})",
+                ids,
+            ).fetchall()
+        }
+    finally:
+        conn.close()
+
+    out: list[dict] = []
+    for c in ordered:
+        row = rows.get(c.chunk_id)
+        if not row:
+            continue
+        out.append(
+            {
+                "id": c.chunk_id,
+                "date": row["date"],
+                "text": row["text"],
+                "score": float(c.score),
+                "source": c.source,
+            }
+        )
+    return out
+
+
 def retrieve_chunks(
     question: str,
     top_k: int | None = None,
     *,
     use_vector: bool = True,
+    plan_names: list[str] | None = None,
 ) -> list[dict]:
     """
-    v0.1 主召回：tag_match（entity 高权重 + keyword 计数）∪ 向量检索，加权合并。
+    v0.2 主召回：PlanExecutor 顺序执行 Operator（默认 tag → embedding），再 hydrate。
+    use_vector=False 时强制仅跑 tag（便于无 Chroma 时试跑）。
     """
     retrieval_cfg = resolve_retrieval_config()
-    if top_k is not None:
-        retrieval_cfg.top_k = top_k
+    k = top_k if top_k is not None else retrieval_cfg.top_k
 
-    qside = extract_query_tags(question)
-    tag_hits = tag_match(question, cfg=retrieval_cfg.tag_score, query_side=qside)
+    if plan_names is not None:
+        names = plan_names
+    elif not use_vector:
+        names = ["tag"]
+    else:
+        names = None  # 走 config
 
-    vec_hits: list[dict] = []
-    if use_vector:
-        try:
-            vec_hits = search_similar(question, top_k=retrieval_cfg.top_k)
-        except Exception as exc:
-            print(f"  [warn] 向量检索失败，仅用 tag 路: {exc}")
-
-    if use_vector and vec_hits:
-        return merge_vector_and_tag(vec_hits, tag_hits, retrieval_cfg=retrieval_cfg)
-    return tag_hits[: retrieval_cfg.top_k]
+    plan = build_plan(names, top_k=k) if names is not None else build_plan_from_config(top_k=k)
+    # 若配置含 embedding 但 use_vector=False，上面已强制 tag-only
+    candidates = PlanExecutor().run(question, plan)
+    return hydrate_candidates(candidates, top_k=k)
 
 
 def statistical_query(question: str) -> dict:
@@ -187,17 +222,83 @@ def parse_date_range(question: str) -> tuple[str, str] | None:
     return None
 
 
-def query(question: str, *, use_vector: bool = True) -> dict:
+def save_retrieval_json(result: dict, question: str) -> Path | None:
     """
-    v0.1 统一查询入口：一律走 retrieve_chunks。
-    旧 statistical / summarization 路由不再作为默认分支。
+    把本次召回结果写入 JSON（默认 data/last_retrieval.json）。
+    若配置了 history_dir，再额外存一份带时间戳的副本。
+    """
+    cfg = load_config().get("retrieval") or {}
+    enabled = os.getenv("RETRIEVAL_SAVE_JSON", "").strip().lower()
+    if enabled:
+        save = enabled in {"1", "true", "yes", "on"}
+    else:
+        save = bool(cfg.get("save_json", True))
+    if not save:
+        return None
+
+    payload = {
+        "queried_at": datetime.now(timezone.utc).isoformat(),
+        "question": question,
+        **result,
+    }
+    # chunks 正文可能很长：审阅文件保留全文；如需可后续加 truncate
+
+    log_rel = (
+        os.getenv("RETRIEVAL_LOG_PATH", "").strip()
+        or cfg.get("log_path")
+        or "data/last_retrieval.json"
+    )
+    out = resolve_path(log_rel)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    hist_rel = (
+        os.getenv("RETRIEVAL_HISTORY_DIR", "").strip()
+        or cfg.get("history_dir")
+        or ""
+    )
+    if hist_rel:
+        hist_dir = resolve_path(hist_rel)
+        hist_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        safe_q = "".join(c if c.isalnum() or c in "-_" else "_" for c in question[:24])
+        hist_path = hist_dir / f"{stamp}_{safe_q or 'q'}.json"
+        hist_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    return out
+
+
+def query(
+    question: str,
+    *,
+    use_vector: bool = True,
+    plan_names: list[str] | None = None,
+    save_json: bool | None = None,
+) -> dict:
+    """
+    v0.2 统一查询入口：Engine Plan → hydrate → 可选写入 JSON。
     """
     qside = extract_query_tags(question)
-    chunks = retrieve_chunks(question, use_vector=use_vector)
-    return {
+    if plan_names is not None:
+        names = plan_names
+    elif not use_vector:
+        names = ["tag"]
+    else:
+        names = None
+
+    chunks = retrieve_chunks(question, use_vector=use_vector, plan_names=names)
+    plan = (
+        build_plan(names)
+        if names is not None
+        else build_plan_from_config()
+    )
+    result = {
         "type": "retrieval",
         "count": len(chunks),
         "chunks": chunks,
+        "plan": [op.name for op in plan.operators],
         "query_tags": {
             "entities": qside.entities,
             "keywords": qside.keywords,
@@ -206,21 +307,28 @@ def query(question: str, *, use_vector: bool = True) -> dict:
             "orgs": qside.orgs,
         },
     }
+    if save_json is not False:
+        path = save_retrieval_json(result, question)
+        if path is not None:
+            result["log_path"] = str(path)
+    return result
 
 
 if __name__ == "__main__":
     tests = [
         "碧蓮做了什么",
-        "中秋節去天壇",
         "討論水泥定價",
     ]
     for q in tests:
         result = query(q, use_vector=False)
         print(f"\nQ: {q}")
+        print(f"plan: {result['plan']}")
         print(f"query_tags: {result['query_tags']}")
         print(f"召回: {result['count']} 条")
+        if result.get("log_path"):
+            print(f"JSON → {result['log_path']}")
         for c in result["chunks"][:3]:
             print(
                 f"  [{c.get('date')}] score={c.get('score'):.2f} "
-                f"ent={c.get('entity_hits')} kw={c.get('keyword_hits')}"
+                f"source={c.get('source')} id={c.get('id')}"
             )

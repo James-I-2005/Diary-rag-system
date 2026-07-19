@@ -59,7 +59,11 @@ def cmd_test() -> None:
 
 
 def cmd_chat() -> None:
-    console.print("[bold]个人日记 RAG[/bold] — 输入问题，空行退出\n")
+    from src.answer import generate_answer, reset_conversation
+
+    cid = reset_conversation()
+    console.print("[bold]个人日记 RAG[/bold] — Context Engine 多轮对话")
+    console.print(f"[dim]conversation_id={cid}（召回记忆不写入聊天历史）[/dim]\n")
     while True:
         try:
             question = input("你: ").strip()
@@ -68,7 +72,7 @@ def cmd_chat() -> None:
         if not question:
             break
         console.print("\n[dim]思考中...[/dim]")
-        answer = generate_answer(question)
+        answer = generate_answer(question, conversation_id=cid, use_vector=True)
         console.print(Markdown(f"\n{answer}\n"))
 
 

@@ -58,9 +58,16 @@ python scripts/build_chunk_keywords.py
 # chunk 实体（出现即收录）→ 规则+LLM 清洗 → 合并全局；--ratio 0.05 抽样试跑
 python scripts/build_chunk_entities.py --ratio 0.05
 python scripts/build_chunk_entities.py
-# tag 召回评分试跑（不走向量，省加载时间）
+# tag 召回 / Engine Plan 试跑（不走向量）
 python -m src.query
-# 或：python -c "from src.query import query; print(query('碧蓮', use_vector=False))"
+python -m src.engine
+# 切换 Plan：.env 设 RETRIEVAL_PLAN=tag 或 embedding,tag
+# 召回结果 JSON：data/last_retrieval.json（历史在 data/retrieval_runs/）
+
+# Context Engine 多轮（记忆临时进 Prompt，不进聊天历史）
+python -m src.context
+python main.py chat
+# 调试：data/last_context.json
 
 # 词表/停用词库：导入现有 JSON/txt、状态、PG 增补
 python scripts/sync_lexicon_db.py status
