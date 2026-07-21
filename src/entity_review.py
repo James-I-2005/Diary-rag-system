@@ -385,7 +385,7 @@ def summarize_review(review: EntityReviewResult) -> dict[str, Any]:
     n_rewrite = sum(1 for o in review.ops if o.action == "rewrite")
     n_keep = sum(1 for o in review.ops if o.action == "keep")
     examples = [
-        f"{o.original}→{o.cleaned or '∅'}({o.action}/{o.source})"
+        f"{o.original}->{o.cleaned or '-'}({o.action}/{o.source})"
         for o in review.ops
         if o.action in {"rewrite", "drop"}
     ][:12]

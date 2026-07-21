@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Assistant</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">
+          <span class="logo-icon">📔</span>
+          <span class="logo-text">Memory Assistant</span>
+        </div>
+        <button type="button" class="btn-new-chat" id="btn-new-chat">
+          <span class="icon">+</span>
+          新建聊天
+        </button>
+      </div>
+
+      <nav class="conversation-list" id="conversation-list" aria-label="历史对话">
+        <!-- 动态填充 -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="sidebar-hint">个人日记 RAG</span>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+    <main class="workspace">
+      <header class="workspace-header">
+        <button type="button" class="btn-menu" id="btn-menu" aria-label="打开菜单">☰</button>
+        <h1 class="workspace-title" id="workspace-title">Memory Assistant</h1>
+        <div class="scheme-picker">
+          <label for="scheme-select">检索方案</label>
+          <select id="scheme-select" aria-label="检索方案">
+            <option value="weighted_50_50">Tag + RAG 加权 (0.5/0.5)</option>
+          </select>
+        </div>
+      </header>
+
+      <section class="message-area" id="message-area">
+        <div class="empty-state" id="empty-state">
+          <h2>你好！</h2>
+          <p>今天想回忆些什么？</p>
+          <ul class="example-questions" id="example-questions">
+            <li><button type="button" data-q="碧蓮做了什么？">碧蓮做了什么？</button></li>
+            <li><button type="button" data-q="討論水泥定價的日记有哪些？">討論水泥定價的日记有哪些？</button></li>
+            <li><button type="button" data-q="有没有写过关于藤田君的记录？">有没有写过关于藤田君的记录？</button></li>
+          </ul>
+        </div>
+        <div class="messages" id="messages"></div>
+      </section>
+
+      <footer class="input-area">
+        <div class="input-box">
+          <textarea
+            id="message-input"
+            rows="1"
+            placeholder="输入问题，Enter 发送，Shift+Enter 换行"
+            aria-label="消息输入"
+          ></textarea>
+          <button type="button" class="btn-send" id="btn-send" disabled aria-label="发送">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="input-hint">召回记忆仅用于本轮回答，不会写入聊天历史</p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

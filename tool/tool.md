@@ -58,15 +58,31 @@ python scripts/build_chunk_keywords.py
 # chunk 实体（出现即收录）→ 规则+LLM 清洗 → 合并全局；--ratio 0.05 抽样试跑
 python scripts/build_chunk_entities.py --ratio 0.05
 python scripts/build_chunk_entities.py
+
+# ★ 一键重建楊基振全文离线缓存（正文 + Chroma + 实体 + 词表 + keywords）
+# 推荐首次：跳过实体/词表 LLM，规则清洗即可（快且稳）
+python scripts/build_offline_cache.py --no-entity-llm --no-vocab-llm
+# 已有 md / 已 ingest+embed 时续跑：
+# python scripts/build_offline_cache.py --skip-import --skip-ingest --skip-embed --no-entity-llm --no-vocab-llm
+# 覆盖率检查：
+python scripts/check_db_status.py
 # tag 召回 / Engine Plan 试跑（不走向量）
 python -m src.query
 python -m src.engine
-# 切换 Plan：.env 设 RETRIEVAL_PLAN=tag 或 embedding,tag
+# 切换 Plan / 方案：.env 设 RETRIEVAL_SCHEME=weighted_50_50（默认）
+#   或 union_max / tag_only / embedding_only
+# Web 顶栏可切换检索方案
 # 召回结果 JSON：data/last_retrieval.json（历史在 data/retrieval_runs/）
 
 # Context Engine 多轮（记忆临时进 Prompt，不进聊天历史）
 python -m src.context
 python main.py chat
+# Query Agent 调试（理解 / 重写 / need_retrieval）
+python -m src.query_agent
+# 聊天内命令：/new /list /use <id前缀> /title <名称>
+# Web 界面（ChatGPT 风格）
+python main.py web
+# 浏览器打开 http://127.0.0.1:8765
 # 调试：data/last_context.json
 
 # 词表/停用词库：导入现有 JSON/txt、状态、PG 增补

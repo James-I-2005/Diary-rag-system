@@ -35,3 +35,107 @@ def merge_candidates(
                 parts.append(c.source)
             existing.source = "+".join(parts) if parts else c.source
     return sorted(by_id.values(), key=lambda x: (-x.score, x.chunk_id))
+
+
+def _minmax_norm(scores: list[float]) -> list[float]:
+    if not scores:
+        return []
+    lo, hi = min(scores), max(scores)
+    if hi <= lo:
+        # 全部相同：视为满分，避免加权一路被清零
+        return [1.0] * len(scores)
+    span = hi - lo
+    return [(s - lo) / span for s in scores]
+
+
+def merge_candidates_weighted(
+    tag_hits: list[Candidate],
+    embedding_hits: list[Candidate],
+    *,
+    w_tag: float = 0.5,
+    w_embedding: float = 0.5,
+    top_k: int | None = None,
+) -> list[Candidate]:
+    """
+    Tag + Embedding 加权合并：
+      final = w_tag * norm(tag) + w_embedding * norm(embedding)
+    缺失一路记 0；各自 min-max 归一化到 [0,1]。
+    同分时优先双路命中，并在截断时均衡两路，避免一路占满 top_k。
+    """
+    tag_n = _minmax_norm([float(c.score) for c in tag_hits])
+    emb_n = _minmax_norm([float(c.score) for c in embedding_hits])
+    tag_map = {c.chunk_id: tag_n[i] for i, c in enumerate(tag_hits)}
+    emb_map = {c.chunk_id: emb_n[i] for i, c in enumerate(embedding_hits)}
+
+    ids = set(tag_map) | set(emb_map)
+    out: list[Candidate] = []
+    for cid in ids:
+        nt = tag_map.get(cid, 0.0)
+        ne = emb_map.get(cid, 0.0)
+        sources: list[str] = []
+        if cid in tag_map:
+            sources.append("tag")
+        if cid in emb_map:
+            sources.append("embedding")
+        out.append(
+            Candidate(
+                chunk_id=cid,
+                score=w_tag * nt + w_embedding * ne,
+                source="+".join(sources),
+            )
+        )
+    out.sort(
+        key=lambda x: (
+            -x.score,
+            0 if "+" in (x.source or "") else 1,
+            x.chunk_id,
+        )
+    )
+    if top_k is None or top_k <= 0 or len(out) <= top_k:
+        return out
+    return _balanced_topk(out, top_k)
+
+
+def _balanced_topk(ranked: list[Candidate], k: int) -> list[Candidate]:
+    """截断时：双路优先，其余 tag/embedding 轮询，避免单路占满。"""
+    dual = [c for c in ranked if "+" in (c.source or "")]
+    tag_only = [c for c in ranked if c.source == "tag"]
+    emb_only = [c for c in ranked if c.source == "embedding"]
+    other = [
+        c
+        for c in ranked
+        if c.source not in {"tag", "embedding"} and "+" not in (c.source or "")
+    ]
+
+    selected: list[Candidate] = []
+    seen: set[str] = set()
+
+    def _take(c: Candidate) -> None:
+        if c.chunk_id in seen or len(selected) >= k:
+            return
+        seen.add(c.chunk_id)
+        selected.append(c)
+
+    for c in dual:
+        _take(c)
+        if len(selected) >= k:
+            return selected
+
+    i = j = o = 0
+    while len(selected) < k and (
+        i < len(tag_only) or j < len(emb_only) or o < len(other)
+    ):
+        if i < len(tag_only):
+            _take(tag_only[i])
+            i += 1
+        if len(selected) >= k:
+            break
+        if j < len(emb_only):
+            _take(emb_only[j])
+            j += 1
+        if len(selected) >= k:
+            break
+        if o < len(other):
+            _take(other[o])
+            o += 1
+    return selected

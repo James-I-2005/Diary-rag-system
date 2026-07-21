@@ -11,9 +11,10 @@ from typing import Any
 from src.context.conversation import ConversationManager
 from src.context.engine import ContextEngine
 from src.context.models import BuiltContext, ConversationState
-from src.engine import PlanExecutor, build_plan, build_plan_from_config
+from src.engine import run_scheme
 from src.llm import get_llm_client, get_llm_model
 from src.query import hydrate_candidates, save_retrieval_json
+from src.query_agent import QueryAgent, StructuredQuery
 from src.store import load_config, resolve_path
 from src.tag_retrieve import extract_query_tags, resolve_retrieval_config
 
@@ -24,11 +25,13 @@ class ContextService:
         *,
         conversation: ConversationManager | None = None,
         context_engine: ContextEngine | None = None,
+        query_agent: QueryAgent | None = None,
     ):
         self.conversation = conversation or ConversationManager()
         self.context_engine = context_engine or ContextEngine(
             conversation=self.conversation
         )
+        self.query_agent = query_agent or QueryAgent()
 
     def _retrieve(
         self,
@@ -36,22 +39,37 @@ class ContextService:
         *,
         use_vector: bool = True,
         plan_names: list[str] | None = None,
-    ) -> tuple[list[dict], list[str]]:
+        scheme: str | None = None,
+    ) -> tuple[list[dict], list[str], dict]:
         cfg = resolve_retrieval_config()
-        if plan_names is not None:
-            names = plan_names
-        elif not use_vector:
-            names = ["tag"]
+        # scheme 优先；其次显式 plan_names；use_vector=False 时强制 tag_only
+        if not use_vector and scheme is None and plan_names is None:
+            scheme = "tag_only"
+        if plan_names is not None and scheme is None:
+            # 兼容旧调用：把算子列表当成临时 union_max
+            from src.engine.schemes import RetrievalScheme, run_scheme as _run
+
+            sch = RetrievalScheme(
+                id=",".join(plan_names),
+                label=",".join(plan_names),
+                operators=plan_names,
+                merge="max",
+            )
+            candidates, used = _run(query, sch, top_k=cfg.top_k)
         else:
-            names = None
-        plan = (
-            build_plan(names, top_k=cfg.top_k)
-            if names is not None
-            else build_plan_from_config(top_k=cfg.top_k)
-        )
-        candidates = PlanExecutor().run(query, plan)
+            candidates, used = run_scheme(query, scheme, top_k=cfg.top_k)
+
         chunks = hydrate_candidates(candidates, top_k=cfg.top_k)
-        return chunks, [op.name for op in plan.operators]
+        plan = list(used.operators)
+        meta = used.to_public()
+        return chunks, plan, meta
+
+    def _run_query_agent(
+        self,
+        query: str,
+        state: ConversationState,
+    ) -> StructuredQuery:
+        return self.query_agent.process(query, state=state)
 
     def handle_turn(
         self,
@@ -60,28 +78,43 @@ class ContextService:
         conversation_id: str | None = None,
         use_vector: bool = True,
         plan_names: list[str] | None = None,
+        scheme: str | None = None,
         persist: bool = True,
     ) -> dict[str, Any]:
         """
         完整一轮：
         1) 确保 conversation
-        2) Memory Engine 召回（临时）
-        3) ContextEngine 构图
-        4) LLM 回答
-        5) 仅把 user/assistant 消息写入 Conversation（不含 memories）
+        2) Query Agent → Structured Query
+        3) 按需 Memory Engine 召回（临时）
+        4) ContextEngine 构图
+        5) LLM 回答
+        6) 仅把 user/assistant 消息写入 Conversation（不含 memories）
         """
         cid = self.conversation.get_or_create(conversation_id)
         state = self.conversation.load(cid)
 
-        chunks, plan = self._retrieve(
-            query, use_vector=use_vector, plan_names=plan_names
-        )
-        qside = extract_query_tags(query)
+        structured = self._run_query_agent(query, state)
+
+        scheme_meta: dict = {}
+        if structured.need_retrieval:
+            # 前端/调用方指定的 scheme 优先于 QueryAgent 默认 plan
+            chunks, plan, scheme_meta = self._retrieve(
+                structured.retrieval_query(),
+                use_vector=use_vector,
+                plan_names=None if scheme else (plan_names or structured.retrieval_plan or None),
+                scheme=scheme,
+            )
+        else:
+            chunks, plan = [], []
+
+        qside = extract_query_tags(structured.retrieval_query())
         retrieval_payload = {
-            "type": "retrieval",
+            "type": "retrieval" if structured.need_retrieval else "skipped",
             "count": len(chunks),
             "chunks": chunks,
             "plan": plan,
+            "scheme": scheme_meta,
+            "structured_query": structured.to_dict(),
             "query_tags": {
                 "entities": qside.entities,
                 "keywords": qside.keywords,
@@ -91,6 +124,8 @@ class ContextService:
 
         trace = {
             "plan": plan,
+            "scheme": scheme_meta,
+            "structured_query": structured.to_dict(),
             "candidate_ids": [c["id"] for c in chunks],
             "scores": {c["id"]: c.get("score") for c in chunks},
         }
@@ -131,7 +166,9 @@ class ContextService:
         return {
             "conversation_id": cid,
             "answer": answer,
+            "structured_query": structured.to_dict(),
             "plan": plan,
+            "scheme": scheme_meta,
             "memories_used": [
                 {
                     "chunk_id": m.chunk_id,
@@ -164,7 +201,10 @@ class ContextService:
             print(f"  [warn] LLM 调用失败，降级: {exc}")
 
         if not built.memories:
-            return "未找到相关日记内容，请尝试换个问法。"
+            return (
+                ""
+                
+            )
         lines = [
             f"[{m.date}] {m.text[:120]}…" if len(m.text) > 120 else f"[{m.date}] {m.text}"
             for m in built.memories[:5]

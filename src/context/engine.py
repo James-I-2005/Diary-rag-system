@@ -21,12 +21,11 @@ from src.context.tokens import (
 from src.engine.candidate import Candidate
 from src.store import load_config
 
-DEFAULT_SYSTEM = """你是个人日记记忆助手。根据提供的「召回记忆」与对话上下文回答用户。
-要求：
-1. 仅基于召回记忆与对话，不要编造未出现的事实
-2. 涉及日记内容时标注日期 [YYYY-MM-DD]
-3. 简洁有条理；记忆不足时明确说明
-4. 召回记忆只是本轮参考，不要假定用户永远在谈同一段记忆"""
+DEFAULT_SYSTEM = """你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
+
+系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
+
+仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。"""
 
 
 class ContextEngine:
@@ -184,7 +183,7 @@ class ContextEngine:
             lines.append(line)
             kept.append(m)
             used += t
-        block = "召回记忆（仅本轮参考，非聊天历史）：\n" + "\n\n".join(lines)
+        block = "相关日记片段：\n" + "\n\n".join(lines)
         return kept, block, estimate_tokens(block)
 
     def build(
@@ -248,18 +247,62 @@ class ContextEngine:
         )
 
     def maybe_update_summary(self, state: ConversationState) -> str:
-        """消息过多时生成极简摘要（规则压缩，不调 LLM）。"""
-        threshold = int(self._cfg().get("summarize_after_messages", 20))
+        """消息过多时用 LLM 压缩较早对话为 summary（不写入召回记忆）。"""
+        cfg = self._cfg()
+        threshold = int(cfg.get("summarize_after_messages", 20))
         if len(state.messages) < threshold:
             return state.summary
-        # 取较早消息做压缩，保留 recent 原貌
-        older = state.messages[:- self.recent_turns() * 2]
+
+        keep_n = self.recent_turns() * 2
+        older = state.messages[:-keep_n] if keep_n < len(state.messages) else []
         if not older:
             return state.summary
-        snippets = []
-        for m in older[-12:]:
-            snippets.append(f"{m.role}: {m.content[:80]}")
-        summary = "；".join(snippets)
+
+        # 已摘要过且没有足够新的旧消息 → 跳过，避免每轮打 LLM
+        step = int(cfg.get("summarize_every_messages", 10))
+        covered = int(getattr(state, "summary_upto", 0) or 0)
+        if len(older) - covered < max(1, step) and state.summary:
+            return state.summary
+
+        transcript = "\n".join(
+            f"{m.role}: {m.content}" for m in older[-40:]
+        )
+        prev = state.summary.strip()
+        prompt = f"""你是对话摘要助手。请把下列较早聊天记录压缩成简洁中文摘要（不超过 200 字）。
+保留：用户目标、已确认事实、重要专名/日期、未决问题。不要编造。
+
+{f"已有摘要：{prev}" if prev else ""}
+
+待压缩对话：
+{transcript}
+
+只输出摘要正文，不要标题或解释。"""
+
+        summary = ""
+        try:
+            from src.llm import get_llm_client, get_llm_model
+
+            client = get_llm_client("tags")  # 轻量模型
+            resp = client.chat.completions.create(
+                model=get_llm_model("tags"),
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+            )
+            summary = (resp.choices[0].message.content or "").strip()
+        except Exception as exc:
+            print(f"  [warn] LLM 摘要失败，回退规则压缩: {exc}")
+            snippets = [f"{m.role}:{m.content[:60]}" for m in older[-12:]]
+            summary = "；".join(snippets)
+
         summary = fit_text(summary, self.budget.allot("summary") or 400)
-        self.conversation.update_summary(state.conversation_id, summary)
+        if not summary:
+            return state.summary
+
+        self.conversation.update_summary(
+            state.conversation_id,
+            summary,
+            summary_upto=len(older),
+        )
+        state.summary = summary
+        state.summary_upto = len(older)
         return summary

@@ -31,8 +31,8 @@ class TagScoreConfig:
 @dataclass
 class RetrievalConfig:
     top_k: int = 20
-    w_vector: float = 0.7
-    w_tag: float = 0.3
+    w_vector: float = 0.5
+    w_tag: float = 0.5
     tag_score: TagScoreConfig = field(default_factory=TagScoreConfig)
 
 
@@ -87,8 +87,8 @@ def resolve_retrieval_config() -> RetrievalConfig:
     cfg = load_config().get("retrieval") or {}
     return RetrievalConfig(
         top_k=_env_int("RETRIEVAL_TOP_K", int(cfg.get("top_k", 20))),
-        w_vector=_env_float("RETRIEVAL_W_VECTOR", float(cfg.get("w_vector", 0.7))),
-        w_tag=_env_float("RETRIEVAL_W_TAG", float(cfg.get("w_tag", 0.3))),
+        w_vector=_env_float("RETRIEVAL_W_VECTOR", float(cfg.get("w_vector", 0.5))),
+        w_tag=_env_float("RETRIEVAL_W_TAG", float(cfg.get("w_tag", 0.5))),
         tag_score=resolve_tag_score_config(),
     )
 

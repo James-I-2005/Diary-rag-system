@@ -21,6 +21,7 @@ def _ensure_conversation_tables(conn) -> None:
             id TEXT PRIMARY KEY,
             title TEXT DEFAULT '',
             summary TEXT DEFAULT '',
+            summary_upto INTEGER DEFAULT 0,
             created_at TEXT,
             updated_at TEXT
         );
@@ -48,6 +49,13 @@ def _ensure_conversation_tables(conn) -> None:
         """
     )
     conn.commit()
+    # 兼容旧库
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(conversations)").fetchall()}
+    if "summary_upto" not in cols:
+        conn.execute(
+            "ALTER TABLE conversations ADD COLUMN summary_upto INTEGER DEFAULT 0"
+        )
+        conn.commit()
 
 
 class ConversationManager:
@@ -61,8 +69,9 @@ class ConversationManager:
             _ensure_conversation_tables(conn)
             conn.execute(
                 """
-                INSERT INTO conversations (id, title, summary, created_at, updated_at)
-                VALUES (?, ?, '', ?, ?)
+                INSERT INTO conversations
+                (id, title, summary, summary_upto, created_at, updated_at)
+                VALUES (?, ?, '', 0, ?, ?)
                 """,
                 (cid, title or "chat", now, now),
             )
@@ -70,6 +79,37 @@ class ConversationManager:
         finally:
             conn.close()
         return cid
+
+    def list_conversations(self, *, limit: int = 50) -> list[dict]:
+        conn = get_db()
+        try:
+            _ensure_conversation_tables(conn)
+            rows = conn.execute(
+                """
+                SELECT id, title, summary, summary_upto, created_at, updated_at,
+                       (SELECT COUNT(*) FROM conversation_messages m
+                        WHERE m.conversation_id = c.id) AS n_messages
+                FROM conversations c
+                ORDER BY updated_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    def set_title(self, conversation_id: str, title: str) -> None:
+        conn = get_db()
+        try:
+            _ensure_conversation_tables(conn)
+            conn.execute(
+                "UPDATE conversations SET title = ?, updated_at = ? WHERE id = ?",
+                (title.strip() or "chat", _now(), conversation_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
 
     def get_or_create(self, conversation_id: str | None = None, title: str = "") -> str:
         if conversation_id:
@@ -90,7 +130,7 @@ class ConversationManager:
         try:
             _ensure_conversation_tables(conn)
             row = conn.execute(
-                "SELECT id, summary FROM conversations WHERE id = ?",
+                "SELECT id, summary, summary_upto FROM conversations WHERE id = ?",
                 (conversation_id,),
             ).fetchone()
             if not row:
@@ -104,9 +144,10 @@ class ConversationManager:
                 """,
                 (conversation_id,),
             ).fetchall()
-            return ConversationState(
+            state = ConversationState(
                 conversation_id=row["id"],
                 summary=row["summary"] or "",
+                summary_upto=int(row["summary_upto"] or 0),
                 messages=[
                     Message(
                         id=m["id"],
@@ -117,6 +158,7 @@ class ConversationManager:
                     for m in msgs
                 ],
             )
+            return state
         finally:
             conn.close()
 
@@ -148,14 +190,30 @@ class ConversationManager:
             conn.close()
         return mid
 
-    def update_summary(self, conversation_id: str, summary: str) -> None:
+    def update_summary(
+        self,
+        conversation_id: str,
+        summary: str,
+        *,
+        summary_upto: int | None = None,
+    ) -> None:
         conn = get_db()
         try:
             _ensure_conversation_tables(conn)
-            conn.execute(
-                "UPDATE conversations SET summary = ?, updated_at = ? WHERE id = ?",
-                (summary, _now(), conversation_id),
-            )
+            if summary_upto is None:
+                conn.execute(
+                    "UPDATE conversations SET summary = ?, updated_at = ? WHERE id = ?",
+                    (summary, _now(), conversation_id),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE conversations
+                    SET summary = ?, summary_upto = ?, updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (summary, int(summary_upto), _now(), conversation_id),
+                )
             conn.commit()
         finally:
             conn.close()

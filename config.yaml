@@ -21,12 +21,35 @@ embedding:
   model: "BAAI/bge-small-zh-v1.5"
   batch_size: 32
 
-# 检索（Engine Plan：可组合 Operator；参数可用环境变量覆盖）
+# 检索（Engine Plan / 命名方案；参数可用环境变量覆盖）
 retrieval:
   top_k: 20
-  plan: ["tag", "embedding"]  # 可选 embedding,tag / 仅 tag / 仅 embedding
-  w_vector: 0.7             # 保留：旧加权合并参考（当前并集取 max）
-  w_tag: 0.3
+  # 默认方案：Tag + RAG 各 0.5 加权（可用 RETRIEVAL_SCHEME 覆盖）
+  scheme: "weighted_50_50"
+  plan: ["tag", "embedding"]  # 旧字段：未指定 scheme 时的算子列表兜底
+  w_vector: 0.5             # 加权方案中的 embedding 权重（与 schemes 可分别覆盖）
+  w_tag: 0.5
+  schemes:
+    weighted_50_50:
+      label: "Tag + RAG 加权 (0.5/0.5)"
+      description: "两路归一化后各 0.5 加权"
+      operators: ["tag", "embedding"]
+      merge: "weighted"
+      w_tag: 0.5
+      w_embedding: 0.5
+    union_max:
+      label: "并集取 max"
+      description: "顺序执行，同分取较大值"
+      operators: ["tag", "embedding"]
+      merge: "max"
+    tag_only:
+      label: "仅 Tag"
+      operators: ["tag"]
+      merge: "max"
+    embedding_only:
+      label: "仅 RAG（向量）"
+      operators: ["embedding"]
+      merge: "max"
   save_json: true           # 每次召回写入 JSON，便于审阅
   log_path: "data/last_retrieval.json"
   history_dir: "data/retrieval_runs"  # 同时按时间戳留一份；空则不留历史
@@ -43,8 +66,11 @@ retrieval:
 # Context Engine（对话与 Memory 解耦；召回记忆仅本轮进入 Prompt）
 context:
   system_prompt: |
-    你是个人日记记忆助手。根据「召回记忆」与对话上下文回答用户。
-    仅基于给定材料，标注日期 [YYYY-MM-DD]，不足则说明；召回记忆勿当作永久聊天事实。
+    你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
+
+    系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
+
+    仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。
   recent_message_turns: 8
   total_token_budget: 8000
   budget:
@@ -55,9 +81,18 @@ context:
     query: 0.10
   memory_min_score: 0.0
   memory_max_items: 20
-  summarize_after_messages: 20
+  summarize_after_messages: 20   # 总消息数达到后开始 LLM 压缩较早对话
+  summarize_every_messages: 10   # 较早区每新增约 N 条再压缩一次
   save_debug_json: true
   debug_path: "data/last_context.json"
+
+# Query Agent（Memory Engine 上游：理解 / 重写 / 检索决策）
+query_agent:
+  enabled: true
+  llm_role: "tags"           # 轻量模型即可
+  rule_fast_path: true       # 极短寒暄走规则，省 LLM
+  save_debug_json: true
+  debug_path: "data/last_query.json"
 
 # v0.1 分词与实体（src/tokenize.py）
 tokenize:

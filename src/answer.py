@@ -29,6 +29,7 @@ def generate_answer(
     conversation_id: str | None = None,
     use_vector: bool = True,
     plan_names: list[str] | None = None,
+    scheme: str | None = None,
 ) -> str:
     """
     一轮问答：Memory Engine 召回（临时）→ Context 构图 → LLM。
@@ -41,6 +42,7 @@ def generate_answer(
         conversation_id=cid,
         use_vector=use_vector,
         plan_names=plan_names,
+        scheme=scheme,
         persist=True,
     )
     _default_conversation_id = result["conversation_id"]
@@ -53,6 +55,7 @@ def generate_answer_detailed(
     conversation_id: str | None = None,
     use_vector: bool = True,
     plan_names: list[str] | None = None,
+    scheme: str | None = None,
 ) -> dict:
     """同 generate_answer，返回完整诊断字段。"""
     global _default_conversation_id
@@ -62,6 +65,7 @@ def generate_answer_detailed(
         conversation_id=cid,
         use_vector=use_vector,
         plan_names=plan_names,
+        scheme=scheme,
         persist=True,
     )
     _default_conversation_id = result["conversation_id"]

@@ -1,12 +1,13 @@
-"""Memory Retrieval Engine：Candidate / Operator / Plan / PlanExecutor。"""
+"""Memory Retrieval Engine：Candidate / Operator / Plan / PlanExecutor / Schemes。"""
 
 from __future__ import annotations
 
-from src.engine.candidate import Candidate, merge_candidates
+from src.engine.candidate import Candidate, merge_candidates, merge_candidates_weighted
 from src.engine.executor import PlanExecutor
 from src.engine.operator import Operator
 from src.engine.plan import Plan
 from src.engine.registry import build_plan, build_plan_from_config, resolve_plan_names
+from src.engine.schemes import get_scheme, list_schemes, run_scheme
 
 __all__ = [
     "Candidate",
@@ -14,9 +15,13 @@ __all__ = [
     "Plan",
     "PlanExecutor",
     "merge_candidates",
+    "merge_candidates_weighted",
     "build_plan",
     "build_plan_from_config",
     "resolve_plan_names",
+    "list_schemes",
+    "get_scheme",
+    "run_scheme",
 ]
 
 
@@ -30,9 +35,8 @@ if __name__ == "__main__":
     import json
 
     q = "碧蓮做了什么"
-    plan = build_plan_from_config()
-    print("plan:", [op.name for op in plan.operators])
-    hits = PlanExecutor().run(q, plan)
+    hits, sch = run_scheme(q)
+    print("scheme:", sch.id, sch.label, sch.merge)
     print(f"query={q!r} n={len(hits)}")
     print(
         json.dumps(

@@ -65,6 +65,7 @@ class ConversationState:
     conversation_id: str
     summary: str = ""
     messages: list[Message] = field(default_factory=list)
+    summary_upto: int = 0  # summary 已覆盖的较早消息条数
 
 
 @dataclass

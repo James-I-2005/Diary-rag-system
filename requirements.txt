@@ -14,3 +14,7 @@ rich>=13.7.0          # 终端美化输出
 python-dotenv>=1.0.0  # 从 .env 读取 OPENROUTER_API_KEY
 jieba>=0.42.1         # 中文分词 + 词性（实体抽取）
 psycopg[binary]>=3.1  # 可选：词表/停用词 PostgreSQL 后端
+
+# Web UI
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
