@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from src.engine.candidate import Candidate
 
@@ -17,5 +18,7 @@ class Operator(ABC):
         self,
         query: str,
         candidates: list[Candidate],
+        *,
+        structured: Any = None,
     ) -> list[Candidate]:
         ...

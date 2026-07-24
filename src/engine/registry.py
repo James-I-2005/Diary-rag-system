@@ -7,6 +7,7 @@ import os
 from src.engine.operator import Operator
 from src.engine.operators.embedding import EmbeddingOperator
 from src.engine.operators.tag import TagOperator
+from src.engine.operators.view import ViewOperator
 from src.engine.plan import Plan
 from src.store import load_config
 from src.tag_retrieve import resolve_retrieval_config
@@ -14,6 +15,7 @@ from src.tag_retrieve import resolve_retrieval_config
 _REGISTRY: dict[str, type[Operator]] = {
     "tag": TagOperator,
     "embedding": EmbeddingOperator,
+    "view": ViewOperator,
 }
 
 

@@ -18,6 +18,8 @@ class EmbeddingOperator(Operator):
         self,
         query: str,
         candidates: list[Candidate],
+        *,
+        structured=None,
     ) -> list[Candidate]:
         cfg = resolve_retrieval_config()
         k = self.top_k if self.top_k is not None else cfg.top_k

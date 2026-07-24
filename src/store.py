@@ -98,6 +98,20 @@ def _init_tables(conn: sqlite3.Connection) -> None:
             chunk_count INTEGER,
             processed_at TEXT DEFAULT (datetime('now'))
         );
+
+        CREATE TABLE IF NOT EXISTS memory_views (
+            id TEXT PRIMARY KEY,
+            chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+            view_type TEXT NOT NULL,
+            content TEXT NOT NULL,
+            date TEXT NOT NULL,
+            source_file TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            model_version TEXT DEFAULT 'v0.3'
+        );
+        CREATE INDEX IF NOT EXISTS idx_memory_views_chunk ON memory_views(chunk_id);
+        CREATE INDEX IF NOT EXISTS idx_memory_views_type ON memory_views(view_type);
+        CREATE INDEX IF NOT EXISTS idx_memory_views_date ON memory_views(date);
         """
     )
     # 兼容旧库：补列
@@ -141,6 +155,9 @@ def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         f"DELETE FROM chunk_tags WHERE chunk_id IN ({placeholders})", ids
+    )
+    conn.execute(
+        f"DELETE FROM memory_views WHERE chunk_id IN ({placeholders})", ids
     )
     conn.execute(
         f"DELETE FROM chunks WHERE id IN ({placeholders})", ids

@@ -10,7 +10,6 @@ from src.context.models import (
     Message,
     RetrievedMemory,
 )
-from src.context.service import ContextService
 from src.context.tokens import TokenBudget, estimate_tokens, resolve_token_budget
 
 __all__ = [
@@ -27,7 +26,17 @@ __all__ = [
 ]
 
 
+def __getattr__(name: str):
+    if name == "ContextService":
+        from src.context.service import ContextService
+
+        return ContextService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 if __name__ == "__main__":
+    from src.context.service import ContextService
+
     svc = ContextService()
     r1 = svc.handle_turn("碧蓮做了什么", use_vector=False)
     print("cid:", r1["conversation_id"])

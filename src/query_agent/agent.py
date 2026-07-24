@@ -11,7 +11,13 @@ from typing import Any
 from src.context.models import ConversationState
 from src.engine.registry import resolve_plan_names
 from src.llm import get_llm_client, get_llm_model
-from src.query_agent.models import VALID_INTENTS, Intent, StructuredQuery
+from src.query_agent.models import (
+    INTENT_VIEW_HINTS,
+    VALID_INTENTS,
+    Intent,
+    QueryRepresentation,
+    StructuredQuery,
+)
 from src.store import load_config, resolve_path
 
 _GREETING_RE = re.compile(
@@ -48,6 +54,19 @@ rewritten_query 规则：
 - 不要回答问题，不要复制整段对话，不要加「请检索」等元指令
 - 无指代且表达已清晰时，可轻微整理标点/口语，保留原意
 
+当 need_retrieval=true 时，额外输出：
+- embedding_query：供 Memory View 向量检索的扩展语义句（可含抽象概念、成长主题、价值观等，不要只重复 rewritten_query）
+- query_representation：
+  - semantic_facets：3–8 个语义面向（如「长期投入」「习惯建立」）
+  - view_type_hints：从 event/narrative/growth/identity/future_query 中选 1–3 个
+  - time_range：{"start":"YYYY-MM-DD","end":"YYYY-MM-DD"} 或 null
+  - entity_hints：涉及的人名/实体，无则 []
+
+view_type_hints 参考（可覆盖）：
+- memory_recall → event, narrative
+- memory_search → event, future_query
+- summary → growth, identity, event
+
 若提供了「对话摘要/最近对话」，仅用于消歧与指代消解；摘要与当前句冲突时以当前用户输入为准。
 
 示例：
@@ -55,16 +74,13 @@ rewritten_query 规则：
 → {"need_retrieval":false,"intent":"conversation","rewritten_query":"你好"}
 
 用户：我有没有写过关于焦虑的内容？
-→ {"need_retrieval":true,"intent":"memory_search","rewritten_query":"日记中是否写过与焦虑相关的内容"}
+→ {"need_retrieval":true,"intent":"memory_search","rewritten_query":"日记中是否写过与焦虑相关的内容","embedding_query":"查找日记中关于焦虑、情绪困扰的记录","query_representation":{"semantic_facets":["焦虑","情绪","心理"],"view_type_hints":["event","future_query"],"time_range":null,"entity_hints":[]}}
 
-用户：去年夏天发生了什么？
-→ {"need_retrieval":true,"intent":"summary","rewritten_query":"归纳去年夏天日记中的主要经历与事件"}
+用户：我什么时候开始变得自律？
+→ {"need_retrieval":true,"intent":"summary","rewritten_query":"归纳与自律、习惯养成相关的经历与转折点","embedding_query":"寻找与长期投入、稳定习惯、自我约束、接受成长过程相关的记忆","query_representation":{"semantic_facets":["自律","习惯","长期投入","成长过程"],"view_type_hints":["growth","identity","future_query"],"time_range":null,"entity_hints":[]}}
 
-用户：那次东京旅行怎么样？（上下文刚谈过2019东京行）
-→ {"need_retrieval":true,"intent":"memory_recall","rewritten_query":"2019年东京旅行的经历与感受"}
-
-只输出 JSON：
-{"need_retrieval":true,"intent":"memory_recall","rewritten_query":"..."}"""
+只输出 JSON（conversation 可省略 embedding_query 与 query_representation）：
+{"need_retrieval":true,"intent":"memory_recall","rewritten_query":"...","embedding_query":"...","query_representation":{...}}"""
 
 
 class QueryAgent:
@@ -207,12 +223,24 @@ class QueryAgent:
         need_retrieval = bool(data.get("need_retrieval", True))
         intent = self._normalize_intent(data.get("intent"))
         rewritten = str(data.get("rewritten_query") or original).strip() or original
+        embedding_query = str(data.get("embedding_query") or "").strip()
+        query_rep = QueryRepresentation.from_dict(data.get("query_representation"))
 
         # 与 prompt 约束双保险：intent 决定 need_retrieval
         if intent == "conversation":
             need_retrieval = False
         elif intent in {"summary", "memory_search", "memory_recall", "unknown"}:
             need_retrieval = True
+
+        if need_retrieval:
+            if not embedding_query:
+                embedding_query = rewritten
+            if query_rep is None:
+                query_rep = QueryRepresentation(
+                    view_type_hints=list(INTENT_VIEW_HINTS.get(intent, [])),
+                )
+            elif not query_rep.view_type_hints:
+                query_rep.view_type_hints = list(INTENT_VIEW_HINTS.get(intent, []))
 
         plan = self.default_plan() if need_retrieval else []
 
@@ -222,6 +250,8 @@ class QueryAgent:
             need_retrieval=need_retrieval,
             intent=intent,
             retrieval_plan=plan,
+            query_representation=query_rep,
+            embedding_query=embedding_query if need_retrieval else "",
             source="llm",
             meta={"llm_raw": raw[:500]},
         )

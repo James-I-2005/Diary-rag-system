@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
 class Candidate:
     chunk_id: str
     score: float = 0.0
-    source: str = ""  # 调试用：tag / embedding / tag+embedding
+    source: str = ""  # 调试用：tag / embedding / view / tag+view
+    meta: dict[str, Any] = field(default_factory=dict)
 
 
 def merge_candidates(
@@ -25,6 +27,7 @@ def merge_candidates(
                 chunk_id=c.chunk_id,
                 score=float(c.score),
                 source=c.source or "",
+                meta=dict(c.meta) if c.meta else {},
             )
             continue
         if float(c.score) > existing.score:
@@ -34,6 +37,8 @@ def merge_candidates(
             if c.source not in parts:
                 parts.append(c.source)
             existing.source = "+".join(parts) if parts else c.source
+        if c.meta:
+            existing.meta.update(c.meta)
     return sorted(by_id.values(), key=lambda x: (-x.score, x.chunk_id))
 
 
@@ -46,6 +51,56 @@ def _minmax_norm(scores: list[float]) -> list[float]:
         return [1.0] * len(scores)
     span = hi - lo
     return [(s - lo) / span for s in scores]
+
+
+def merge_candidates_weighted_paths(
+    paths: dict[str, list[Candidate]],
+    weights: dict[str, float],
+    *,
+    top_k: int | None = None,
+) -> list[Candidate]:
+    """多路归一化加权合并；paths/weights 的 key 应对齐（如 tag、embedding、view）。"""
+    norm_maps: dict[str, dict[str, float]] = {}
+    for name, hits in paths.items():
+        norm_maps[name] = {
+            c.chunk_id: s
+            for c, s in zip(hits, _minmax_norm([float(c.score) for c in hits]))
+        }
+
+    ids: set[str] = set()
+    for m in norm_maps.values():
+        ids |= set(m.keys())
+
+    out: list[Candidate] = []
+    for cid in ids:
+        score = 0.0
+        sources: list[str] = []
+        meta: dict = {}
+        for name, w in weights.items():
+            if cid in norm_maps.get(name, {}):
+                score += w * norm_maps[name][cid]
+                sources.append(name)
+                for c in paths.get(name, []):
+                    if c.chunk_id == cid and c.meta:
+                        meta.update(c.meta)
+        out.append(
+            Candidate(
+                chunk_id=cid,
+                score=score,
+                source="+".join(sources),
+                meta=meta,
+            )
+        )
+    out.sort(
+        key=lambda x: (
+            -x.score,
+            0 if "+" in (x.source or "") else 1,
+            x.chunk_id,
+        )
+    )
+    if top_k is None or top_k <= 0 or len(out) <= top_k:
+        return out
+    return _balanced_topk(out, top_k)
 
 
 def merge_candidates_weighted(
@@ -101,10 +156,12 @@ def _balanced_topk(ranked: list[Candidate], k: int) -> list[Candidate]:
     dual = [c for c in ranked if "+" in (c.source or "")]
     tag_only = [c for c in ranked if c.source == "tag"]
     emb_only = [c for c in ranked if c.source == "embedding"]
+    view_only = [c for c in ranked if c.source == "view"]
     other = [
         c
         for c in ranked
-        if c.source not in {"tag", "embedding"} and "+" not in (c.source or "")
+        if c.source not in {"tag", "embedding", "view"}
+        and "+" not in (c.source or "")
     ]
 
     selected: list[Candidate] = []
@@ -121,9 +178,9 @@ def _balanced_topk(ranked: list[Candidate], k: int) -> list[Candidate]:
         if len(selected) >= k:
             return selected
 
-    i = j = o = 0
+    i = j = v = o = 0
     while len(selected) < k and (
-        i < len(tag_only) or j < len(emb_only) or o < len(other)
+        i < len(tag_only) or j < len(emb_only) or v < len(view_only) or o < len(other)
     ):
         if i < len(tag_only):
             _take(tag_only[i])
@@ -133,6 +190,11 @@ def _balanced_topk(ranked: list[Candidate], k: int) -> list[Candidate]:
         if j < len(emb_only):
             _take(emb_only[j])
             j += 1
+        if len(selected) >= k:
+            break
+        if v < len(view_only):
+            _take(view_only[v])
+            v += 1
         if len(selected) >= k:
             break
         if o < len(other):

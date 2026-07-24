@@ -6,7 +6,12 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.engine.candidate import Candidate, merge_candidates, merge_candidates_weighted
+from src.engine.candidate import (
+    Candidate,
+    merge_candidates,
+    merge_candidates_weighted,
+    merge_candidates_weighted_paths,
+)
 from src.engine.registry import create_operator
 from src.store import load_config
 from src.tag_retrieve import resolve_retrieval_config
@@ -20,6 +25,20 @@ _BUILTIN_SCHEMES: dict[str, dict[str, Any]] = {
         "merge": "weighted",
         "w_tag": 0.5,
         "w_embedding": 0.5,
+    },
+    "tag_view_weighted": {
+        "label": "Tag + View 加权 (0.5/0.5)",
+        "description": "实体关键词 + Memory View 语义",
+        "operators": ["tag", "view"],
+        "merge": "weighted",
+        "w_tag": 0.5,
+        "w_view": 0.5,
+    },
+    "view_only": {
+        "label": "仅 Memory View",
+        "description": "Memory View 语义检索",
+        "operators": ["view"],
+        "merge": "max",
     },
     "union_max": {
         "label": "并集取 max（旧默认）",
@@ -39,6 +58,12 @@ _BUILTIN_SCHEMES: dict[str, dict[str, Any]] = {
         "operators": ["embedding"],
         "merge": "max",
     },
+    "triple_max": {
+        "label": "Tag + RAG + View 并集",
+        "description": "三路独立召回后并集取 max",
+        "operators": ["tag", "embedding", "view"],
+        "merge": "max",
+    },
 }
 
 
@@ -51,6 +76,7 @@ class RetrievalScheme:
     merge: str = "max"  # max | weighted
     w_tag: float = 0.5
     w_embedding: float = 0.5
+    w_view: float = 0.5
 
     def to_public(self) -> dict[str, Any]:
         return {
@@ -61,6 +87,7 @@ class RetrievalScheme:
             "merge": self.merge,
             "w_tag": self.w_tag,
             "w_embedding": self.w_embedding,
+            "w_view": self.w_view,
         }
 
 
@@ -79,6 +106,7 @@ def _parse_scheme(sid: str, raw: dict[str, Any]) -> RetrievalScheme:
         merge=merge,
         w_tag=float(raw.get("w_tag", 0.5)),
         w_embedding=float(raw.get("w_embedding", raw.get("w_vector", 0.5))),
+        w_view=float(raw.get("w_view", 0.5)),
     )
 
 
@@ -92,7 +120,6 @@ def list_schemes() -> list[RetrievalScheme]:
                 base = dict(merged.get(k) or {})
                 base.update(v)
                 merged[k] = base
-    # 保持内置顺序，再追加仅自定义的
     order = list(_BUILTIN_SCHEMES.keys())
     for k in merged:
         if k not in order:
@@ -113,8 +140,7 @@ def get_scheme(scheme_id: str | None = None) -> RetrievalScheme:
     by_id = {s.id: s for s in list_schemes()}
     if sid in by_id:
         return by_id[sid]
-    # 兼容：把 "tag,embedding" 当作 union_max 风格临时方案
-    if "," in sid or sid in {"tag", "embedding"}:
+    if "," in sid or sid in {"tag", "embedding", "view"}:
         ops = [n.strip().lower() for n in sid.split(",") if n.strip()]
         return RetrievalScheme(
             id=sid,
@@ -122,17 +148,33 @@ def get_scheme(scheme_id: str | None = None) -> RetrievalScheme:
             operators=ops,
             merge="max",
         )
-    # 未知 → 默认
     default_id = resolve_default_scheme_id()
     if default_id in by_id:
         return by_id[default_id]
     return list_schemes()[0]
 
 
+def _resolve_op_query(name: str, query: str, structured: Any) -> str:
+    if structured is not None and name == "view":
+        vq = getattr(structured, "view_retrieval_query", None)
+        if callable(vq):
+            text = vq()
+            if text.strip():
+                return text.strip()
+    if structured is not None and name == "tag":
+        rq = getattr(structured, "retrieval_query", None)
+        if callable(rq):
+            text = rq()
+            if text.strip():
+                return text.strip()
+    return query
+
+
 def run_scheme(
     query: str,
     scheme: RetrievalScheme | str | None = None,
     *,
+    structured: Any = None,
     top_k: int | None = None,
 ) -> tuple[list[Candidate], RetrievalScheme]:
     """按方案独立跑各 Operator，再按 merge 策略合并。"""
@@ -143,31 +185,46 @@ def run_scheme(
     per_op: dict[str, list[Candidate]] = {}
     for name in sch.operators:
         op = create_operator(name, top_k=k)
-        # 独立执行：不把上一算子结果传入，避免 max 链式污染加权
-        per_op[name] = op.execute(query=query, candidates=[])
+        op_query = _resolve_op_query(name, query, structured)
+        per_op[name] = op.execute(
+            query=op_query, candidates=[], structured=structured
+        )
 
     if sch.merge == "weighted" and len(sch.operators) >= 2:
-        tag_hits = per_op.get("tag") or []
-        emb_hits = per_op.get("embedding") or []
-        # 若方案含其他算子，先 max 并入对应侧或单独并
+        op_set = set(sch.operators)
+        if op_set == {"tag", "embedding"}:
+            merged = merge_candidates_weighted(
+                per_op.get("tag") or [],
+                per_op.get("embedding") or [],
+                w_tag=sch.w_tag,
+                w_embedding=sch.w_embedding,
+                top_k=k,
+            )
+        elif op_set == {"tag", "view"}:
+            merged = merge_candidates_weighted_paths(
+                {"tag": per_op.get("tag") or [], "view": per_op.get("view") or []},
+                {"tag": sch.w_tag, "view": sch.w_view},
+                top_k=k,
+            )
+        else:
+            weights = {}
+            paths = {}
+            for name in sch.operators:
+                w = getattr(sch, f"w_{name}", 1.0 / len(sch.operators))
+                weights[name] = w
+                paths[name] = per_op.get(name) or []
+            merged = merge_candidates_weighted_paths(paths, weights, top_k=k)
+
         others = [
             c
             for n, hits in per_op.items()
-            if n not in {"tag", "embedding"}
+            if n not in sch.operators[:2]
             for c in hits
         ]
-        merged = merge_candidates_weighted(
-            tag_hits,
-            emb_hits,
-            w_tag=sch.w_tag,
-            w_embedding=sch.w_embedding,
-            top_k=k,
-        )
         if others:
             merged = merge_candidates(merged, others)[:k]
         return merged, sch
 
-    # max：顺序并集取 max（与旧 PlanExecutor 行为一致）
     candidates: list[Candidate] = []
     for name in sch.operators:
         candidates = merge_candidates(candidates, per_op.get(name) or [])

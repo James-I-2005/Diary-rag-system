@@ -17,6 +17,8 @@ class TagOperator(Operator):
         self,
         query: str,
         candidates: list[Candidate],
+        *,
+        structured=None,
     ) -> list[Candidate]:
         cfg = resolve_tag_score_config()
         if self.top_k is not None:

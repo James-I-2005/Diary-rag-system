@@ -38,6 +38,17 @@ def get_chroma_collection():
     )
 
 
+def get_views_collection():
+    cfg = load_config()
+    chroma_dir = str(resolve_path(cfg["data"]["chroma_dir"]))
+    coll_name = (cfg.get("memory_views") or {}).get("chroma_collection", "diary_views")
+    client = chromadb.PersistentClient(path=chroma_dir)
+    return client.get_or_create_collection(
+        name=coll_name,
+        metadata={"hnsw:space": "cosine"},
+    )
+
+
 def _upsert_rows(rows) -> int:
     if not rows:
         return 0
@@ -150,6 +161,134 @@ def search_by_date_range(
         include=["documents", "metadatas", "distances"],
     )
     return _parse_query_results(results)
+
+
+def index_views(records: list | None = None) -> int:
+    """将 memory_views 写入 Chroma diary_views；records 为空则全量索引。"""
+    from src.memory_views import MemoryViewRecord, fetch_views_for_index
+
+    if records is None:
+        records = fetch_views_for_index()
+    if not records:
+        print("没有 Memory View 可索引")
+        return 0
+
+    rows = []
+    for r in records:
+        if isinstance(r, MemoryViewRecord):
+            rows.append(r)
+        else:
+            rows.append(
+                MemoryViewRecord(
+                    id=r["id"],
+                    chunk_id=r["chunk_id"],
+                    view_type=r["view_type"],
+                    content=r["content"],
+                    date=r["date"],
+                    source_file=r.get("source_file") or "",
+                    model_version=r.get("model_version") or "v0.3",
+                )
+            )
+
+    ids = [r.id for r in rows]
+    texts = [r.content for r in rows]
+    metadatas = [
+        {
+            "chunk_id": r.chunk_id,
+            "view_type": r.view_type,
+            "date": r.date,
+            "source_file": r.source_file or "",
+        }
+        for r in rows
+    ]
+
+    print(f"嵌入 {len(texts)} 个 Memory View ...")
+    embeddings = embed_texts(texts)
+    collection = get_views_collection()
+    collection.upsert(
+        ids=ids,
+        embeddings=embeddings,
+        documents=texts,
+        metadatas=metadatas,
+    )
+    return collection.count()
+
+
+def delete_views_from_chroma(view_ids: list[str]) -> None:
+    if not view_ids:
+        return
+    collection = get_views_collection()
+    if collection.count() == 0:
+        return
+    collection.delete(ids=view_ids)
+
+
+def _parse_view_query_results(results: dict) -> list[dict]:
+    hits: list[dict] = []
+    if not results["ids"] or not results["ids"][0]:
+        return hits
+    for i in range(len(results["ids"][0])):
+        meta = results["metadatas"][0][i]
+        hits.append(
+            {
+                "view_id": results["ids"][0][i],
+                "text": results["documents"][0][i],
+                "chunk_id": meta.get("chunk_id", ""),
+                "view_type": meta.get("view_type", ""),
+                "date": meta.get("date", ""),
+                "distance": results["distances"][0][i],
+                "score": 1 - results["distances"][0][i],
+            }
+        )
+    return hits
+
+
+def search_views(
+    query: str,
+    top_k: int | None = None,
+    *,
+    view_types: list[str] | None = None,
+    date_start: str | None = None,
+    date_end: str | None = None,
+) -> list[dict]:
+    """Memory View ANN 检索。"""
+    cfg = load_config()
+    mv_cfg = cfg.get("memory_views") or {}
+    base_k = top_k or cfg["retrieval"]["top_k"]
+    multiplier = int(mv_cfg.get("view_ann_multiplier", 3))
+    k = max(base_k * multiplier, 30)
+
+    collection = get_views_collection()
+    if collection.count() == 0:
+        return []
+
+    query_embedding = embed_texts([query])[0]
+    where: dict | None = None
+    clauses: list[dict] = []
+    if view_types:
+        if len(view_types) == 1:
+            clauses.append({"view_type": view_types[0]})
+        else:
+            clauses.append({"view_type": {"$in": view_types}})
+    if date_start:
+        clauses.append({"date": {"$gte": date_start}})
+    if date_end:
+        clauses.append({"date": {"$lte": date_end}})
+    if len(clauses) == 1:
+        where = clauses[0]
+    elif len(clauses) > 1:
+        where = {"$and": clauses}
+
+    kwargs: dict = {
+        "query_embeddings": [query_embedding],
+        "n_results": min(k, collection.count()),
+        "include": ["documents", "metadatas", "distances"],
+    }
+    if where:
+        kwargs["where"] = where
+
+    results = collection.query(**kwargs)
+    return _parse_view_query_results(results)
 
 
 if __name__ == "__main__":

@@ -102,6 +102,7 @@ def hydrate_candidates(candidates: list, *, top_k: int | None = None) -> list[di
                 "text": row["text"],
                 "score": float(c.score),
                 "source": c.source,
+                "matched_views": (c.meta or {}).get("matched_views") or [],
             }
         )
     return out

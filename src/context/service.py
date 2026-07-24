@@ -14,7 +14,8 @@ from src.context.models import BuiltContext, ConversationState
 from src.engine import run_scheme
 from src.llm import get_llm_client, get_llm_model
 from src.query import hydrate_candidates, save_retrieval_json
-from src.query_agent import QueryAgent, StructuredQuery
+from src.query_agent.agent import QueryAgent
+from src.query_agent.models import StructuredQuery
 from src.store import load_config, resolve_path
 from src.tag_retrieve import extract_query_tags, resolve_retrieval_config
 
@@ -37,16 +38,15 @@ class ContextService:
         self,
         query: str,
         *,
+        structured: StructuredQuery | None = None,
         use_vector: bool = True,
         plan_names: list[str] | None = None,
         scheme: str | None = None,
     ) -> tuple[list[dict], list[str], dict]:
         cfg = resolve_retrieval_config()
-        # scheme 优先；其次显式 plan_names；use_vector=False 时强制 tag_only
         if not use_vector and scheme is None and plan_names is None:
             scheme = "tag_only"
         if plan_names is not None and scheme is None:
-            # 兼容旧调用：把算子列表当成临时 union_max
             from src.engine.schemes import RetrievalScheme, run_scheme as _run
 
             sch = RetrievalScheme(
@@ -55,9 +55,13 @@ class ContextService:
                 operators=plan_names,
                 merge="max",
             )
-            candidates, used = _run(query, sch, top_k=cfg.top_k)
+            candidates, used = _run(
+                query, sch, structured=structured, top_k=cfg.top_k
+            )
         else:
-            candidates, used = run_scheme(query, scheme, top_k=cfg.top_k)
+            candidates, used = run_scheme(
+                query, scheme, structured=structured, top_k=cfg.top_k
+            )
 
         chunks = hydrate_candidates(candidates, top_k=cfg.top_k)
         plan = list(used.operators)
@@ -100,6 +104,7 @@ class ContextService:
             # 前端/调用方指定的 scheme 优先于 QueryAgent 默认 plan
             chunks, plan, scheme_meta = self._retrieve(
                 structured.retrieval_query(),
+                structured=structured,
                 use_vector=use_vector,
                 plan_names=None if scheme else (plan_names or structured.retrieval_plan or None),
                 scheme=scheme,

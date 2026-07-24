@@ -25,6 +25,8 @@ DEFAULT_SYSTEM = """你是用户的陪伴型助手：可以闲聊生活、想法
 
 系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
 
+若记忆块含「相关视角」，那是检索到的语义视角；「原文证据」是日记原文。可综合推理，抽象结论需有视角或原文支撑。
+
 仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。"""
 
 
@@ -170,7 +172,24 @@ class ContextEngine:
         kept: list[RetrievedMemory] = []
         used = 0
         for m in memories:
-            line = f"[{m.date or '????-??-??'}] (score={m.score:.2f}, {m.source or '-'}) {m.text}"
+            if m.matched_views:
+                view_lines = []
+                for v in m.matched_views[:3]:
+                    vtype = v.get("view_type") or v.get("type") or "view"
+                    vtext = str(v.get("content") or "")[:200]
+                    view_lines.append(f"- [{vtype}] {vtext}")
+                body = (
+                    f"[{m.date or '????-??-??'}] chunk_id={m.chunk_id} "
+                    f"(score={m.score:.2f}, {m.source or '-'})\n"
+                    f"相关视角：\n" + "\n".join(view_lines) + "\n"
+                    f"原文证据：\n{m.text}"
+                )
+            else:
+                body = (
+                    f"[{m.date or '????-??-??'}] "
+                    f"(score={m.score:.2f}, {m.source or '-'}) {m.text}"
+                )
+            line = body
             t = estimate_tokens(line)
             if used + t > max_tokens:
                 remain = max_tokens - used
@@ -183,7 +202,7 @@ class ContextEngine:
             lines.append(line)
             kept.append(m)
             used += t
-        block = "相关日记片段：\n" + "\n\n".join(lines)
+        block = "相关记忆片段：\n" + "\n\n".join(lines)
         return kept, block, estimate_tokens(block)
 
     def build(

@@ -50,6 +50,21 @@ retrieval:
       label: "仅 RAG（向量）"
       operators: ["embedding"]
       merge: "max"
+    tag_view_weighted:
+      label: "Tag + View 加权 (0.5/0.5)"
+      description: "实体关键词 + Memory View 语义"
+      operators: ["tag", "view"]
+      merge: weighted
+      w_tag: 0.5
+      w_view: 0.5
+    view_only:
+      label: "仅 Memory View"
+      operators: ["view"]
+      merge: max
+    triple_max:
+      label: "Tag + RAG + View 并集"
+      operators: ["tag", "embedding", "view"]
+      merge: max
   save_json: true           # 每次召回写入 JSON，便于审阅
   log_path: "data/last_retrieval.json"
   history_dir: "data/retrieval_runs"  # 同时按时间戳留一份；空则不留历史
@@ -69,6 +84,8 @@ context:
     你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
 
     系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
+
+    若记忆块含「相关视角」，那是检索到的语义视角；「原文证据」是日记原文。可综合推理，抽象结论需有视角或原文支撑。
 
     仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。
   recent_message_turns: 8
@@ -93,6 +110,16 @@ query_agent:
   rule_fast_path: true       # 极短寒暄走规则，省 LLM
   save_debug_json: true
   debug_path: "data/last_query.json"
+
+# Memory Views（v0.3：Chunk → 多视角语义表示 → diary_views 向量索引）
+memory_views:
+  max_views_per_chunk: 6
+  model_version: "v0.3"
+  chroma_collection: "diary_views"
+  view_ann_multiplier: 3
+  extraction:
+    llm_role: "tags"
+    batch_size: 8
 
 # v0.1 分词与实体（src/tokenize.py）
 tokenize:

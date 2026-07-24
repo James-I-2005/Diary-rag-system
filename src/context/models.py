@@ -32,6 +32,8 @@ class RetrievedMemory:
     source: str = ""
     date: str = ""
     text: str = ""
+    matched_views: list[dict] = field(default_factory=list)
+    evidence_text: str = ""
 
     @classmethod
     def from_candidate(
@@ -51,12 +53,18 @@ class RetrievedMemory:
 
     @classmethod
     def from_hydrated(cls, row: dict[str, Any]) -> RetrievedMemory:
+        text = str(row.get("text") or "")
+        views = row.get("matched_views") or []
+        if not isinstance(views, list):
+            views = []
         return cls(
             chunk_id=str(row.get("id") or row.get("chunk_id") or ""),
             score=float(row.get("score") or 0.0),
             source=str(row.get("source") or ""),
             date=str(row.get("date") or ""),
-            text=str(row.get("text") or ""),
+            text=text,
+            matched_views=views,
+            evidence_text=text,
         )
 
 
