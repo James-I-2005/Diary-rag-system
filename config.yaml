@@ -31,8 +31,8 @@ retrieval:
   w_tag: 0.5
   schemes:
     weighted_50_50:
-      label: "Tag + RAG 加权 (0.5/0.5)"
-      description: "两路归一化后各 0.5 加权"
+      label: "Tag + Sentence 加权 (0.5/0.5)"
+      description: "Tag 展开 sentence + rag-sentence 向量加权"
       operators: ["tag", "embedding"]
       merge: "weighted"
       w_tag: 0.5
@@ -47,24 +47,9 @@ retrieval:
       operators: ["tag"]
       merge: "max"
     embedding_only:
-      label: "仅 RAG（向量）"
+      label: "仅 Sentence 向量"
       operators: ["embedding"]
       merge: "max"
-    tag_view_weighted:
-      label: "Tag + View 加权 (0.5/0.5)"
-      description: "实体关键词 + Memory View 语义"
-      operators: ["tag", "view"]
-      merge: weighted
-      w_tag: 0.5
-      w_view: 0.5
-    view_only:
-      label: "仅 Memory View"
-      operators: ["view"]
-      merge: max
-    triple_max:
-      label: "Tag + RAG + View 并集"
-      operators: ["tag", "embedding", "view"]
-      merge: max
   save_json: true           # 每次召回写入 JSON，便于审阅
   log_path: "data/last_retrieval.json"
   history_dir: "data/retrieval_runs"  # 同时按时间戳留一份；空则不留历史
@@ -78,17 +63,17 @@ retrieval:
     min_score: 0.0
     top_k: 50               # TagOperator 召回上限
 
-# Context Engine（对话与 Memory 解耦；召回记忆仅本轮进入 Prompt）
+# Context Engine（会话短期记忆 = 滑动窗口 + 溢出摘要；日记召回仅本轮临时进 Prompt）
 context:
   system_prompt: |
     你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
 
-    系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
+    系统有时会附上检索到的日记原文，以及「命中理由」（匹配到的改写句子）。有材料时自然融入回答；没有材料时照常陪聊，不要拒答。
 
-    若记忆块含「相关视角」，那是检索到的语义视角；「原文证据」是日记原文。可综合推理，抽象结论需有视角或原文支撑。
-
-    仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。
-  recent_message_turns: 8
+    抽象结论需有原文或命中理由支撑。仅在用户明确追问日记且材料不足时说明查无——仍可继续聊，别硬编。
+  # 会话内短期记忆：滑动窗口保留最近 N 轮（一轮 ≈ user+assistant，即最多 2N 条消息）
+  session_window_turns: 10
+  recent_message_turns: 10   # 兼容旧键；优先读 session_window_turns
   total_token_budget: 8000
   budget:
     system: 0.10
@@ -98,28 +83,31 @@ context:
     query: 0.10
   memory_min_score: 0.0
   memory_max_items: 20
-  summarize_after_messages: 20   # 总消息数达到后开始 LLM 压缩较早对话
-  summarize_every_messages: 10   # 较早区每新增约 N 条再压缩一次
+  # 超出窗口后：默认每有新溢出就 LLM 摘要；>1 时先用短摘录顶住，攒满 N 条再压缩
+  summarize_every_messages: 1
   save_debug_json: true
   debug_path: "data/last_context.json"
 
-# Query Agent（Memory Engine 上游：理解 / 重写 / 检索决策）
+# Query Agent（改写 + 拆成 query rag-sentences；不做意图路由）
 query_agent:
   enabled: true
-  llm_role: "tags"           # 轻量模型即可
-  rule_fast_path: true       # 极短寒暄走规则，省 LLM
+  llm_role: "tags"
   save_debug_json: true
   debug_path: "data/last_query.json"
 
-# Memory Views（v0.3：Chunk → 多视角语义表示 → diary_views 向量索引）
+# Paraphrase / rag-sentence（v0.4：检索基元）
+paraphrase:
+  max_sentences_per_chunk: 30
+  model_version: "rag-sentence-v1"
+  chroma_collection: "diary_sentences"
+  llm_role: "tags"
+
+# Memory Views（v0.3 已退役，保留配置仅兼容旧数据）
 memory_views:
+  deprecated: true
   max_views_per_chunk: 6
   model_version: "v0.3"
   chroma_collection: "diary_views"
-  view_ann_multiplier: 3
-  extraction:
-    llm_role: "tags"
-    batch_size: 8
 
 # v0.1 分词与实体（src/tokenize.py）
 tokenize:

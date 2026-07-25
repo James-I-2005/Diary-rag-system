@@ -1,4 +1,4 @@
-"""Embedding 召回算子：独立向量检索，与入参 Candidate 并集合并。"""
+"""Embedding 召回算子：ANN on rag-sentences。"""
 
 from __future__ import annotations
 
@@ -31,9 +31,13 @@ class EmbeddingOperator(Operator):
 
         new = [
             Candidate(
-                chunk_id=h["id"],
+                unit_id=h["id"],
                 score=float(h.get("score") or 0.0),
                 source="embedding",
+                meta={
+                    "parent_chunk_id": h.get("chunk_id") or "",
+                    "sentence_text": h.get("text") or "",
+                },
             )
             for h in hits
             if h.get("id")

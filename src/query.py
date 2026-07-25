@@ -69,40 +69,162 @@ def filter_by_tags(filters: dict) -> list[dict]:
     return [{"id": r["id"], "date": r["date"], "text": r["text"]} for r in rows]
 
 
+# 句子池相对最终 chunk top_k 的倍率，避免同 chunk 多句挤占名额后 chunk 数不足
+_SENTENCE_POOL_MULTIPLIER = 3
+
+
+def sentence_pool_size(chunk_top_k: int) -> int:
+    """Operator 侧多取一些句子，留给 hydrate 按 chunk 聚合。"""
+    k = max(int(chunk_top_k), 1)
+    return max(k * _SENTENCE_POOL_MULTIPLIER, k)
+
+
 def hydrate_candidates(candidates: list, *, top_k: int | None = None) -> list[dict]:
-    """Candidate → 带 date/text 的 chunk dict（Engine 之外补全文）。"""
+    """
+    sentence 候选 → 按父 chunk 聚合为召回单位。
+
+    - 匹配基元仍是 rag-sentence；任一句子命中即带上整个 chunk
+    - 每条输出：text=chunk 全文，score=组内最高分，matched_sentences=命中理由
+    - top_k 按 chunk 计数（去重后）
+    """
     if not candidates:
         return []
     retrieval_cfg = resolve_retrieval_config()
     k = top_k if top_k is not None else retrieval_cfg.top_k
-    ordered = candidates[:k]
-    ids = [c.chunk_id for c in ordered]
+
+    ids = [c.unit_id for c in candidates if getattr(c, "unit_id", None)]
+    if not ids:
+        return []
+
     conn = get_db()
     try:
         placeholders = ",".join("?" * len(ids))
-        rows = {
+        sent_rows = {
             r["id"]: r
             for r in conn.execute(
-                f"SELECT id, date, text FROM chunks WHERE id IN ({placeholders})",
+                f"""SELECT id, chunk_id, text, date FROM rag_sentences
+                    WHERE id IN ({placeholders})""",
                 ids,
             ).fetchall()
         }
+        # fallback：unit_id 可能是未 paraphrase 的 chunk_id
+        missing = [i for i in ids if i not in sent_rows]
+        chunk_fallback: dict = {}
+        if missing:
+            ph2 = ",".join("?" * len(missing))
+            chunk_fallback = {
+                r["id"]: r
+                for r in conn.execute(
+                    f"SELECT id, date, text FROM chunks WHERE id IN ({ph2})",
+                    missing,
+                ).fetchall()
+            }
+        parent_ids = list(
+            {
+                *(r["chunk_id"] for r in sent_rows.values()),
+                *chunk_fallback.keys(),
+            }
+        )
+        chunk_texts: dict[str, str] = {}
+        chunk_dates: dict[str, str] = {}
+        if parent_ids:
+            ph3 = ",".join("?" * len(parent_ids))
+            for r in conn.execute(
+                f"SELECT id, date, text FROM chunks WHERE id IN ({ph3})",
+                parent_ids,
+            ).fetchall():
+                chunk_texts[r["id"]] = r["text"] or ""
+                chunk_dates[r["id"]] = r["date"] or ""
+        for cid, row in chunk_fallback.items():
+            chunk_texts.setdefault(cid, row["text"] or "")
+            chunk_dates.setdefault(cid, row["date"] or "")
     finally:
         conn.close()
 
-    out: list[dict] = []
-    for c in ordered:
-        row = rows.get(c.chunk_id)
-        if not row:
+    # chunk_id → 聚合状态
+    groups: dict[str, dict] = {}
+    for c in candidates:
+        uid = getattr(c, "unit_id", None)
+        if not uid:
             continue
+        score = float(getattr(c, "score", 0.0) or 0.0)
+        source = str(getattr(c, "source", "") or "")
+        sent = sent_rows.get(uid)
+        if sent:
+            parent = sent["chunk_id"]
+            hit = {
+                "id": uid,
+                "text": sent["text"] or "",
+                "score": score,
+                "source": source,
+            }
+            date = sent["date"] or chunk_dates.get(parent, "")
+        elif uid in chunk_fallback:
+            parent = uid
+            # 无 paraphrase：整段 chunk 既是匹配也是正文，不单独列命中句
+            hit = None
+            date = chunk_fallback[uid]["date"] or chunk_dates.get(parent, "")
+        else:
+            continue
+
+        g = groups.get(parent)
+        if g is None:
+            groups[parent] = {
+                "chunk_id": parent,
+                "score": score,
+                "source": source,
+                "date": date,
+                "matched_sentences": [hit] if hit else [],
+            }
+            continue
+
+        if score > g["score"]:
+            g["score"] = score
+        if source and source not in g["source"].split("+"):
+            parts = [p for p in g["source"].split("+") if p]
+            if source not in parts:
+                parts.append(source)
+            g["source"] = "+".join(parts) if parts else source
+        if not g["date"] and date:
+            g["date"] = date
+        if hit:
+            # 同句重复命中：保留更高分
+            existing = next(
+                (s for s in g["matched_sentences"] if s["id"] == hit["id"]),
+                None,
+            )
+            if existing is None:
+                g["matched_sentences"].append(hit)
+            elif hit["score"] > existing["score"]:
+                existing["score"] = hit["score"]
+                if hit["source"]:
+                    existing["source"] = hit["source"]
+
+    ranked = sorted(
+        groups.values(),
+        key=lambda g: (-float(g["score"]), g.get("date") or "", g["chunk_id"]),
+    )[:k]
+
+    out: list[dict] = []
+    for g in ranked:
+        cid = g["chunk_id"]
+        full = chunk_texts.get(cid, "")
+        hits = sorted(
+            g["matched_sentences"],
+            key=lambda s: (-float(s["score"]), s["id"]),
+        )
         out.append(
             {
-                "id": c.chunk_id,
-                "date": row["date"],
-                "text": row["text"],
-                "score": float(c.score),
-                "source": c.source,
-                "matched_views": (c.meta or {}).get("matched_views") or [],
+                "id": cid,
+                "unit_id": cid,
+                "chunk_id": cid,
+                "date": g["date"] or chunk_dates.get(cid, ""),
+                "text": full,
+                "score": float(g["score"]),
+                "source": g["source"],
+                "matched_sentences": hits,
+                # 兼容旧字段：正文即 chunk，证据与 text 相同
+                "evidence_text": full,
             }
         )
     return out
@@ -116,11 +238,12 @@ def retrieve_chunks(
     plan_names: list[str] | None = None,
 ) -> list[dict]:
     """
-    v0.2 主召回：PlanExecutor 顺序执行 Operator（默认 tag → embedding），再 hydrate。
+    主召回：Operator 在 sentence 上匹配 → hydrate 按 chunk 聚合。
     use_vector=False 时强制仅跑 tag（便于无 Chroma 时试跑）。
     """
     retrieval_cfg = resolve_retrieval_config()
     k = top_k if top_k is not None else retrieval_cfg.top_k
+    pool = sentence_pool_size(k)
 
     if plan_names is not None:
         names = plan_names
@@ -129,8 +252,7 @@ def retrieve_chunks(
     else:
         names = None  # 走 config
 
-    plan = build_plan(names, top_k=k) if names is not None else build_plan_from_config(top_k=k)
-    # 若配置含 embedding 但 use_vector=False，上面已强制 tag-only
+    plan = build_plan(names, top_k=pool) if names is not None else build_plan_from_config(top_k=pool)
     candidates = PlanExecutor().run(question, plan)
     return hydrate_candidates(candidates, top_k=k)
 

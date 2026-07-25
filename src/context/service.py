@@ -13,7 +13,7 @@ from src.context.engine import ContextEngine
 from src.context.models import BuiltContext, ConversationState
 from src.engine import run_scheme
 from src.llm import get_llm_client, get_llm_model
-from src.query import hydrate_candidates, save_retrieval_json
+from src.query import hydrate_candidates, save_retrieval_json, sentence_pool_size
 from src.query_agent.agent import QueryAgent
 from src.query_agent.models import StructuredQuery
 from src.store import load_config, resolve_path
@@ -44,6 +44,7 @@ class ContextService:
         scheme: str | None = None,
     ) -> tuple[list[dict], list[str], dict]:
         cfg = resolve_retrieval_config()
+        pool = sentence_pool_size(cfg.top_k)
         if not use_vector and scheme is None and plan_names is None:
             scheme = "tag_only"
         if plan_names is not None and scheme is None:
@@ -56,11 +57,11 @@ class ContextService:
                 merge="max",
             )
             candidates, used = _run(
-                query, sch, structured=structured, top_k=cfg.top_k
+                query, sch, structured=structured, top_k=pool
             )
         else:
             candidates, used = run_scheme(
-                query, scheme, structured=structured, top_k=cfg.top_k
+                query, scheme, structured=structured, top_k=pool
             )
 
         chunks = hydrate_candidates(candidates, top_k=cfg.top_k)
@@ -88,14 +89,18 @@ class ContextService:
         """
         完整一轮：
         1) 确保 conversation
-        2) Query Agent → Structured Query
-        3) 按需 Memory Engine 召回（临时）
-        4) ContextEngine 构图
-        5) LLM 回答
-        6) 仅把 user/assistant 消息写入 Conversation（不含 memories）
+        2) 会话短期记忆：溢出滑动窗口 → 更新 summary
+        3) Query Agent → Structured Query
+        4) 按需 Memory Engine 召回（临时；非跨会话长期记忆）
+        5) Context Builder 构图：System + Summary + Recent + Memories + Query
+        6) LLM 回答
+        7) 仅把 user/assistant 消息写入 Conversation（不含 memories）
         """
         cid = self.conversation.get_or_create(conversation_id)
         state = self.conversation.load(cid)
+
+        # 先维护会话短期记忆：窗口外旧对话 → summary，再参与本轮构图
+        self.context_engine.ensure_summary(state)
 
         structured = self._run_query_agent(query, state)
 
@@ -135,7 +140,8 @@ class ContextService:
             "scores": {c["id"]: c.get("score") for c in chunks},
         }
 
-        built = self.context_engine.build(
+        # Context Builder：System + Summary + Recent(窗口) + Memories + Query
+        built = self.context_engine.build_context(
             query=query,
             state=state,
             memories=chunks,
@@ -162,9 +168,6 @@ class ContextService:
                     for c in chunks
                 ],
             )
-            # 刷新 summary（规则）
-            state2 = self.conversation.load(cid)
-            self.context_engine.maybe_update_summary(state2)
 
         self._save_context_debug(built, query, cid)
 
@@ -176,10 +179,19 @@ class ContextService:
             "scheme": scheme_meta,
             "memories_used": [
                 {
+                    "unit_id": m.unit_id,
                     "chunk_id": m.chunk_id,
                     "date": m.date,
                     "score": m.score,
                     "source": m.source,
+                    "matched_sentences": [
+                        {
+                            "id": h.get("id"),
+                            "score": h.get("score"),
+                            "text": h.get("text"),
+                        }
+                        for h in (m.matched_sentences or [])
+                    ],
                 }
                 for m in built.memories
             ],

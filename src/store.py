@@ -112,6 +112,19 @@ def _init_tables(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_memory_views_chunk ON memory_views(chunk_id);
         CREATE INDEX IF NOT EXISTS idx_memory_views_type ON memory_views(view_type);
         CREATE INDEX IF NOT EXISTS idx_memory_views_date ON memory_views(date);
+
+        CREATE TABLE IF NOT EXISTS rag_sentences (
+            id TEXT PRIMARY KEY,
+            chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+            text TEXT NOT NULL,
+            sent_index INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            source_file TEXT,
+            model_version TEXT DEFAULT 'rag-sentence-v1',
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_rag_sentences_chunk ON rag_sentences(chunk_id);
+        CREATE INDEX IF NOT EXISTS idx_rag_sentences_date ON rag_sentences(date);
         """
     )
     # 兼容旧库：补列
@@ -158,6 +171,9 @@ def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         f"DELETE FROM memory_views WHERE chunk_id IN ({placeholders})", ids
+    )
+    conn.execute(
+        f"DELETE FROM rag_sentences WHERE chunk_id IN ({placeholders})", ids
     )
     conn.execute(
         f"DELETE FROM chunks WHERE id IN ({placeholders})", ids

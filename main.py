@@ -20,9 +20,18 @@ def cmd_ingest() -> None:
 
 
 def cmd_index() -> None:
-    from src.embed import index_all_chunks
+    from src.embed import index_sentences
 
-    index_all_chunks()
+    total = index_sentences()
+    console.print(f"[green]sentence 索引完成[/green]，共 {total} 条")
+
+
+def cmd_sentences() -> None:
+    """chunk → rag-sentence → Chroma。"""
+    from src.paraphrase.pipeline import run_paraphrase_pipeline
+
+    result = run_paraphrase_pipeline()
+    console.print(f"[green]paraphrase 完成[/green] {result}")
 
 
 def cmd_tags() -> None:
@@ -32,21 +41,48 @@ def cmd_tags() -> None:
 
 
 def cmd_update() -> None:
-    """增量更新：新日记 → 嵌入 → 标签。"""
-    from src.embed import index_new_chunks
+    """增量更新：新日记 → paraphrase → 嵌入 → 标签。"""
+    from src.embed import index_sentences_for_chunks
     from src.extract_tags import extract_tags_for_ids
     from src.ingest import ingest_incremental
+    from src.paraphrase.agent import paraphrase_chunk
+    from src.rag_sentences import save_sentences_for_chunk
+    from src.store import get_db
 
-    console.print("1/3 导入新日记...")
+    console.print("1/4 导入新日记...")
     new_ids = ingest_incremental()
     if not new_ids:
         console.print("没有新内容")
         return
 
-    console.print(f"2/3 嵌入 {len(new_ids)} 个新 chunk...")
-    index_new_chunks(new_ids)
+    console.print(f"2/4 paraphrase {len(new_ids)} 个 chunk...")
+    conn = get_db()
+    try:
+        placeholders = ",".join("?" * len(new_ids))
+        rows = conn.execute(
+            f"SELECT id, date, text, source_file FROM chunks WHERE id IN ({placeholders})",
+            new_ids,
+        ).fetchall()
+    finally:
+        conn.close()
+    for row in rows:
+        try:
+            result = paraphrase_chunk(row["id"], row["text"], date=row["date"] or "")
+            if result.sentences:
+                save_sentences_for_chunk(
+                    row["id"],
+                    result.sentences,
+                    date=row["date"] or "",
+                    source_file=row["source_file"] or "",
+                )
+                console.print(f"  [ok] {row['id']}: {len(result.sentences)}")
+        except Exception as exc:
+            console.print(f"  [fail] {row['id']}: {exc}")
 
-    console.print("3/3 提取标签...")
+    console.print("3/4 嵌入 sentences...")
+    index_sentences_for_chunks(new_ids)
+
+    console.print("4/4 提取标签...")
     extract_tags_for_ids(new_ids)
 
     console.print("[green]更新完成[/green]")
@@ -135,7 +171,7 @@ def main() -> None:
         "command",
         nargs="?",
         default="chat",
-        help="ingest | index | tags | update | test | chat | web | 或直接提问",
+        help="ingest | index | tags | sentences | update | test | chat | web | 或直接提问",
     )
     parser.add_argument("--host", default="127.0.0.1", help="web 服务监听地址")
     parser.add_argument("--port", type=int, default=8765, help="web 服务端口")
@@ -147,6 +183,7 @@ def main() -> None:
         "ingest": cmd_ingest,
         "index": cmd_index,
         "tags": cmd_tags,
+        "sentences": cmd_sentences,
         "update": cmd_update,
         "test": cmd_test,
         "chat": cmd_chat,

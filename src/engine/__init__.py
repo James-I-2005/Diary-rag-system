@@ -40,7 +40,7 @@ if __name__ == "__main__":
     print(f"query={q!r} n={len(hits)}")
     print(
         json.dumps(
-            [{"chunk_id": c.chunk_id, "score": c.score, "source": c.source} for c in hits[:5]],
+            [{"unit_id": c.unit_id, "score": c.score, "source": c.source} for c in hits[:5]],
             ensure_ascii=False,
             indent=2,
         )

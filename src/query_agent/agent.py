@@ -1,4 +1,4 @@
-"""Query Agent：理解意图、重写查询、输出 StructuredQuery。"""
+"""Query Agent：改写用户问题，并拆成 query rag-sentences。除此之外不做路由/意图判断。"""
 
 from __future__ import annotations
 
@@ -11,80 +11,57 @@ from typing import Any
 from src.context.models import ConversationState
 from src.engine.registry import resolve_plan_names
 from src.llm import get_llm_client, get_llm_model
-from src.query_agent.models import (
-    INTENT_VIEW_HINTS,
-    VALID_INTENTS,
-    Intent,
-    QueryRepresentation,
-    StructuredQuery,
-)
+from src.query_agent.models import StructuredQuery
 from src.store import load_config, resolve_path
 
-_GREETING_RE = re.compile(
-    r"^(你好|您好|嗨|哈喽|早上好|下午好|晚上好|在吗|在不在|"
-    r"谢谢|多谢|感谢|好的|ok|okay|嗯|嗯嗯|哈哈+|呵呵+|"
-    r"你是谁|你叫什么|介绍一下自己)[\s!！?？。~～]*$",
-    re.IGNORECASE,
-)
+_QUERY_PROMPT = """你是 Query Agent。不回答用户，只处理用户问题，并严格输出一个 JSON 对象（不要 markdown）。
 
-_UNDERSTAND_PROMPT = """你是 Query Agent。不回答用户，只做查询理解，并严格输出一个 JSON 对象（不要 markdown）。
+你只做两件事：
 
-字段：
-- need_retrieval: bool  是否需要检索个人日记
-- intent: string        见下方枚举
-- rewritten_query: string  始终填写；供检索/下游使用的自包含查询
+## 1. rewritten_query（改写）
 
-intent 枚举与互斥（按顺序判定，命中即停）：
-1. conversation — 寒暄、感谢、闲聊、问助手身份；与日记内容无关
-2. summary — 要求归纳/统计/偏好/一段时间概况（「总结一下」「这段时间怎么样」「我最常…」）
-3. memory_search — 查有无记录、是否写过某主题/关键词（「有没有写过」「日记里提过吗」）
-4. memory_recall — 回忆具体经历、人物、事件、时间点（「…发生了什么」「谁/何时/何地」）
-5. unknown — 无法归入以上，但可能与日记有关
+把用户原话改写成更易被检索与模型理解的表述：
+- 抽出隐含意思，补全指代（结合对话上下文中的「后来呢/那次/他」等）
+- 删除修辞、口语填充、重复、无意义过渡语
+- 不编造用户没说的事实；不要回答问题本身
 
-need_retrieval 约束：
-- conversation → false
-- summary / memory_search / memory_recall → true
-- unknown → true（宁可检索）
-- 不确定是否需检索 → true
+## 2. query_sentences（Query RAG-Sentence）
 
-rewritten_query 规则：
-- conversation：可与用户原文相同
-- 需要检索时：写成可独立理解的检索问句；结合对话上下文消解「后来呢/那次/他」等指代
-- 只补全指代与必要时间/人物线索，不编造日记里没有的事实
-- 不要回答问题，不要复制整段对话，不要加「请检索」等元指令
-- 无指代且表达已清晰时，可轻微整理标点/口语，保留原意
+参考 RAG-Sentence 规范，把改写后的查询意图拆成若干条检索友好的句子：
+1. 每句表达一个相对独立、完整的语义单元
+2. 脱离上下文也能理解；主语明确，代词还原为具体对象
+3. 保留人物、对象、事件、观点、原因、感受、结论等检索线索
+4. 删除修辞与填充；保持自然语言，不要列表/编号/JSON
+5. 互不相关的语义拆开；共同表达一个完整意思的可合并
+6. 不补充原文没有的信息
+7. 合起来应覆盖改写后查询的主要检索意图
 
-当 need_retrieval=true 时，额外输出：
-- embedding_query：供 Memory View 向量检索的扩展语义句（可含抽象概念、成长主题、价值观等，不要只重复 rewritten_query）
-- query_representation：
-  - semantic_facets：3–8 个语义面向（如「长期投入」「习惯建立」）
-  - view_type_hints：从 event/narrative/growth/identity/future_query 中选 1–3 个
-  - time_range：{"start":"YYYY-MM-DD","end":"YYYY-MM-DD"} 或 null
-  - entity_hints：涉及的人名/实体，无则 []
+## 输出 JSON（仅这两个业务字段）
 
-view_type_hints 参考（可覆盖）：
-- memory_recall → event, narrative
-- memory_search → event, future_query
-- summary → growth, identity, event
-
-若提供了「对话摘要/最近对话」，仅用于消歧与指代消解；摘要与当前句冲突时以当前用户输入为准。
+{
+  "rewritten_query": "……",
+  "query_sentences": [
+    "……",
+    "……"
+  ]
+}
 
 示例：
-用户：你好
-→ {"need_retrieval":false,"intent":"conversation","rewritten_query":"你好"}
+用户：那次打羽毛球被小胖墩夸了，心里还挺美的，后来是不是也没啥期待结果反而还行？
+→
+{
+  "rewritten_query": "回忆某次羽毛球被卷发小胖墩夸奖以及当天期待落空却感觉不错的经历",
+  "query_sentences": [
+    "用户询问某次羽毛球运动中被卷发小胖墩夸奖的经历。",
+    "用户询问当天原本没有期待但实际感觉不错的经历。"
+  ]
+}
 
-用户：我有没有写过关于焦虑的内容？
-→ {"need_retrieval":true,"intent":"memory_search","rewritten_query":"日记中是否写过与焦虑相关的内容","embedding_query":"查找日记中关于焦虑、情绪困扰的记录","query_representation":{"semantic_facets":["焦虑","情绪","心理"],"view_type_hints":["event","future_query"],"time_range":null,"entity_hints":[]}}
-
-用户：我什么时候开始变得自律？
-→ {"need_retrieval":true,"intent":"summary","rewritten_query":"归纳与自律、习惯养成相关的经历与转折点","embedding_query":"寻找与长期投入、稳定习惯、自我约束、接受成长过程相关的记忆","query_representation":{"semantic_facets":["自律","习惯","长期投入","成长过程"],"view_type_hints":["growth","identity","future_query"],"time_range":null,"entity_hints":[]}}
-
-只输出 JSON（conversation 可省略 embedding_query 与 query_representation）：
-{"need_retrieval":true,"intent":"memory_recall","rewritten_query":"...","embedding_query":"...","query_representation":{...}}"""
+只输出 JSON，不要其它文字。"""
 
 
 class QueryAgent:
-    """Memory Runtime 入口：Raw Query → Structured Query。"""
+    """Raw Query → 改写 + query rag-sentences。"""
 
     def __init__(self) -> None:
         self._cfg = self._load_cfg()
@@ -103,12 +80,6 @@ class QueryAgent:
             os.getenv("QUERY_AGENT_LLM_ROLE", "").strip()
             or str(self._cfg.get("llm_role") or "tags")
         )
-
-    def rule_fast_path(self) -> bool:
-        env = os.getenv("QUERY_AGENT_RULE_FAST_PATH", "").strip().lower()
-        if env:
-            return env in {"1", "true", "yes", "on"}
-        return bool(self._cfg.get("rule_fast_path", True))
 
     def default_plan(self) -> list[str]:
         try:
@@ -129,8 +100,8 @@ class QueryAgent:
             return StructuredQuery(
                 original_query=raw_query,
                 rewritten_query=raw_query,
+                query_sentences=[],
                 need_retrieval=False,
-                intent="conversation",
                 retrieval_plan=[],
                 source="rule",
             )
@@ -138,22 +109,17 @@ class QueryAgent:
         if not self.enabled():
             return self._passthrough(original)
 
-        if self.rule_fast_path():
-            ruled = self._try_rule(original)
-            if ruled is not None:
-                self._save_debug(ruled, state)
-                return ruled
-
         try:
             structured = self._llm_process(original, state=state)
         except Exception as exc:
-            print(f"  [warn] Query Agent LLM 失败，降级 recall 优先: {exc}")
+            print(f"  [warn] Query Agent LLM 失败，降级原文: {exc}")
             structured = StructuredQuery(
                 original_query=original,
                 rewritten_query=original,
+                query_sentences=[original],
                 need_retrieval=True,
-                intent="unknown",
                 retrieval_plan=self.default_plan(),
+                embedding_query=original,
                 source="fallback",
                 meta={"error": str(exc)},
             )
@@ -165,32 +131,30 @@ class QueryAgent:
         return StructuredQuery(
             original_query=original,
             rewritten_query=original,
+            query_sentences=[original],
             need_retrieval=True,
-            intent="unknown",
             retrieval_plan=self.default_plan(),
+            embedding_query=original,
             source="disabled",
         )
 
-    def _try_rule(self, text: str) -> StructuredQuery | None:
-        t = text.strip()
-        if len(t) <= 16 and _GREETING_RE.match(t):
-            return StructuredQuery(
-                original_query=text,
-                rewritten_query=text,
-                need_retrieval=False,
-                intent="conversation",
-                retrieval_plan=[],
-                source="rule",
-            )
-        return None
+    def _session_window_turns(self) -> int:
+        ctx = load_config().get("context") or {}
+        if "session_window_turns" in ctx:
+            return max(1, int(ctx["session_window_turns"]))
+        return max(1, int(ctx.get("recent_message_turns", 10)))
 
     def _format_context(self, state: ConversationState | None) -> str:
+        """与 Context Builder 一致：摘要 + 滑动窗口内最近对话。"""
         if not state:
             return ""
         parts: list[str] = []
         if state.summary.strip():
             parts.append(f"对话摘要：{state.summary.strip()}")
-        recent = state.messages[-6:]
+        n = self._session_window_turns() * 2
+        recent = state.messages[-n:] if n > 0 else []
+        # Query Agent 只需少量近期原文即可消解指代，最多取窗口内末 6 条
+        recent = recent[-6:]
         if recent:
             lines = [f"{m.role}: {m.content}" for m in recent]
             parts.append("最近对话：\n" + "\n".join(lines))
@@ -212,7 +176,7 @@ class QueryAgent:
         resp = client.chat.completions.create(
             model=get_llm_model(self.llm_role()),
             messages=[
-                {"role": "system", "content": _UNDERSTAND_PROMPT},
+                {"role": "system", "content": _QUERY_PROMPT},
                 {"role": "user", "content": user_content},
             ],
             temperature=0.1,
@@ -220,41 +184,38 @@ class QueryAgent:
         raw = (resp.choices[0].message.content or "").strip()
         data = self._parse_json(raw)
 
-        need_retrieval = bool(data.get("need_retrieval", True))
-        intent = self._normalize_intent(data.get("intent"))
         rewritten = str(data.get("rewritten_query") or original).strip() or original
-        embedding_query = str(data.get("embedding_query") or "").strip()
-        query_rep = QueryRepresentation.from_dict(data.get("query_representation"))
-
-        # 与 prompt 约束双保险：intent 决定 need_retrieval
-        if intent == "conversation":
-            need_retrieval = False
-        elif intent in {"summary", "memory_search", "memory_recall", "unknown"}:
-            need_retrieval = True
-
-        if need_retrieval:
-            if not embedding_query:
-                embedding_query = rewritten
-            if query_rep is None:
-                query_rep = QueryRepresentation(
-                    view_type_hints=list(INTENT_VIEW_HINTS.get(intent, [])),
-                )
-            elif not query_rep.view_type_hints:
-                query_rep.view_type_hints = list(INTENT_VIEW_HINTS.get(intent, []))
-
-        plan = self.default_plan() if need_retrieval else []
+        sentences = self._normalize_sentences(
+            data.get("query_sentences"), fallback=rewritten
+        )
+        embedding_query = "\n".join(sentences)
 
         return StructuredQuery(
             original_query=original,
             rewritten_query=rewritten,
-            need_retrieval=need_retrieval,
-            intent=intent,
-            retrieval_plan=plan,
-            query_representation=query_rep,
-            embedding_query=embedding_query if need_retrieval else "",
+            query_sentences=sentences,
+            need_retrieval=True,
+            retrieval_plan=self.default_plan(),
+            embedding_query=embedding_query,
             source="llm",
-            meta={"llm_raw": raw[:500]},
+            meta={"llm_raw": raw[:800]},
         )
+
+    def _normalize_sentences(self, raw: Any, *, fallback: str) -> list[str]:
+        out: list[str] = []
+        if isinstance(raw, list):
+            for item in raw:
+                s = str(item or "").strip()
+                if s:
+                    out.append(s)
+        elif isinstance(raw, str) and raw.strip():
+            for line in raw.splitlines():
+                s = line.strip()
+                if s:
+                    out.append(s)
+        if not out:
+            out = [fallback.strip()] if fallback.strip() else []
+        return out[:20]
 
     def _parse_json(self, text: str) -> dict[str, Any]:
         text = text.strip()
@@ -273,20 +234,6 @@ class QueryAgent:
             if isinstance(data, dict):
                 return data
         raise ValueError(f"无法解析 Query Agent JSON: {text[:200]}")
-
-    def _normalize_intent(self, raw: Any) -> Intent:
-        key = str(raw or "unknown").strip().lower().replace("-", "_")
-        if key in VALID_INTENTS:
-            return key  # type: ignore[return-value]
-        aliases = {
-            "chat": "conversation",
-            "greeting": "conversation",
-            "recall": "memory_recall",
-            "search": "memory_search",
-            "summarize": "summary",
-            "summarization": "summary",
-        }
-        return aliases.get(key, "unknown")  # type: ignore[return-value]
 
     def _save_debug(
         self,

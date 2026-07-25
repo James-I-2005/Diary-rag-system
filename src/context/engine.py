@@ -1,4 +1,13 @@
-"""Context Engine：组合 Conversation + Retrieved Memories → LLM messages。"""
+"""Context Engine / Context Builder：组合会话短期记忆 + 本轮召回 → LLM messages。
+
+Prompt 流水线（与会话记忆策略一致）：
+
+    System Prompt
+  + Conversation Summary      ← 超出滑动窗口的旧对话压缩
+  + Recent Messages           ← 窗口内原文（默认 10 轮）
+  + Retrieved Memories        ← 本轮日记召回，临时，不入会话历史
+  + Current User Query
+"""
 
 from __future__ import annotations
 
@@ -23,17 +32,20 @@ from src.store import load_config
 
 DEFAULT_SYSTEM = """你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
 
-系统有时会附上相关日记片段和对话上下文。有材料时，把它们当作「记得的事」自然融入回答，涉及具体经历时顺手带上日期；没有材料或材料对不上时，照常陪聊、共情、追问，不要因此拒答或说「无法提供更多信息」。
+系统有时会附上检索到的日记原文，以及「命中理由」（匹配到的改写句子）。有材料时自然融入回答；没有材料时照常陪聊，不要拒答。
 
-若记忆块含「相关视角」，那是检索到的语义视角；「原文证据」是日记原文。可综合推理，抽象结论需有视角或原文支撑。
-
-仅在用户明确追问「日记里有没有 / 当时具体怎样」且材料不足时，才说明日记里没找到可靠依据——此时仍可继续聊，别硬编日记事实。"""
+抽象结论需有原文或命中理由支撑。仅在用户明确追问日记且材料不足时说明查无——仍可继续聊，别硬编。"""
 
 
 class ContextEngine:
     """
     不负责检索；只消费 Memory Engine 的 Candidate / 已 hydrate 的记忆，
     并结合 ConversationState 构建最终 Prompt。
+
+    会话记忆（本模块职责）：
+    - 短期：滑动窗口内原文（session_window_turns）
+    - 溢出：压缩为 conversation summary
+    不实现跨会话长期记忆 / 用户画像。
     """
 
     def __init__(
@@ -55,11 +67,21 @@ class ContextEngine:
             or DEFAULT_SYSTEM
         )
 
-    def recent_turns(self) -> int:
-        raw = os.getenv("CONTEXT_RECENT_TURNS", "").strip()
+    def session_window_turns(self) -> int:
+        """滑动窗口大小（轮）。优先 session_window_turns，兼容 recent_message_turns。"""
+        raw = os.getenv("CONTEXT_SESSION_WINDOW_TURNS", "").strip() or os.getenv(
+            "CONTEXT_RECENT_TURNS", ""
+        ).strip()
         if raw:
-            return int(raw)
-        return int(self._cfg().get("recent_message_turns", 8))
+            return max(1, int(raw))
+        cfg = self._cfg()
+        if "session_window_turns" in cfg:
+            return max(1, int(cfg["session_window_turns"]))
+        return max(1, int(cfg.get("recent_message_turns", 10)))
+
+    def recent_turns(self) -> int:
+        """兼容旧调用名。"""
+        return self.session_window_turns()
 
     def memory_min_score(self) -> float:
         raw = os.getenv("CONTEXT_MEMORY_MIN_SCORE", "").strip()
@@ -93,7 +115,6 @@ class ContextEngine:
             hydrated = hydrate_candidates(list(items))  # type: ignore[arg-type]
             return [RetrievedMemory.from_hydrated(h) for h in hydrated]
 
-        # dict（query.retrieve_chunks 返回）
         out: list[RetrievedMemory] = []
         for m in items:
             if isinstance(m, RetrievedMemory):
@@ -108,7 +129,7 @@ class ContextEngine:
         min_score = self.memory_min_score()
         max_items = self.memory_max_items()
         filtered = [m for m in memories if m.score >= min_score and m.text.strip()]
-        filtered.sort(key=lambda m: (-m.score, m.date, m.chunk_id))
+        filtered.sort(key=lambda m: (-m.score, m.date, m.unit_id))
         return filtered[:max_items]
 
     def rank_memories(
@@ -124,16 +145,16 @@ class ContextEngine:
             return []
         hint = ""
         if state:
-            hint = (state.summary or "") + " " + " ".join(
-                m.content for m in state.messages[-4:]
-            )
+            window = self.session_window_turns()
+            recent = self.conversation.recent_messages(state, max_turns=window)
+            hint = (state.summary or "") + " " + " ".join(m.content for m in recent[-4:])
         scored: list[tuple[float, RetrievedMemory]] = []
         for m in memories:
             bonus = 0.0
             if m.date and m.date in hint:
                 bonus = 0.05
             scored.append((m.score + bonus, m))
-        scored.sort(key=lambda x: (-x[0], x[1].date, x[1].chunk_id))
+        scored.sort(key=lambda x: (-x[0], x[1].date, x[1].unit_id))
         return [m for _, m in scored]
 
     def _pack_recent(
@@ -172,23 +193,26 @@ class ContextEngine:
         kept: list[RetrievedMemory] = []
         used = 0
         for m in memories:
-            if m.matched_views:
-                view_lines = []
-                for v in m.matched_views[:3]:
-                    vtype = v.get("view_type") or v.get("type") or "view"
-                    vtext = str(v.get("content") or "")[:200]
-                    view_lines.append(f"- [{vtype}] {vtext}")
-                body = (
-                    f"[{m.date or '????-??-??'}] chunk_id={m.chunk_id} "
-                    f"(score={m.score:.2f}, {m.source or '-'})\n"
-                    f"相关视角：\n" + "\n".join(view_lines) + "\n"
-                    f"原文证据：\n{m.text}"
-                )
+            header = (
+                f"[{m.date or '????-??-??'}] id={m.chunk_id or m.unit_id} "
+                f"(score={m.score:.2f}, {m.source or '-'})"
+            )
+            hits = getattr(m, "matched_sentences", None) or []
+            if hits:
+                reason_lines = []
+                for h in hits[:8]:
+                    ht = str(h.get("text") or "").strip()
+                    if not ht:
+                        continue
+                    hs = float(h.get("score") or 0.0)
+                    reason_lines.append(f"- ({hs:.2f}) {ht}")
+                reasons = "\n".join(reason_lines)
+                if reasons:
+                    body = f"{header}\n原文：{m.text}\n命中理由：\n{reasons}"
+                else:
+                    body = f"{header}\n原文：{m.text}"
             else:
-                body = (
-                    f"[{m.date or '????-??-??'}] "
-                    f"(score={m.score:.2f}, {m.source or '-'}) {m.text}"
-                )
+                body = f"{header}\n{m.text}"
             line = body
             t = estimate_tokens(line)
             if used + t > max_tokens:
@@ -202,7 +226,9 @@ class ContextEngine:
             lines.append(line)
             kept.append(m)
             used += t
-        block = "相关记忆片段：\n" + "\n\n".join(lines)
+        block = "【本轮检索到的相关记忆】（仅供本次回答参考，不是聊天记录）\n" + "\n\n".join(
+            lines
+        )
         return kept, block, estimate_tokens(block)
 
     def build(
@@ -213,15 +239,44 @@ class ContextEngine:
         memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
         retrieval_trace: dict[str, Any] | None = None,
     ) -> BuiltContext:
+        """
+        Context Builder：按流水线组装最终 LLM messages。
+
+        1. System Prompt
+        2. Conversation Summary（窗口外旧对话）
+        3. Recent Messages（滑动窗口内原文）
+        4. Retrieved Memories（本轮临时）
+        5. Current User Query
+        """
+        return self.build_context(
+            query=query,
+            state=state,
+            memories=memories,
+            retrieval_trace=retrieval_trace,
+        )
+
+    def build_context(
+        self,
+        *,
+        query: str,
+        state: ConversationState,
+        memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
+        retrieval_trace: dict[str, Any] | None = None,
+    ) -> BuiltContext:
         budget = self.budget
+        window = self.session_window_turns()
+
+        # --- 1. System Prompt ---
         system = fit_text(self.system_prompt(), budget.allot("system"))
+
+        # --- 2. Conversation Summary（溢出窗口的压缩记忆）---
         summary = fit_text(state.summary or "", budget.allot("summary"))
 
-        recent_src = self.conversation.recent_messages(
-            state, max_turns=self.recent_turns()
-        )
+        # --- 3. Recent Messages（滑动窗口）---
+        recent_src = self.conversation.recent_messages(state, max_turns=window)
         recent, recent_used = self._pack_recent(recent_src, budget.allot("recent"))
 
+        # --- 4. Retrieved Memories（本轮日记召回，临时）---
         adapted = self.adapt_memories(memories)
         filtered = self.filter_memories(adapted)
         ranked = self.rank_memories(filtered, state=state)
@@ -229,20 +284,24 @@ class ContextEngine:
             ranked, budget.allot("memories")
         )
 
+        # --- 5. Current User Query ---
         q_text = fit_text(query, budget.allot("query"))
 
-        # 组装 OpenAI messages：system 合并 summary + memories 说明；recent 为多轮；最后 user=query
+        # 组装 messages：system 承载指令 + 摘要；recent 为多轮原文；
+        # 记忆块作为独立 system 段插在当前 query 之前（不写入会话历史）。
         system_parts = [system]
         if summary:
-            system_parts.append(f"对话摘要：\n{summary}")
-        if mem_block:
-            system_parts.append(mem_block)
+            system_parts.append(
+                "【对话摘要】（滑动窗口之外的较早对话，已压缩）\n" + summary
+            )
         system_content = "\n\n".join(p for p in system_parts if p)
 
         messages: list[dict[str, str]] = [{"role": "system", "content": system_content}]
         for m in recent:
             if m.role in ("user", "assistant"):
                 messages.append({"role": m.role, "content": m.content})
+        if mem_block:
+            messages.append({"role": "system", "content": mem_block})
         messages.append({"role": "user", "content": q_text})
 
         total_est = sum(estimate_tokens(m["content"]) for m in messages)
@@ -265,27 +324,42 @@ class ContextEngine:
             retrieval_trace=retrieval_trace or {},
         )
 
-    def maybe_update_summary(self, state: ConversationState) -> str:
-        """消息过多时用 LLM 压缩较早对话为 summary（不写入召回记忆）。"""
+    def ensure_summary(self, state: ConversationState) -> str:
+        """
+        会话短期记忆维护：超出滑动窗口的消息压缩进 summary。
+
+        在 build_context 之前调用，避免窗口外消息既不进 recent 又不在摘要里。
+        """
         cfg = self._cfg()
-        threshold = int(cfg.get("summarize_after_messages", 20))
-        if len(state.messages) < threshold:
-            return state.summary
-
-        keep_n = self.recent_turns() * 2
-        older = state.messages[:-keep_n] if keep_n < len(state.messages) else []
-        if not older:
-            return state.summary
-
-        # 已摘要过且没有足够新的旧消息 → 跳过，避免每轮打 LLM
-        step = int(cfg.get("summarize_every_messages", 10))
-        covered = int(getattr(state, "summary_upto", 0) or 0)
-        if len(older) - covered < max(1, step) and state.summary:
-            return state.summary
-
-        transcript = "\n".join(
-            f"{m.role}: {m.content}" for m in older[-40:]
+        window = self.session_window_turns()
+        overflow, _recent = self.conversation.split_session_window(
+            state, max_turns=window
         )
+        if not overflow:
+            return state.summary
+
+        covered = int(getattr(state, "summary_upto", 0) or 0)
+        # 溢出已全部纳入摘要 → 跳过
+        if covered >= len(overflow) and state.summary:
+            return state.summary
+
+        # 可选节流：未覆盖溢出不足 N 条时暂不打 LLM，但仍把未覆盖原文拼进摘要区，避免丢上下文
+        step = int(cfg.get("summarize_every_messages", 1))
+        uncovered = overflow[covered:] if covered < len(overflow) else overflow[-40:]
+        if (
+            state.summary
+            and step > 1
+            and len(uncovered) < step
+            and covered > 0
+        ):
+            # 轻量回退：已有摘要 + 未压缩溢出的短摘录，保证窗口外内容仍可见
+            snippets = [f"{m.role}:{m.content[:80]}" for m in uncovered]
+            interim = (state.summary.strip() + "；" + "；".join(snippets)).strip("；")
+            state.summary = fit_text(interim, self.budget.allot("summary") or 400)
+            return state.summary
+
+        # 压缩尚未纳入摘要的溢出段（带上已有摘要做增量合并）
+        transcript = "\n".join(f"{m.role}: {m.content}" for m in uncovered[-40:])
         prev = state.summary.strip()
         prompt = f"""你是对话摘要助手。请把下列较早聊天记录压缩成简洁中文摘要（不超过 200 字）。
 保留：用户目标、已确认事实、重要专名/日期、未决问题。不要编造。
@@ -301,7 +375,7 @@ class ContextEngine:
         try:
             from src.llm import get_llm_client, get_llm_model
 
-            client = get_llm_client("tags")  # 轻量模型
+            client = get_llm_client("tags")
             resp = client.chat.completions.create(
                 model=get_llm_model("tags"),
                 messages=[{"role": "user", "content": prompt}],
@@ -310,8 +384,11 @@ class ContextEngine:
             summary = (resp.choices[0].message.content or "").strip()
         except Exception as exc:
             print(f"  [warn] LLM 摘要失败，回退规则压缩: {exc}")
-            snippets = [f"{m.role}:{m.content[:60]}" for m in older[-12:]]
-            summary = "；".join(snippets)
+            snippets = [f"{m.role}:{m.content[:60]}" for m in uncovered[-12:]]
+            if prev:
+                summary = prev + "；" + "；".join(snippets)
+            else:
+                summary = "；".join(snippets)
 
         summary = fit_text(summary, self.budget.allot("summary") or 400)
         if not summary:
@@ -320,8 +397,12 @@ class ContextEngine:
         self.conversation.update_summary(
             state.conversation_id,
             summary,
-            summary_upto=len(older),
+            summary_upto=len(overflow),
         )
         state.summary = summary
-        state.summary_upto = len(older)
+        state.summary_upto = len(overflow)
         return summary
+
+    def maybe_update_summary(self, state: ConversationState) -> str:
+        """兼容旧名：等价于 ensure_summary。"""
+        return self.ensure_summary(state)

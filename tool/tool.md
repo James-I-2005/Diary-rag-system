@@ -70,23 +70,23 @@ python scripts/check_db_status.py
 python -m src.query
 python -m src.engine
 # 切换 Plan / 方案：.env 设 RETRIEVAL_SCHEME=weighted_50_50（默认）
-#   或 tag_view_weighted / view_only / triple_max / union_max / tag_only / embedding_only
+#   或 union_max / tag_only / embedding_only
 # Web 顶栏可切换检索方案
 # 召回结果 JSON：data/last_retrieval.json（历史在 data/retrieval_runs/）
 
-# v0.3 Memory Views（需 OpenRouter；先抽样试跑）
-python scripts/build_memory_views.py --ratio 0.05   # 5% chunk 提取 view + 索引
-python scripts/build_memory_views.py                # 增量：仅无 view 的 chunk
-python scripts/build_memory_views.py --sync-chroma-only
-# 抽象 query 试跑 View 路：
-$env:RETRIEVAL_SCHEME="tag_view_weighted"
-python -m src.query "我什么时候开始变得自律"
+# v0.4 rag-sentence（取代 chunk/view 作为检索基元）
+python main.py sentences                 # 全量：无 sentence 的 chunk → paraphrase → 索引
+python scripts/build_rag_sentences.py --ratio 0.05
+python scripts/build_rag_sentences.py --sync-chroma-only
+python main.py index                     # 重建 diary_sentences 索引
+# 召回 id 形如 {chunk_id}_s0
 
 # Context Engine 多轮（记忆临时进 Prompt，不进聊天历史）
 python -m src.context
 python main.py chat
-# Query Agent 调试（理解 / 重写 / need_retrieval）
+# Query Agent 调试（改写 + query rag-sentences）
 python -m src.query_agent
+# 输出见 data/last_query.json（rewritten_query / query_sentences）
 # 聊天内命令：/new /list /use <id前缀> /title <名称>
 # Web 界面（ChatGPT 风格）
 python main.py web

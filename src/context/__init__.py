@@ -1,4 +1,4 @@
-"""Context Engine：对话状态 + 临时召回记忆 → LLM Context。"""
+"""Context Engine：会话短期记忆（滑动窗口 + 摘要）+ 本轮召回 → LLM Context。"""
 
 from __future__ import annotations
 

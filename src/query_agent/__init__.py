@@ -1,8 +1,8 @@
-"""Query Agent：理解用户意图，输出 StructuredQuery。"""
+"""Query Agent：改写用户问题并拆成 query rag-sentences。"""
 
-from src.query_agent.models import QueryRepresentation, StructuredQuery
+from src.query_agent.models import StructuredQuery
 
-__all__ = ["QueryAgent", "QueryRepresentation", "StructuredQuery"]
+__all__ = ["QueryAgent", "StructuredQuery"]
 
 
 def __getattr__(name: str):

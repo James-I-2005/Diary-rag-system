@@ -1,4 +1,4 @@
-"""Context 层数据模型（与 Retrieval Engine 的 Candidate 对齐，不含日记正文存储）。"""
+"""Context 层数据模型（与 Retrieval Engine 的 Candidate 对齐）。"""
 
 from __future__ import annotations
 
@@ -25,15 +25,16 @@ class Message:
 
 @dataclass
 class RetrievedMemory:
-    """进入 Context 的临时记忆；不写入 Conversation History。"""
+    """进入 Context 的临时记忆；召回单位=chunk，匹配理由=命中的 rag-sentences。"""
 
-    chunk_id: str
+    unit_id: str
     score: float = 0.0
     source: str = ""
     date: str = ""
-    text: str = ""
-    matched_views: list[dict] = field(default_factory=list)
-    evidence_text: str = ""
+    text: str = ""  # chunk 全文
+    chunk_id: str = ""
+    evidence_text: str = ""  # 兼容旧字段；与 text 同为 chunk 全文
+    matched_sentences: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
     def from_candidate(
@@ -44,27 +45,32 @@ class RetrievedMemory:
         text: str = "",
     ) -> RetrievedMemory:
         return cls(
-            chunk_id=c.chunk_id,
+            unit_id=c.unit_id,
             score=float(c.score),
             source=c.source or "",
             date=date,
             text=text,
+            chunk_id=c.chunk_id,
         )
 
     @classmethod
     def from_hydrated(cls, row: dict[str, Any]) -> RetrievedMemory:
         text = str(row.get("text") or "")
-        views = row.get("matched_views") or []
-        if not isinstance(views, list):
-            views = []
+        evidence = str(row.get("evidence_text") or "")
+        unit = str(row.get("id") or row.get("unit_id") or "")
+        parent = str(row.get("chunk_id") or "")
+        hits = row.get("matched_sentences") or []
+        if not isinstance(hits, list):
+            hits = []
         return cls(
-            chunk_id=str(row.get("id") or row.get("chunk_id") or ""),
+            unit_id=unit,
             score=float(row.get("score") or 0.0),
             source=str(row.get("source") or ""),
             date=str(row.get("date") or ""),
             text=text,
-            matched_views=views,
-            evidence_text=text,
+            chunk_id=parent or unit,
+            evidence_text=evidence or text,
+            matched_sentences=[h for h in hits if isinstance(h, dict)],
         )
 
 
@@ -73,13 +79,11 @@ class ConversationState:
     conversation_id: str
     summary: str = ""
     messages: list[Message] = field(default_factory=list)
-    summary_upto: int = 0  # summary 已覆盖的较早消息条数
+    summary_upto: int = 0
 
 
 @dataclass
 class BuiltContext:
-    """最终交给 LLM 的上下文（messages 格式 + 调试元信息）。"""
-
     messages: list[dict[str, str]]
     system: str = ""
     summary: str = ""

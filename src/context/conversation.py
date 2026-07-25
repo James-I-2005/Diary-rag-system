@@ -252,14 +252,34 @@ class ConversationManager:
             conn.close()
         return tid
 
+    @staticmethod
+    def window_message_count(max_turns: int) -> int:
+        """一轮 ≈ user+assistant，窗口消息条数 = 2 * turns。"""
+        return max(0, int(max_turns) * 2)
+
+    def split_session_window(
+        self,
+        state: ConversationState,
+        *,
+        max_turns: int = 10,
+    ) -> tuple[list[Message], list[Message]]:
+        """
+        按滑动窗口切分会话记忆：
+        - overflow：超出窗口、应进入摘要的较早消息
+        - recent：窗口内原文（短期记忆）
+        """
+        n = self.window_message_count(max_turns)
+        msgs = list(state.messages)
+        if n <= 0 or len(msgs) <= n:
+            return [], msgs
+        return msgs[:-n], msgs[-n:]
+
     def recent_messages(
         self,
         state: ConversationState,
         *,
-        max_turns: int = 8,
+        max_turns: int = 10,
     ) -> list[Message]:
-        """最近 max_turns 轮（一轮 ≈ user+assistant，这里按消息条数 2*turns）。"""
-        n = max(0, max_turns * 2)
-        if n <= 0:
-            return []
-        return list(state.messages[-n:])
+        """最近 max_turns 轮原文（滑动窗口内短期记忆）。"""
+        _, recent = self.split_session_window(state, max_turns=max_turns)
+        return recent
