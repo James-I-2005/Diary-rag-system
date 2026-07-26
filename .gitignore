@@ -1,12 +1,67 @@
+# ----- Python -----
 .venv/
+venv/
+env/
 __pycache__/
-*.pyc
-data/diary.db
-data/lexicon.db
-data/chroma/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# ----- 环境与密钥 -----
 .env
+.env.*
+!.env.example
+
+# ----- IDE / OS -----
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- 本地数据库与向量索引 -----
+data/**/*.db
+data/**/*.db-*
+data/chroma/
+data/chroma/**
+
+# ----- 日记原文（隐私，勿提交）-----
 data/diary/
 data/diary_sinica/
+
+# ----- 运行时调试 / 召回快照 -----
+data/last_*.json
 data/retrieval_runs/
-data/last_context.json
-data/last_retrieval.json
+data/rag_sentences_export.json
+
+# ----- Tag / 词表旁路缓存（可重建）-----
+data/vocabulary.json
+data/entities.json
+data/chunk_entities.json
+data/chunk_keywords.json
+data/lexicon.db
+
+# ----- 备份与历史包 -----
+*.bundle
+My_rag-history.bundle
+*.bak
+*.tmp
+*.log
+
+# ----- 保留应入库的静态资源（显式说明，勿误删规则）-----
+# data/stopwords_zh.txt  — 停用词表，应提交
+# .env.example           — 环境变量模板，应提交

@@ -35,6 +35,8 @@ class RetrievedMemory:
     chunk_id: str = ""
     evidence_text: str = ""  # 兼容旧字段；与 text 同为 chunk 全文
     matched_sentences: list[dict[str, Any]] = field(default_factory=list)
+    # current=本轮检索；prior=会话窗口内更早轮次曾召回
+    recall_origin: str = "current"
 
     @classmethod
     def from_candidate(
@@ -62,6 +64,7 @@ class RetrievedMemory:
         hits = row.get("matched_sentences") or []
         if not isinstance(hits, list):
             hits = []
+        origin = str(row.get("recall_origin") or "current").strip() or "current"
         return cls(
             unit_id=unit,
             score=float(row.get("score") or 0.0),
@@ -71,6 +74,7 @@ class RetrievedMemory:
             chunk_id=parent or unit,
             evidence_text=evidence or text,
             matched_sentences=[h for h in hits if isinstance(h, dict)],
+            recall_origin=origin,
         )
 
 

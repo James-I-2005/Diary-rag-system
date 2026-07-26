@@ -91,10 +91,10 @@ class ContextService:
         1) 确保 conversation
         2) 会话短期记忆：溢出滑动窗口 → 更新 summary
         3) Query Agent → Structured Query
-        4) 按需 Memory Engine 召回（临时；非跨会话长期记忆）
-        5) Context Builder 构图：System + Summary + Recent + Memories + Query
+        4) 按需 Memory Engine 召回（本轮）
+        5) Context Builder：System + Summary + Recent(窗口) + (本轮∪窗口内曾召回) Memories + Query
         6) LLM 回答
-        7) 仅把 user/assistant 消息写入 Conversation（不含 memories）
+        7) 写入 user/assistant，并持久化本轮 retrieval_trace（供后续轮次回灌）
         """
         cid = self.conversation.get_or_create(conversation_id)
         state = self.conversation.load(cid)
@@ -136,11 +136,12 @@ class ContextService:
             "plan": plan,
             "scheme": scheme_meta,
             "structured_query": structured.to_dict(),
+            "themes": structured.query_themes,
             "candidate_ids": [c["id"] for c in chunks],
             "scores": {c["id"]: c.get("score") for c in chunks},
         }
 
-        # Context Builder：System + Summary + Recent(窗口) + Memories + Query
+        # Context Builder：窗口对话 + 摘要 + 本轮/历史召回 chunk + 当前问题
         built = self.context_engine.build_context(
             query=query,
             state=state,
@@ -160,10 +161,12 @@ class ContextService:
                 plan=plan,
                 candidates=[
                     {
-                        "chunk_id": c["id"],
+                        "chunk_id": c.get("chunk_id") or c["id"],
                         "score": c.get("score"),
                         "source": c.get("source"),
                         "date": c.get("date"),
+                        "text": c.get("text") or "",
+                        "matched_sentences": c.get("matched_sentences") or [],
                     }
                     for c in chunks
                 ],
@@ -184,6 +187,7 @@ class ContextService:
                     "date": m.date,
                     "score": m.score,
                     "source": m.source,
+                    "recall_origin": m.recall_origin,
                     "matched_sentences": [
                         {
                             "id": h.get("id"),

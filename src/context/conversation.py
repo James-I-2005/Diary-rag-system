@@ -252,6 +252,61 @@ class ConversationManager:
             conn.close()
         return tid
 
+    def list_recent_retrieval_traces(
+        self,
+        conversation_id: str,
+        *,
+        limit: int = 10,
+    ) -> list[dict]:
+        """
+        最近 limit 轮写入的检索痕迹（每轮一条，按时间倒序再正序返回）。
+        供 Context 把窗口内曾召回的 chunk 再次带入 Prompt。
+        """
+        n = max(0, int(limit))
+        if n <= 0:
+            return []
+        conn = get_db()
+        try:
+            _ensure_conversation_tables(conn)
+            rows = conn.execute(
+                """
+                SELECT id, user_message_id, query, plan_json, candidates_json, created_at
+                FROM retrieval_traces
+                WHERE conversation_id = ?
+                ORDER BY created_at DESC, id DESC
+                LIMIT ?
+                """,
+                (conversation_id, n),
+            ).fetchall()
+        finally:
+            conn.close()
+
+        out: list[dict] = []
+        for r in reversed(rows):
+            try:
+                plan = json.loads(r["plan_json"] or "[]")
+            except json.JSONDecodeError:
+                plan = []
+            try:
+                candidates = json.loads(r["candidates_json"] or "[]")
+            except json.JSONDecodeError:
+                candidates = []
+            if not isinstance(plan, list):
+                plan = []
+            if not isinstance(candidates, list):
+                candidates = []
+            out.append(
+                {
+                    "id": r["id"],
+                    "user_message_id": r["user_message_id"],
+                    "query": r["query"] or "",
+                    "plan": plan,
+                    "candidates": [c for c in candidates if isinstance(c, dict)],
+                    "created_at": r["created_at"] or "",
+                }
+            )
+        return out
+
     @staticmethod
     def window_message_count(max_turns: int) -> int:
         """一轮 ≈ user+assistant，窗口消息条数 = 2 * turns。"""

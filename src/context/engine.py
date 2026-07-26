@@ -1,11 +1,11 @@
-"""Context Engine / Context Builder：组合会话短期记忆 + 本轮召回 → LLM messages。
+"""Context Engine / Context Builder：组合会话短期记忆 + 本轮/窗口内召回 → LLM messages。
 
 Prompt 流水线（与会话记忆策略一致）：
 
     System Prompt
   + Conversation Summary      ← 超出滑动窗口的旧对话压缩
   + Recent Messages           ← 窗口内原文（默认 10 轮）
-  + Retrieved Memories        ← 本轮日记召回，临时，不入会话历史
+  + Retrieved Memories        ← 本轮召回 ∪ 窗口内更早轮次曾召回的 chunk
   + Current User Query
 """
 
@@ -28,7 +28,7 @@ from src.context.tokens import (
     resolve_token_budget,
 )
 from src.engine.candidate import Candidate
-from src.store import load_config
+from src.store import get_db, load_config
 
 DEFAULT_SYSTEM = """你是用户的陪伴型助手：可以闲聊生活、想法与日常，也可以在有日记材料时帮忙回忆往事。
 
@@ -45,6 +45,7 @@ class ContextEngine:
     会话记忆（本模块职责）：
     - 短期：滑动窗口内原文（session_window_turns）
     - 溢出：压缩为 conversation summary
+    - 窗口内曾召回的 chunk：从 retrieval_traces 回灌进 Prompt
     不实现跨会话长期记忆 / 用户画像。
     """
 
@@ -82,6 +83,12 @@ class ContextEngine:
     def recent_turns(self) -> int:
         """兼容旧调用名。"""
         return self.session_window_turns()
+
+    def include_prior_retrievals(self) -> bool:
+        raw = os.getenv("CONTEXT_INCLUDE_PRIOR_RETRIEVALS", "").strip()
+        if raw:
+            return raw.lower() not in ("0", "false", "no", "off")
+        return bool(self._cfg().get("include_prior_retrievals", True))
 
     def memory_min_score(self) -> float:
         raw = os.getenv("CONTEXT_MEMORY_MIN_SCORE", "").strip()
@@ -125,12 +132,124 @@ class ContextEngine:
                 out.append(RetrievedMemory.from_hydrated(m))
         return out
 
+    def load_prior_memories(
+        self,
+        conversation_id: str,
+        *,
+        max_turns: int | None = None,
+    ) -> list[RetrievedMemory]:
+        """从近 max_turns 轮 retrieval_traces 还原曾召回的 chunk。"""
+        if not conversation_id or not self.include_prior_retrievals():
+            return []
+        window = max_turns if max_turns is not None else self.session_window_turns()
+        traces = self.conversation.list_recent_retrieval_traces(
+            conversation_id, limit=window
+        )
+        if not traces:
+            return []
+
+        # chunk_id → 最优候选元信息（保留更高分）
+        meta_by_id: dict[str, dict[str, Any]] = {}
+        for tr in traces:
+            for c in tr.get("candidates") or []:
+                cid = str(c.get("chunk_id") or c.get("id") or "").strip()
+                if not cid:
+                    continue
+                score = float(c.get("score") or 0.0)
+                prev = meta_by_id.get(cid)
+                if prev is None or score > float(prev.get("score") or 0.0):
+                    meta_by_id[cid] = dict(c)
+                    meta_by_id[cid]["chunk_id"] = cid
+
+        if not meta_by_id:
+            return []
+
+        # trace 里若无正文，从 chunks 表补齐
+        need_text = [
+            cid
+            for cid, meta in meta_by_id.items()
+            if not str(meta.get("text") or "").strip()
+        ]
+        texts: dict[str, str] = {}
+        dates: dict[str, str] = {}
+        if need_text:
+            conn = get_db()
+            try:
+                ph = ",".join("?" * len(need_text))
+                for r in conn.execute(
+                    f"SELECT id, date, text FROM chunks WHERE id IN ({ph})",
+                    need_text,
+                ).fetchall():
+                    texts[r["id"]] = r["text"] or ""
+                    dates[r["id"]] = r["date"] or ""
+            finally:
+                conn.close()
+
+        out: list[RetrievedMemory] = []
+        for cid, meta in meta_by_id.items():
+            text = str(meta.get("text") or "").strip() or texts.get(cid, "")
+            if not text.strip():
+                continue
+            hits = meta.get("matched_sentences") or []
+            if not isinstance(hits, list):
+                hits = []
+            out.append(
+                RetrievedMemory(
+                    unit_id=cid,
+                    chunk_id=cid,
+                    score=float(meta.get("score") or 0.0),
+                    source=str(meta.get("source") or "prior"),
+                    date=str(meta.get("date") or dates.get(cid, "")),
+                    text=text,
+                    evidence_text=text,
+                    matched_sentences=[h for h in hits if isinstance(h, dict)],
+                    recall_origin="prior",
+                )
+            )
+        return out
+
+    @staticmethod
+    def merge_current_and_prior(
+        current: list[RetrievedMemory],
+        prior: list[RetrievedMemory],
+    ) -> list[RetrievedMemory]:
+        """按 chunk_id 去重：本轮覆盖历史；顺序为本轮在前、仅历史的在后。"""
+        by_id: dict[str, RetrievedMemory] = {}
+        for m in prior:
+            key = (m.chunk_id or m.unit_id or "").strip()
+            if key:
+                by_id[key] = m
+        current_keys: list[str] = []
+        for m in current:
+            key = (m.chunk_id or m.unit_id or "").strip()
+            if not key:
+                continue
+            m.recall_origin = "current"
+            by_id[key] = m
+            current_keys.append(key)
+        seen = set(current_keys)
+        ordered: list[RetrievedMemory] = [by_id[k] for k in current_keys]
+        for m in prior:
+            key = (m.chunk_id or m.unit_id or "").strip()
+            if key and key not in seen and key in by_id:
+                ordered.append(by_id[key])
+                seen.add(key)
+        return ordered
+
     def filter_memories(self, memories: list[RetrievedMemory]) -> list[RetrievedMemory]:
         min_score = self.memory_min_score()
         max_items = self.memory_max_items()
         filtered = [m for m in memories if m.score >= min_score and m.text.strip()]
-        filtered.sort(key=lambda m: (-m.score, m.date, m.unit_id))
-        return filtered[:max_items]
+        # 本轮优先保留：先 current 再 prior，各组内按分排序
+        current = sorted(
+            [m for m in filtered if m.recall_origin != "prior"],
+            key=lambda m: (-m.score, m.date, m.unit_id),
+        )
+        prior = sorted(
+            [m for m in filtered if m.recall_origin == "prior"],
+            key=lambda m: (-m.score, m.date, m.unit_id),
+        )
+        return (current + prior)[:max_items]
 
     def rank_memories(
         self,
@@ -139,7 +258,7 @@ class ContextEngine:
         state: ConversationState | None = None,
     ) -> list[RetrievedMemory]:
         """
-        Context 侧排序：默认保持检索分；若 summary/recent 提到日期，略微提升同日记忆。
+        Context 侧排序：本轮优先；同分下若 summary/recent 提到日期，略微提升同日记忆。
         """
         if not memories:
             return []
@@ -148,14 +267,22 @@ class ContextEngine:
             window = self.session_window_turns()
             recent = self.conversation.recent_messages(state, max_turns=window)
             hint = (state.summary or "") + " " + " ".join(m.content for m in recent[-4:])
-        scored: list[tuple[float, RetrievedMemory]] = []
+        scored: list[tuple[float, int, RetrievedMemory]] = []
         for m in memories:
             bonus = 0.0
             if m.date and m.date in hint:
                 bonus = 0.05
-            scored.append((m.score + bonus, m))
-        scored.sort(key=lambda x: (-x[0], x[1].date, x[1].unit_id))
-        return [m for _, m in scored]
+            # 本轮加权，避免历史挤掉本轮
+            origin_boost = 0.0 if m.recall_origin == "prior" else 1.0
+            scored.append(
+                (
+                    m.score + bonus + origin_boost,
+                    0 if m.recall_origin != "prior" else 1,
+                    m,
+                )
+            )
+        scored.sort(key=lambda x: (-x[0], x[1], x[2].date, x[2].unit_id))
+        return [m for _, _, m in scored]
 
     def _pack_recent(
         self,
@@ -193,9 +320,10 @@ class ContextEngine:
         kept: list[RetrievedMemory] = []
         used = 0
         for m in memories:
+            origin_tag = "本轮" if m.recall_origin != "prior" else "窗口内曾召回"
             header = (
                 f"[{m.date or '????-??-??'}] id={m.chunk_id or m.unit_id} "
-                f"(score={m.score:.2f}, {m.source or '-'})"
+                f"({origin_tag}, score={m.score:.2f}, {m.source or '-'})"
             )
             hits = getattr(m, "matched_sentences", None) or []
             if hits:
@@ -226,8 +354,10 @@ class ContextEngine:
             lines.append(line)
             kept.append(m)
             used += t
-        block = "【本轮检索到的相关记忆】（仅供本次回答参考，不是聊天记录）\n" + "\n\n".join(
-            lines
+        block = (
+            "【相关日记记忆】（含本轮检索 + 近窗口内曾召回的 chunk；"
+            "仅供本次回答参考，不是聊天记录）\n"
+            + "\n\n".join(lines)
         )
         return kept, block, estimate_tokens(block)
 
@@ -238,6 +368,7 @@ class ContextEngine:
         state: ConversationState,
         memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
         retrieval_trace: dict[str, Any] | None = None,
+        prior_memories: Iterable[RetrievedMemory] | None = None,
     ) -> BuiltContext:
         """
         Context Builder：按流水线组装最终 LLM messages。
@@ -245,7 +376,7 @@ class ContextEngine:
         1. System Prompt
         2. Conversation Summary（窗口外旧对话）
         3. Recent Messages（滑动窗口内原文）
-        4. Retrieved Memories（本轮临时）
+        4. Retrieved Memories（本轮 ∪ 窗口内曾召回）
         5. Current User Query
         """
         return self.build_context(
@@ -253,6 +384,7 @@ class ContextEngine:
             state=state,
             memories=memories,
             retrieval_trace=retrieval_trace,
+            prior_memories=prior_memories,
         )
 
     def build_context(
@@ -262,6 +394,7 @@ class ContextEngine:
         state: ConversationState,
         memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
         retrieval_trace: dict[str, Any] | None = None,
+        prior_memories: Iterable[RetrievedMemory] | None = None,
     ) -> BuiltContext:
         budget = self.budget
         window = self.session_window_turns()
@@ -276,9 +409,18 @@ class ContextEngine:
         recent_src = self.conversation.recent_messages(state, max_turns=window)
         recent, recent_used = self._pack_recent(recent_src, budget.allot("recent"))
 
-        # --- 4. Retrieved Memories（本轮日记召回，临时）---
-        adapted = self.adapt_memories(memories)
-        filtered = self.filter_memories(adapted)
+        # --- 4. Retrieved Memories：本轮 ∪ 窗口内曾召回 ---
+        current = self.adapt_memories(memories)
+        for m in current:
+            m.recall_origin = "current"
+        if prior_memories is None:
+            prior = self.load_prior_memories(
+                state.conversation_id, max_turns=window
+            )
+        else:
+            prior = list(prior_memories)
+        merged = self.merge_current_and_prior(current, prior)
+        filtered = self.filter_memories(merged)
         ranked = self.rank_memories(filtered, state=state)
         kept_mem, mem_block, mem_used = self._pack_memories(
             ranked, budget.allot("memories")

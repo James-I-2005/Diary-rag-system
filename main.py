@@ -26,11 +26,13 @@ def cmd_index() -> None:
     console.print(f"[green]sentence 索引完成[/green]，共 {total} 条")
 
 
-def cmd_sentences() -> None:
-    """chunk → rag-sentence → Chroma。"""
+def cmd_sentences(*, force: bool = False) -> None:
+    """chunk → rag-sentence → Chroma。默认只处理尚无 sentence 的 chunk；--force 全量按当前 prompt 重跑。"""
     from src.paraphrase.pipeline import run_paraphrase_pipeline
 
-    result = run_paraphrase_pipeline()
+    if force:
+        console.print("[yellow]force=True：将按当前 prompt_rag_sentence.md 重跑全部 chunk[/yellow]")
+    result = run_paraphrase_pipeline(force=force)
     console.print(f"[green]paraphrase 完成[/green] {result}")
 
 
@@ -175,6 +177,11 @@ def main() -> None:
     )
     parser.add_argument("--host", default="127.0.0.1", help="web 服务监听地址")
     parser.add_argument("--port", type=int, default=8765, help="web 服务端口")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="sentences：强制按当前 prompt 重跑已有 chunk（忽略已有 sentence 缓存）",
+    )
     # 支持：python main.py 吃了几次火锅（多词问题）
     parser.add_argument("rest", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -183,7 +190,7 @@ def main() -> None:
         "ingest": cmd_ingest,
         "index": cmd_index,
         "tags": cmd_tags,
-        "sentences": cmd_sentences,
+        "sentences": lambda: cmd_sentences(force=args.force),
         "update": cmd_update,
         "test": cmd_test,
         "chat": cmd_chat,
