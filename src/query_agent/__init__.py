@@ -1,8 +1,13 @@
-"""Query Agent：改写用户问题并拆成 query rag-sentences。"""
+"""Query Agent：rewrite 主题改写，或 react 中枢召回。"""
 
 from src.query_agent.models import StructuredQuery
 
-__all__ = ["QueryAgent", "StructuredQuery"]
+__all__ = [
+    "QueryAgent",
+    "StructuredQuery",
+    "ReactQueryAgent",
+    "AgentRetrievalResult",
+]
 
 
 def __getattr__(name: str):
@@ -10,4 +15,12 @@ def __getattr__(name: str):
         from src.query_agent.agent import QueryAgent
 
         return QueryAgent
+    if name == "ReactQueryAgent":
+        from src.query_agent.react_agent import ReactQueryAgent
+
+        return ReactQueryAgent
+    if name == "AgentRetrievalResult":
+        from src.query_agent.react_agent import AgentRetrievalResult
+
+        return AgentRetrievalResult
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -37,7 +37,8 @@ python scripts/build_chunk_entities.py
 .\scripts\restart_web.ps1
 # 或：python main.py web
 # 浏览器打开 http://127.0.0.1:8765
-# Web 输入框旁可设「召回自～至」日期；每轮随消息 POST date_from/date_to，留空=不限制
+# Query Agent 默认 mode=react：先分析问题再调 grep(chunk原文)/rag_search
+# 回退旧改写通路：config query_agent.mode: rewrite
 
 查看写好的rag-sentence
 .\.venv\Scripts\python.exe -c "import json; from src.store import get_db; conn=get_db(); rows=conn.execute('SELECT id, chunk_id, date, sent_index, text, source_file FROM rag_sentences ORDER BY date, chunk_id, sent_index').fetchall(); conn.close(); out=[dict(r) for r in rows]; p='data/rag_sentences_export.json'; open(p,'w',encoding='utf-8').write(json.dumps(out,ensure_ascii=False,indent=2)); print(f'exported {len(out)} -> {p}')"

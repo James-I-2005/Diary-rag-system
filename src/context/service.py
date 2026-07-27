@@ -16,6 +16,7 @@ from src.llm import get_llm_client, get_llm_model
 from src.query import hydrate_candidates, save_retrieval_json, sentence_pool_size
 from src.query_agent.agent import QueryAgent
 from src.query_agent.models import StructuredQuery
+from src.query_agent.react_agent import AgentRetrievalResult, ReactQueryAgent
 from src.store import load_config, resolve_path
 from src.tag_retrieve import extract_query_tags, resolve_retrieval_config
 
@@ -27,12 +28,18 @@ class ContextService:
         conversation: ConversationManager | None = None,
         context_engine: ContextEngine | None = None,
         query_agent: QueryAgent | None = None,
+        react_agent: ReactQueryAgent | None = None,
     ):
         self.conversation = conversation or ConversationManager()
         self.context_engine = context_engine or ContextEngine(
             conversation=self.conversation
         )
         self.query_agent = query_agent or QueryAgent()
+        self.react_agent = react_agent or ReactQueryAgent()
+
+    def _query_mode(self) -> str:
+        cfg = load_config().get("query_agent") or {}
+        return str(cfg.get("mode") or "react").strip().lower()
 
     def _retrieve(
         self,
@@ -104,28 +111,59 @@ class ContextService:
         # 先维护会话短期记忆：窗口外旧对话 → summary，再参与本轮构图
         self.context_engine.ensure_summary(state)
 
-        structured = self._run_query_agent(query, state)
-        # 日期范围完全由本轮前端传入，不落会话状态
-        structured.date_from = (date_from or "").strip()
-        structured.date_to = (date_to or "").strip()
-
+        mode = self._query_mode()
         scheme_meta: dict = {}
-        if structured.need_retrieval:
-            # 前端/调用方指定的 scheme 优先于 QueryAgent 默认 plan
-            chunks, plan, scheme_meta = self._retrieve(
-                structured.retrieval_query(),
-                structured=structured,
-                use_vector=use_vector,
-                plan_names=None if scheme else (plan_names or structured.retrieval_plan or None),
+        tool_trace: list = []
+        analysis: dict = {}
+
+        if mode == "react" and (load_config().get("query_agent") or {}).get(
+            "enabled", True
+        ):
+            # ReAct 中枢：分析 → grep(chunk原文)/rag → 合并证据
+            result: AgentRetrievalResult = self.react_agent.retrieve(
+                query,
+                state=state,
+                date_from=date_from,
+                date_to=date_to,
                 scheme=scheme,
             )
+            structured = result.structured
+            structured.date_from = (date_from or "").strip()
+            structured.date_to = (date_to or "").strip()
+            chunks = result.chunks
+            plan = ["react"]
+            scheme_meta = {
+                "id": "react",
+                "tool_trace": result.tool_trace,
+                "stop_reason": result.stop_reason,
+                "analysis": result.analysis,
+            }
+            tool_trace = result.tool_trace
+            analysis = result.analysis
+            if not structured.need_retrieval:
+                chunks = []
         else:
-            chunks, plan = [], []
+            structured = self._run_query_agent(query, state)
+            structured.date_from = (date_from or "").strip()
+            structured.date_to = (date_to or "").strip()
+            if structured.need_retrieval:
+                chunks, plan, scheme_meta = self._retrieve(
+                    structured.retrieval_query(),
+                    structured=structured,
+                    use_vector=use_vector,
+                    plan_names=None
+                    if scheme
+                    else (plan_names or structured.retrieval_plan or None),
+                    scheme=scheme,
+                )
+            else:
+                chunks, plan = [], []
 
         qside = extract_query_tags(structured.retrieval_query())
         start, end = structured.date_range()
         retrieval_payload = {
             "type": "retrieval" if structured.need_retrieval else "skipped",
+            "mode": mode,
             "count": len(chunks),
             "chunks": chunks,
             "plan": plan,
@@ -133,6 +171,8 @@ class ContextService:
             "date_from": start or "",
             "date_to": end or "",
             "structured_query": structured.to_dict(),
+            "tool_trace": tool_trace,
+            "analysis": analysis,
             "query_tags": {
                 "entities": qside.entities,
                 "keywords": qside.keywords,
@@ -147,6 +187,7 @@ class ContextService:
             "themes": structured.query_themes,
             "date_from": start or "",
             "date_to": end or "",
+            "tool_trace": tool_trace,
             "candidate_ids": [c["id"] for c in chunks],
             "scores": {c["id"]: c.get("score") for c in chunks},
         }
@@ -232,10 +273,7 @@ class ContextService:
             print(f"  [warn] LLM 调用失败，降级: {exc}")
 
         if not built.memories:
-            return (
-                ""
-                
-            )
+            return "（暂时没有检索到相关日记，也可以继续聊聊。）"
         lines = [
             f"[{m.date}] {m.text[:120]}…" if len(m.text) > 120 else f"[{m.date}] {m.text}"
             for m in built.memories[:5]
