@@ -6,9 +6,19 @@
 Copy-Item .env.example .env   # 填入 OPENROUTER_API_KEY
 python scripts/check_env.py
 
-# 1. 导入日记 → SQLite chunks
+# 1. 在 config.yaml 设置 extract.root 为日记原文目录（任意路径，不必在 data/ 下）
+#    例如 root: "D:/Notes/my-diary"
+# 2. 目录 Extract → Manifest → 导入 chunks
+#    无 Agent（regex→mtime）：
+python main.py extract
+#    可选：启用 Agent 猜路径日期后再兜底
+# python main.py extract --agent
+#    按 Manifest 建库（无 manifest 时会自动先 extract）
 python main.py ingest
-
+#    旧逻辑（仅顶层 *.md）：
+# python main.py ingest --legacy
+#    临时覆盖根目录：
+# python main.py extract --root "D:/Notes/my-diary"
 # 2. chunk → rag-sentence（调 LLM）并写入 SQLite + 索引 Chroma
 python main.py sentences
 
@@ -23,9 +33,11 @@ python scripts/build_vocabulary.py
 python scripts/build_chunk_keywords.py
 python scripts/build_chunk_entities.py
 
-# 6. 启动问答
-python main.py web
+# 6. 启动 / 重启问答 Web（先杀占用 8765 的进程再启动）
+.\scripts\restart_web.ps1
+# 或：python main.py web
 # 浏览器打开 http://127.0.0.1:8765
+# Web 输入框旁可设「召回自～至」日期；每轮随消息 POST date_from/date_to，留空=不限制
 
 查看写好的rag-sentence
 .\.venv\Scripts\python.exe -c "import json; from src.store import get_db; conn=get_db(); rows=conn.execute('SELECT id, chunk_id, date, sent_index, text, source_file FROM rag_sentences ORDER BY date, chunk_id, sent_index').fetchall(); conn.close(); out=[dict(r) for r in rows]; p='data/rag_sentences_export.json'; open(p,'w',encoding='utf-8').write(json.dumps(out,ensure_ascii=False,indent=2)); print(f'exported {len(out)} -> {p}')"

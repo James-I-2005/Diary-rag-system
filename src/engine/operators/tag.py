@@ -1,8 +1,9 @@
-"""Tag 召回算子：chunk 打分后展开为 rag-sentences。"""
+"""Tag 召回算子：chunk 打分后展开为 rag-sentences；支持日期过滤。"""
 
 from __future__ import annotations
 
 from src.engine.candidate import Candidate, merge_candidates
+from src.engine.date_range import date_bounds_from_structured
 from src.engine.operator import Operator
 from src.rag_sentences import sentences_for_chunks
 from src.tag_retrieve import resolve_tag_score_config, tag_match
@@ -30,6 +31,18 @@ class TagOperator(Operator):
             print(f"  [warn] TagOperator 失败: {exc}")
             return list(candidates)
 
+        date_from, date_to = date_bounds_from_structured(structured)
+        if date_from or date_to:
+            filtered = []
+            for h in hits:
+                d = str(h.get("date") or "")
+                if date_from and d < date_from:
+                    continue
+                if date_to and d > date_to:
+                    continue
+                filtered.append(h)
+            hits = filtered
+
         chunk_scores = {
             h["id"]: float(h.get("tag_score") or h.get("score") or 0.0)
             for h in hits
@@ -43,7 +56,6 @@ class TagOperator(Operator):
         for cid, score in chunk_scores.items():
             sents = by_chunk.get(cid) or []
             if not sents:
-                # 尚无 paraphrase：退化为 chunk 级候选（unit_id=chunk_id）
                 new.append(
                     Candidate(
                         unit_id=cid,

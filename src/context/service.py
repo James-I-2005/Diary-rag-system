@@ -85,13 +85,15 @@ class ContextService:
         plan_names: list[str] | None = None,
         scheme: str | None = None,
         persist: bool = True,
+        date_from: str | None = None,
+        date_to: str | None = None,
     ) -> dict[str, Any]:
         """
         完整一轮：
         1) 确保 conversation
         2) 会话短期记忆：溢出滑动窗口 → 更新 summary
-        3) Query Agent → Structured Query
-        4) 按需 Memory Engine 召回（本轮）
+        3) Query Agent → Structured Query（并挂上本轮前端日期范围）
+        4) 按需 Memory Engine 召回（仅在 date_from~date_to 内，若指定）
         5) Context Builder：System + Summary + Recent(窗口) + (本轮∪窗口内曾召回) Memories + Query
         6) LLM 回答
         7) 写入 user/assistant，并持久化本轮 retrieval_trace（供后续轮次回灌）
@@ -103,6 +105,9 @@ class ContextService:
         self.context_engine.ensure_summary(state)
 
         structured = self._run_query_agent(query, state)
+        # 日期范围完全由本轮前端传入，不落会话状态
+        structured.date_from = (date_from or "").strip()
+        structured.date_to = (date_to or "").strip()
 
         scheme_meta: dict = {}
         if structured.need_retrieval:
@@ -118,12 +123,15 @@ class ContextService:
             chunks, plan = [], []
 
         qside = extract_query_tags(structured.retrieval_query())
+        start, end = structured.date_range()
         retrieval_payload = {
             "type": "retrieval" if structured.need_retrieval else "skipped",
             "count": len(chunks),
             "chunks": chunks,
             "plan": plan,
             "scheme": scheme_meta,
+            "date_from": start or "",
+            "date_to": end or "",
             "structured_query": structured.to_dict(),
             "query_tags": {
                 "entities": qside.entities,
@@ -137,6 +145,8 @@ class ContextService:
             "scheme": scheme_meta,
             "structured_query": structured.to_dict(),
             "themes": structured.query_themes,
+            "date_from": start or "",
+            "date_to": end or "",
             "candidate_ids": [c["id"] for c in chunks],
             "scores": {c["id"]: c.get("score") for c in chunks},
         }

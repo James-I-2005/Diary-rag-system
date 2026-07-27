@@ -139,10 +139,17 @@ class PathwayHarness:
         base["query_agent"]["save_debug_json"] = False
         base.setdefault("retrieval", {})
         base["retrieval"]["top_k"] = 5
+        base.setdefault("extract", {})
+        base["extract"]["root"] = ""
+        base["extract"]["manifest_path"] = str(self.root / "extract_manifest.json")
+        base["extract"]["extensions"] = [".md", ".txt"]
+        base["diary"] = dict(base.get("diary") or {})
+        base["diary"]["date_pattern"] = r"^# (\d{4}-\d{2}-\d{2})"
 
         def fake_cfg():
             return copy.deepcopy(base)
 
+        self.cfg = base
         targets = [
             "src.store.load_config",
             "src.embed.load_config",
@@ -151,6 +158,8 @@ class PathwayHarness:
             "src.engine.schemes.load_config",
             "src.tag_retrieve.load_config",
             "src.query_agent.agent.load_config",
+            "src.extract.pipeline.load_config",
+            "src.ingest.load_config",
         ]
         self._patches = [patch(t, side_effect=fake_cfg) for t in targets]
         self._patches += [
@@ -471,6 +480,139 @@ class TestMockPathways(unittest.TestCase):
             self.assertTrue(cands[0].unit_id.startswith(chunk.id))
             self.assertEqual(cands[0].meta.get("parent_chunk_id"), chunk.id)
             print("[PASS] embedding: fake ANN → sentence candidates")
+
+    def test_06_extract_regex_mtime_then_ingest(self):
+        """无 Agent：扫盘 → 正文正则 / mtime → Manifest → ingest_from_manifest。"""
+        with PathwayHarness() as h:
+            from src.extract.manifest import load_manifest
+            from src.extract.pipeline import run_extract_pipeline
+            from src.ingest import ingest_from_manifest
+            from src.store import get_db
+
+            diary_root = h.root / "diary_src"
+            sub = diary_root / "nested"
+            sub.mkdir(parents=True)
+
+            # 有标准日期标题 → content_regex（即使文件名也有日期，正文覆盖）
+            (diary_root / "2024-07-01_dated.md").write_text(
+                "# 2024-07-01\n\n今天吃了火锅。\n\n"
+                "# 2024-07-02\n\n去打球了。\n",
+                encoding="utf-8",
+            )
+            # 文件名含日期、正文无标题 → path
+            (diary_root / "2024-07-03_note.md").write_text(
+                "文件名带来的日期。\n",
+                encoding="utf-8",
+            )
+            # 正文内嵌点号日期（无 #）→ 应拆成两条 content_regex
+            (diary_root / "tech_split.md").write_text(
+                "2024.7.3\n第一段内容。\n2024.7.5\n第二段内容。\n",
+                encoding="utf-8",
+            )
+            # 目录组合 YYYY/MM/DD
+            ymd = diary_root / "2024" / "07"
+            ymd.mkdir(parents=True)
+            (ymd / "04.md").write_text("目录拼出的日期。\n", encoding="utf-8")
+            # 无日期标题 → mtime
+            bare = sub / "scrap.txt"
+            bare.write_text("没有标题的一段随记。", encoding="utf-8")
+
+            h.cfg["extract"]["root"] = str(diary_root)
+            h.cfg["data"]["diary_dir"] = str(diary_root)
+
+            with patch(
+                "src.extract.pipeline.resolve_diary_dir",
+                return_value=diary_root,
+            ), patch(
+                "src.store.resolve_diary_dir",
+                return_value=diary_root,
+            ):
+                manifest = run_extract_pipeline(
+                    root=diary_root,
+                    use_agent=False,
+                    manifest_path=h.cfg["extract"]["manifest_path"],
+                )
+
+            by_source = (manifest.stats or {}).get("by_source") or {}
+            self.assertEqual(manifest.stats.get("files_total"), 5)
+            # dated.md 2 条 + tech_split.md 2 条
+            self.assertEqual(by_source.get("content_regex"), 4)
+            self.assertEqual(by_source.get("path"), 2)
+            self.assertEqual(by_source.get("mtime"), 1)
+
+            split_e = [
+                e for e in manifest.entries if e.path == "tech_split.md"
+            ]
+            self.assertEqual(len(split_e), 2)
+            self.assertEqual({e.date for e in split_e}, {"2024-07-03", "2024-07-05"})
+            self.assertTrue(all(e.date_source == "content_regex" for e in split_e))
+            self.assertEqual(len(manifest.entries), 7)
+
+            # 被覆盖：files note 应含 overridden_by
+            dated_rec = next(f for f in manifest.files if f.path == "2024-07-01_dated.md")
+            self.assertIn("overridden_by=content_regex", dated_rec.note)
+
+            path_entries = {e.path: e for e in manifest.entries if e.date_source == "path"}
+            self.assertEqual(path_entries["2024-07-03_note.md"].date, "2024-07-03")
+            self.assertEqual(path_entries["2024/07/04.md"].date, "2024-07-04")
+            mtime_entries = [e for e in manifest.entries if e.date_source == "mtime"]
+            self.assertEqual(len(mtime_entries), 1)
+            self.assertEqual(mtime_entries[0].path, "nested/scrap.txt")
+
+            n = ingest_from_manifest(h.cfg["extract"]["manifest_path"])
+            self.assertGreater(n, 0)
+            print("[PASS] extract: 目录→正文(可覆盖)→mtime")
+
+    def test_07_extract_agent_mock_then_fallback(self):
+        """Agent 只处理「目录+正文」都未解决的文件。"""
+        with PathwayHarness() as h:
+            from src.extract import agent as agent_mod
+            from src.extract.pipeline import run_extract_pipeline
+
+            diary_root = h.root / "diary_agent"
+            diary_root.mkdir()
+            (diary_root / "from_agent.md").write_text(
+                "整文件无标题，靠 Agent 给日期。",
+                encoding="utf-8",
+            )
+            (diary_root / "need_regex.md").write_text(
+                "# 2024-08-10\n\n正文正则在 Agent 之前解决。\n",
+                encoding="utf-8",
+            )
+            (diary_root / "2024-08-20_named.md").write_text(
+                "文件名已有日期。\n",
+                encoding="utf-8",
+            )
+
+            class FakeExtractAgent:
+                def resolve_dates(self, nodes):
+                    seen = {n.path for n in nodes}
+                    # 目录已解决、正文已解决的都不应进 Agent
+                    assert "2024-08-20_named.md" not in seen
+                    assert "need_regex.md" not in seen
+                    assert seen == {"from_agent.md"}
+                    return ({"from_agent.md": "2024-08-01"}, [])
+
+            with patch.object(agent_mod, "ExtractAgent", FakeExtractAgent):
+                manifest = run_extract_pipeline(
+                    root=diary_root,
+                    use_agent=True,
+                    manifest_path=h.cfg["extract"]["manifest_path"],
+                )
+
+            by_source = (manifest.stats or {}).get("by_source") or {}
+            self.assertEqual(by_source.get("agent"), 1)
+            self.assertEqual(by_source.get("content_regex"), 1)
+            self.assertEqual(by_source.get("path"), 1)
+            self.assertEqual(manifest.agent_unresolved, [])
+
+            agent_e = next(e for e in manifest.entries if e.path == "from_agent.md")
+            self.assertEqual(agent_e.date_source, "agent")
+            regex_e = next(e for e in manifest.entries if e.path == "need_regex.md")
+            self.assertEqual(regex_e.date_source, "content_regex")
+            path_e = next(e for e in manifest.entries if e.path == "2024-08-20_named.md")
+            self.assertEqual(path_e.date_source, "path")
+            print("[PASS] extract: 目录→正文→agent→mtime")
 
 
 def run() -> int:

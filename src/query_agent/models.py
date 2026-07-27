@@ -20,11 +20,22 @@ class StructuredQuery:
     embedding_query: str = ""
     source: str = "llm"
     meta: dict[str, Any] = field(default_factory=dict)
+    # 本轮召回日期闭区间（YYYY-MM-DD）；空=不限制。完全由前端传入。
+    date_from: str = ""
+    date_to: str = ""
 
     @property
     def query_themes(self) -> list[str]:
         """检索主题列表（1~3）。"""
         return [s.strip() for s in self.query_sentences if str(s).strip()]
+
+    def date_range(self) -> tuple[str | None, str | None]:
+        """归一化日期范围；from>to 时自动对调。"""
+        start = (self.date_from or "").strip() or None
+        end = (self.date_to or "").strip() or None
+        if start and end and start > end:
+            start, end = end, start
+        return start, end
 
     def retrieval_query(self) -> str:
         """供 Tag 等单路使用：主题拼接或改写句。"""
@@ -47,4 +58,7 @@ class StructuredQuery:
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["query_themes"] = self.query_themes
+        start, end = self.date_range()
+        d["date_from"] = start or ""
+        d["date_to"] = end or ""
         return d

@@ -419,9 +419,61 @@ button {
   background: var(--bg-main);
 }
 
-.input-box {
+.composer {
   max-width: 768px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.date-range label {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.date-range input[type="date"] {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  padding: 4px 8px;
+  background: #fff;
+}
+
+.date-range input[type="date"]:focus {
+  outline: 2px solid rgba(16, 163, 127, 0.35);
+  border-color: var(--accent);
+}
+
+.date-sep {
+  color: var(--text-secondary);
+}
+
+.btn-date-clear {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.btn-date-clear:hover {
+  background: var(--bg-user);
+  color: var(--text-primary);
+}
+
+.input-box {
   display: flex;
   align-items: flex-end;
   gap: 8px;

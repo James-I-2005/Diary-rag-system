@@ -48,13 +48,14 @@ def run_paraphrase_pipeline(
     for row in rows:
         cid = row["id"]
         try:
-            if force:
-                deleted.extend(delete_sentences_for_chunk(cid))
             result = paraphrase_chunk(cid, row["text"], date=row.get("date") or "")
             if not result.sentences:
                 fail += 1
                 print(f"  [skip] {cid}: 无 sentence")
                 continue
+            # 仅在新结果就绪后再覆盖；避免 force 时先删后失败导致句子丢失
+            if force:
+                deleted.extend(delete_sentences_for_chunk(cid))
             save_sentences_for_chunk(
                 cid,
                 result.sentences,

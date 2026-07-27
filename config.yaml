@@ -1,7 +1,8 @@
 ﻿# 路径
-# diary_dir 可被 .env 的 DIARY_DIR 覆盖（支持相对/绝对路径）
+# 日记原文根目录请写在下方 extract.root（任意盘符，不必在 data/ 下）
+# extract.root 优先于 .env 的 DIARY_DIR；二者都空才用 data.diary_dir
 data:
-  diary_dir: "data/diary"
+  diary_dir: "data/diary"   # 仅当 extract.root 与 DIARY_DIR 都留空时的回退
   db_path: "data/diary.db"
   chroma_dir: "data/chroma"
 
@@ -184,6 +185,18 @@ llm:
     http_referer: "https://github.com/James-I-2005/Diary-rag-system"
     x_title: "Personal Diary RAG"
 
-# 日记格式
+# 日记格式（正文切分还会内置识别 2026.7.3 / 2026年7月3日 / 3.7.2026 等变体）
 diary:
   date_pattern: "^# (\\d{4}-\\d{2}-\\d{2})"
+
+# 目录 Extract → Manifest（见 doc/version0.4/05-extract-pipeline.md）
+extract:
+  # 日记原文根目录：递归扫此目录建 Manifest / 入库。可写绝对路径，例如：
+  # root: "D:/Notes/my-diary"
+  # root: "C:/Users/you/Documents/日记"
+  # 留空则回退到 DIARY_DIR，再回退 data.diary_dir
+  root: "D:/temp/week1"
+  extensions: [".md", ".txt", ".docx"]
+  peek_chars: 200
+  llm_role: "tags"
+  manifest_path: "data/extract_manifest.json"

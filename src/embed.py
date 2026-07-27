@@ -160,8 +160,32 @@ def _parse_sentence_results(results: dict) -> list[dict]:
     return hits
 
 
-def search_similar(query: str, top_k: int | None = None) -> list[dict]:
-    """向量检索 rag-sentences。"""
+def _chroma_date_where(
+    date_from: str | None = None,
+    date_to: str | None = None,
+) -> dict | None:
+    """构建 Chroma metadata 日期过滤；date 存 YYYY-MM-DD 时可字典序比较。"""
+    start = (date_from or "").strip() or None
+    end = (date_to or "").strip() or None
+    if start and end and start > end:
+        start, end = end, start
+    if start and end:
+        return {"$and": [{"date": {"$gte": start}}, {"date": {"$lte": end}}]}
+    if start:
+        return {"date": {"$gte": start}}
+    if end:
+        return {"date": {"$lte": end}}
+    return None
+
+
+def search_similar(
+    query: str,
+    top_k: int | None = None,
+    *,
+    date_from: str | None = None,
+    date_to: str | None = None,
+) -> list[dict]:
+    """向量检索 rag-sentences；可选按 date 闭区间过滤。"""
     cfg = load_config()
     k = top_k or cfg["retrieval"]["top_k"]
 
@@ -170,34 +194,34 @@ def search_similar(query: str, top_k: int | None = None) -> list[dict]:
         return []
 
     query_embedding = embed_texts([query])[0]
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=min(k, collection.count()),
-        include=["documents", "metadatas", "distances"],
-    )
+    where = _chroma_date_where(date_from, date_to)
+    kwargs: dict = {
+        "query_embeddings": [query_embedding],
+        "n_results": min(k, collection.count()),
+        "include": ["documents", "metadatas", "distances"],
+    }
+    if where is not None:
+        kwargs["where"] = where
+    try:
+        results = collection.query(**kwargs)
+    except Exception as exc:
+        # 无匹配 metadata / 旧索引缺 date 字段时降级为不带 where
+        if where is not None:
+            print(f"  [warn] Chroma 日期过滤失败，降级全库检索: {exc}")
+            kwargs.pop("where", None)
+            results = collection.query(**kwargs)
+        else:
+            raise
     return _parse_sentence_results(results)
 
 
 def search_by_date_range(
     query: str, start_date: str, end_date: str, top_k: int = 20
 ) -> list[dict]:
-    query_embedding = embed_texts([query])[0]
-    collection = get_sentences_collection()
-    if collection.count() == 0:
-        return []
-
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=min(top_k, collection.count()),
-        where={
-            "$and": [
-                {"date": {"$gte": start_date}},
-                {"date": {"$lte": end_date}},
-            ]
-        },
-        include=["documents", "metadatas", "distances"],
+    """兼容旧调用：等价于 search_similar(..., date_from=, date_to=)。"""
+    return search_similar(
+        query, top_k=top_k, date_from=start_date, date_to=end_date
     )
-    return _parse_sentence_results(results)
 
 
 if __name__ == "__main__":

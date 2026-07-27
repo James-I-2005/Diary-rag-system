@@ -65,6 +65,9 @@ class SendMessageBody(BaseModel):
     message: str = Field(..., min_length=1)
     use_vector: bool = True
     scheme: str | None = None  # weighted_50_50 | union_max | tag_only | embedding_only
+    # 本轮召回日期闭区间（YYYY-MM-DD）；空/省略=不限制。完全由前端传入，不持久化。
+    date_from: str | None = None
+    date_to: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -73,6 +76,22 @@ class ChatResponse(BaseModel):
     user_message: dict[str, Any]
     assistant_message: dict[str, Any]
     scheme: dict[str, Any] | None = None
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+def _normalize_client_date(value: str | None) -> str | None:
+    """校验 YYYY-MM-DD；空则不限制。"""
+    import re
+
+    s = (value or "").strip()
+    if not s:
+        return None
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+        raise HTTPException(
+            status_code=400, detail=f"日期格式须为 YYYY-MM-DD，收到: {s}"
+        )
+    return s
 
 
 app = FastAPI(title="Diary RAG Chat API", version="0.2.0")
@@ -166,12 +185,17 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
     if not query:
         raise HTTPException(status_code=400, detail="消息不能为空")
 
+    date_from = _normalize_client_date(body.date_from)
+    date_to = _normalize_client_date(body.date_to)
+
     result = svc.handle_turn(
         query,
         conversation_id=conversation_id,
         use_vector=body.use_vector,
         scheme=body.scheme or None,
         persist=True,
+        date_from=date_from,
+        date_to=date_to,
     )
     _maybe_set_title_from_first_message(conversation_id, query)
 
@@ -179,11 +203,14 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
     msgs = state.messages
     assistant_msg = msgs[-1] if msgs else None
     user_msg = msgs[-2] if len(msgs) >= 2 else None
+    sq = result.get("structured_query") or {}
 
     return ChatResponse(
         conversation_id=result["conversation_id"],
         answer=result["answer"],
         scheme=result.get("scheme") or None,
+        date_from=sq.get("date_from") or date_from,
+        date_to=sq.get("date_to") or date_to,
         user_message={
             "id": user_msg.id if user_msg else "",
             "role": "user",

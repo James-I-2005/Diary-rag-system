@@ -19,12 +19,29 @@ const btnNewChat = $("#btn-new-chat");
 const btnMenu = $("#btn-menu");
 const exampleQuestions = $("#example-questions");
 const schemeSelect = $("#scheme-select");
+const dateFromInput = $("#date-from");
+const dateToInput = $("#date-to");
+const btnDateClear = $("#btn-date-clear");
 
 let conversations = [];
 let activeId = null;
 let isSending = false;
 let userScrolledUp = false;
-let currentScheme = localStorage.getItem("retrieval_scheme") || "weighted_50_50";
+let currentScheme = localStorage.getItem("retrieval_scheme") || "embedding_only";
+
+function getDateRangePayload() {
+  const date_from = (dateFromInput?.value || "").trim();
+  const date_to = (dateToInput?.value || "").trim();
+  const payload = {};
+  if (date_from) payload.date_from = date_from;
+  if (date_to) payload.date_to = date_to;
+  return payload;
+}
+
+function clearDateRange() {
+  if (dateFromInput) dateFromInput.value = "";
+  if (dateToInput) dateToInput.value = "";
+}
 
 function formatTime(iso) {
   if (!iso) return "";
@@ -262,6 +279,7 @@ async function sendMessage() {
         message: text,
         use_vector: true,
         scheme: currentScheme,
+        ...getDateRangePayload(),
       }),
     });
 
@@ -341,6 +359,32 @@ async function init() {
   schemeSelect.addEventListener("change", () => {
     currentScheme = schemeSelect.value;
     localStorage.setItem("retrieval_scheme", currentScheme);
+  });
+
+  btnDateClear?.addEventListener("click", clearDateRange);
+
+  // 起止互校：若 from>to 时发送前后端也会对调；这里仅提示互换输入
+  dateFromInput?.addEventListener("change", () => {
+    if (
+      dateFromInput.value &&
+      dateToInput?.value &&
+      dateFromInput.value > dateToInput.value
+    ) {
+      const tmp = dateFromInput.value;
+      dateFromInput.value = dateToInput.value;
+      dateToInput.value = tmp;
+    }
+  });
+  dateToInput?.addEventListener("change", () => {
+    if (
+      dateFromInput?.value &&
+      dateToInput.value &&
+      dateFromInput.value > dateToInput.value
+    ) {
+      const tmp = dateFromInput.value;
+      dateFromInput.value = dateToInput.value;
+      dateToInput.value = tmp;
+    }
   });
 
   exampleQuestions.addEventListener("click", (e) => {

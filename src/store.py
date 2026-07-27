@@ -21,15 +21,25 @@ def load_config() -> dict:
 def resolve_path(relative: str) -> Path:
     """相对 My_rag 根目录解析路径；若已是绝对路径则原样返回。"""
     p = Path(relative)
-    return p if p.is_absolute() else ROOT / relative
+    return p if p.is_absolute() else (ROOT / relative).resolve()
 
 
 def resolve_diary_dir() -> Path:
-    """日记目录：优先 .env 的 DIARY_DIR，否则 config.yaml 的 data.diary_dir。"""
+    """
+    日记原文根目录（extract / ingest 共用），不必位于 data/ 下。
+
+    优先级：
+    1. config.yaml → extract.root（推荐：在此写任意绝对/相对路径）
+    2. 环境变量 DIARY_DIR（未设 extract.root 时的覆盖）
+    3. config.yaml → data.diary_dir
+    """
+    cfg = load_config()
+    extract_root = str(((cfg.get("extract") or {}).get("root") or "")).strip()
+    if extract_root:
+        return resolve_path(extract_root)
     override = os.getenv("DIARY_DIR", "").strip()
     if override:
         return resolve_path(override)
-    cfg = load_config()
     return resolve_path(cfg["data"]["diary_dir"])
 
 
@@ -150,7 +160,7 @@ def save_chunks(chunks: list, conn: sqlite3.Connection) -> None:
 
 
 def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
-    """文件变更重导入前，清理旧 chunk 与标签。"""
+    """文件变更重导入前，清理旧 chunk / 标签 / rag_sentences。"""
     ids = [
         r["id"]
         for r in conn.execute(
@@ -160,6 +170,15 @@ def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
     if not ids:
         return
     placeholders = ",".join("?" * len(ids))
+    n_sent = conn.execute(
+        f"SELECT COUNT(*) FROM rag_sentences WHERE chunk_id IN ({placeholders})",
+        ids,
+    ).fetchone()[0]
+    if n_sent:
+        print(
+            f"  [warn] 重导入 {source_file!r}：将删除 {len(ids)} 个 chunk "
+            f"及关联的 {n_sent} 条 rag_sentence（需重新 python main.py sentences）"
+        )
     conn.execute(
         f"DELETE FROM chunk_entity WHERE chunk_id IN ({placeholders})", ids
     )

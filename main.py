@@ -12,11 +12,63 @@ from src.answer import generate_answer
 console = Console()
 
 
-def cmd_ingest() -> None:
-    from src.ingest import ingest_all
+def cmd_extract(
+    *,
+    root: str | None = None,
+    use_agent: bool = False,
+    manifest: str | None = None,
+) -> None:
+    """扫盘 →（可选）Agent → regex/mtime → 写 Manifest。"""
+    from src.extract.manifest import default_manifest_path
+    from src.extract.pipeline import run_extract_pipeline
 
-    count = ingest_all()
-    console.print(f"[green]导入完成[/green]，共 {count} 个 chunk")
+    mode = "agent+fallback" if use_agent else "regex→mtime（无 Agent）"
+    console.print(f"[dim]extract 模式: {mode}[/dim]")
+    manifest_obj = run_extract_pipeline(
+        root=root,
+        use_agent=use_agent,
+        manifest_path=manifest,
+    )
+    out = manifest or str(default_manifest_path())
+    stats = manifest_obj.stats or {}
+    console.print(
+        f"[green]extract 完成[/green] root={manifest_obj.root} "
+        f"files={stats.get('files_total', 0)} entries={stats.get('entries_total', 0)} "
+        f"by_source={stats.get('by_source', {})}"
+    )
+    if manifest_obj.errors:
+        console.print(f"[yellow]errors={len(manifest_obj.errors)}[/yellow]")
+    console.print(f"[dim]manifest → {out}[/dim]")
+
+
+def cmd_ingest(
+    *,
+    manifest: str | None = None,
+    legacy: bool = False,
+    use_agent: bool = False,
+) -> None:
+    """默认：若已有 manifest 则按 manifest 建库；否则先 extract(无 Agent) 再 ingest。"""
+    from pathlib import Path
+
+    from src.extract.manifest import default_manifest_path
+    from src.ingest import ingest_all, ingest_from_manifest
+    from src.store import resolve_path
+
+    if legacy:
+        count = ingest_all(use_extract=False)
+        console.print(f"[green]导入完成（legacy）[/green]，共 {count} 个 chunk")
+        return
+
+    mpath = Path(manifest) if manifest else default_manifest_path()
+    if not mpath.is_absolute():
+        mpath = resolve_path(str(mpath))
+
+    if not mpath.is_file():
+        console.print("[dim]无 manifest，先跑 extract（无 Agent）…[/dim]")
+        cmd_extract(use_agent=use_agent, manifest=str(mpath))
+
+    count = ingest_from_manifest(mpath)
+    console.print(f"[green]导入完成[/green]，共 {count} 个 chunk（from manifest）")
 
 
 def cmd_index() -> None:
@@ -173,7 +225,7 @@ def main() -> None:
         "command",
         nargs="?",
         default="chat",
-        help="ingest | index | tags | sentences | update | test | chat | web | 或直接提问",
+        help="extract | ingest | index | tags | sentences | update | test | chat | web | 或直接提问",
     )
     parser.add_argument("--host", default="127.0.0.1", help="web 服务监听地址")
     parser.add_argument("--port", type=int, default=8765, help="web 服务端口")
@@ -182,12 +234,37 @@ def main() -> None:
         action="store_true",
         help="sentences：强制按当前 prompt 重跑已有 chunk（忽略已有 sentence 缓存）",
     )
+    parser.add_argument(
+        "--root",
+        default=None,
+        help="extract：日记根目录（默认 config/DIARY_DIR）",
+    )
+    parser.add_argument(
+        "--manifest",
+        default=None,
+        help="extract/ingest：manifest 路径（默认 data/extract_manifest.json）",
+    )
+    parser.add_argument(
+        "--agent",
+        action="store_true",
+        help="extract：启用 Extract Agent 定日期后再 regex/mtime 兜底",
+    )
+    parser.add_argument(
+        "--legacy",
+        action="store_true",
+        help="ingest：旧逻辑（仅顶层 *.md + 正文标题，不经 manifest）",
+    )
     # 支持：python main.py 吃了几次火锅（多词问题）
     parser.add_argument("rest", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     commands = {
-        "ingest": cmd_ingest,
+        "extract": lambda: cmd_extract(
+            root=args.root, use_agent=args.agent, manifest=args.manifest
+        ),
+        "ingest": lambda: cmd_ingest(
+            manifest=args.manifest, legacy=args.legacy, use_agent=args.agent
+        ),
         "index": cmd_index,
         "tags": cmd_tags,
         "sentences": lambda: cmd_sentences(force=args.force),
@@ -209,7 +286,6 @@ def main() -> None:
 
     answer = generate_answer(question)
     console.print(Markdown(answer))
-
 
 if __name__ == "__main__":
     main()

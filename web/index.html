@@ -58,20 +58,29 @@
       </section>
 
       <footer class="input-area">
-        <div class="input-box">
-          <textarea
-            id="message-input"
-            rows="1"
-            placeholder="输入问题，Enter 发送，Shift+Enter 换行"
-            aria-label="消息输入"
-          ></textarea>
-          <button type="button" class="btn-send" id="btn-send" disabled aria-label="发送">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-            </svg>
-          </button>
+        <div class="composer">
+          <div class="date-range" title="本轮召回日期范围；留空表示不限制">
+            <label for="date-from">召回自</label>
+            <input type="date" id="date-from" aria-label="召回起始日期" />
+            <span class="date-sep">至</span>
+            <input type="date" id="date-to" aria-label="召回结束日期" />
+            <button type="button" class="btn-date-clear" id="btn-date-clear" title="清除日期">清除</button>
+          </div>
+          <div class="input-box">
+            <textarea
+              id="message-input"
+              rows="1"
+              placeholder="输入问题，Enter 发送，Shift+Enter 换行"
+              aria-label="消息输入"
+            ></textarea>
+            <button type="button" class="btn-send" id="btn-send" disabled aria-label="发送">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </div>
         </div>
-        <p class="input-hint">召回记忆仅用于本轮回答，不会写入聊天历史</p>
+        <p class="input-hint">召回记忆仅用于本轮回答；日期范围每轮由上方选择，留空则不限制</p>
       </footer>
     </main>
   </div>
