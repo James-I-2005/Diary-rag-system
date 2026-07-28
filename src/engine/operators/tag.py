@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from src.engine.candidate import Candidate, merge_candidates
-from src.engine.date_range import date_bounds_from_structured
+from src.engine.date_range import date_allowed
 from src.engine.operator import Operator
 from src.rag_sentences import sentences_for_chunks
 from src.tag_retrieve import resolve_tag_score_config, tag_match
@@ -31,17 +31,11 @@ class TagOperator(Operator):
             print(f"  [warn] TagOperator 失败: {exc}")
             return list(candidates)
 
-        date_from, date_to = date_bounds_from_structured(structured)
-        if date_from or date_to:
-            filtered = []
-            for h in hits:
-                d = str(h.get("date") or "")
-                if date_from and d < date_from:
-                    continue
-                if date_to and d > date_to:
-                    continue
-                filtered.append(h)
-            hits = filtered
+        hits = [
+            h
+            for h in hits
+            if date_allowed(str(h.get("date") or ""), structured)
+        ]
 
         chunk_scores = {
             h["id"]: float(h.get("tag_score") or h.get("score") or 0.0)

@@ -9,9 +9,9 @@ python scripts/check_env.py
 # 1. 在 config.yaml 设置 extract.root 为日记原文目录（任意路径，不必在 data/ 下）
 #    例如 root: "D:/Notes/my-diary"
 # 2. 目录 Extract → Manifest → 导入 chunks
-#    无 Agent（regex→mtime）：
+#    无 Agent：path → 正文 → mtime
 python main.py extract
-#    可选：启用 Agent 猜路径日期后再兜底
+#    可选：path 未命中时用轻量路径 Agent（中文月等），再正文/mtime
 # python main.py extract --agent
 #    按 Manifest 建库（无 manifest 时会自动先 extract）
 python main.py ingest
@@ -37,6 +37,7 @@ python scripts/build_chunk_entities.py
 .\scripts\restart_web.ps1
 # 或：python main.py web
 # 浏览器打开 http://127.0.0.1:8765
+# 侧栏「导入日记库」：填本机根目录 → extract → ingest →（可选）sentences
 # Query Agent 默认 mode=react：先分析问题再调 grep(chunk原文)/rag_search
 # 回退旧改写通路：config query_agent.mode: rewrite
 

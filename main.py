@@ -22,7 +22,7 @@ def cmd_extract(
     from src.extract.manifest import default_manifest_path
     from src.extract.pipeline import run_extract_pipeline
 
-    mode = "agent+fallback" if use_agent else "regex→mtime（无 Agent）"
+    mode = "path→agent→正文→mtime" if use_agent else "path→正文→mtime（无 Agent）"
     console.print(f"[dim]extract 模式: {mode}[/dim]")
     manifest_obj = run_extract_pipeline(
         root=root,
@@ -247,7 +247,7 @@ def main() -> None:
     parser.add_argument(
         "--agent",
         action="store_true",
-        help="extract：启用 Extract Agent 定日期后再 regex/mtime 兜底",
+        help="extract：对 path 正则未命中的文件启用轻量路径 Agent，再正文/mtime",
     )
     parser.add_argument(
         "--legacy",

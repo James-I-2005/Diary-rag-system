@@ -1,4 +1,4 @@
-"""Extract Pipeline：扫盘 →（可选）Agent 定日期 → 正则/mtime → Manifest。"""
+"""Extract Pipeline：扫盘 → path →（可选）Agent → 正文正则 → mtime → Manifest。"""
 
 from __future__ import annotations
 

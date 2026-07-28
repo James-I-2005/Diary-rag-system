@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from src.embed import search_similar
 from src.engine.candidate import Candidate, merge_candidates
-from src.engine.date_range import date_bounds_from_structured
+from src.engine.date_range import date_bounds_from_structured, dates_from_structured
 from src.engine.operator import Operator
 from src.tag_retrieve import resolve_retrieval_config
 
@@ -42,7 +42,10 @@ class EmbeddingOperator(Operator):
         if not themes:
             return list(candidates)
 
-        date_from, date_to = date_bounds_from_structured(structured)
+        dset = dates_from_structured(structured)
+        date_from, date_to = (
+            (None, None) if dset else date_bounds_from_structured(structured)
+        )
         per_theme_k = max(int(k), 8)
 
         merged = list(candidates)
@@ -53,6 +56,7 @@ class EmbeddingOperator(Operator):
                     top_k=per_theme_k,
                     date_from=date_from,
                     date_to=date_to,
+                    dates=dset,
                 )
             except Exception as exc:
                 print(f"  [warn] EmbeddingOperator theme={theme!r} 失败: {exc}")

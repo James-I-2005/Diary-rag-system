@@ -1,4 +1,4 @@
-"""日期兜底：目录/文件名 → 正文正则（可覆盖目录）→ Agent → mtime。"""
+"""日期级联：path 正则 → Agent（路径）→ 正文正则 → mtime。"""
 
 from __future__ import annotations
 
@@ -64,66 +64,63 @@ def entry_from_mtime(node: FileNode, text: str) -> ManifestEntry | None:
     )
 
 
-def resolve_path_and_content(
-    node: FileNode,
-    date_pattern: str,
-) -> tuple[list[ManifestEntry] | None, str | None, str | None]:
-    """
-    阶段 1–2：目录/文件名 → 正文正则（正文命中则覆盖目录）。
-
-    返回 (entries|None, error|None, path_date_or_None)。
-    - entries 非空：已由 path 或 content_regex 解决
-    - entries 为 None 且 error 为 None：仍需 Agent / mtime；第三项为 path 候选（供 note）
-    """
-    try:
-        text = read_file_text(node.abs_path)
-    except OSError as exc:
-        return None, str(exc), None
-
-    path_date = parse_date_from_rel_path(
+def try_path_date(node: FileNode) -> str | None:
+    """步骤 1：标准路径/文件名年月日正则。"""
+    return parse_date_from_rel_path(
         node.path,
         fallback_year=int(node.mtime_date[:4]) if node.mtime_date else None,
     )
 
-    # 2) 正文正则：命中则覆盖目录结果
-    regex_entries = entries_from_regex(node, text, date_pattern)
-    if regex_entries:
-        return regex_entries, None, path_date
 
-    # 1) 目录/文件名（正文未覆盖时生效）
-    if path_date:
-        entry = _whole_file_entry(node, text, path_date, "path")
-        if entry:
-            return [entry], None, path_date
-        return None, "empty_or_unreadable", path_date
-
-    # 正文与目录皆无 → 交后续 Agent / mtime；仍带回 text 由上层读文件
-    if not text.strip():
-        return None, "empty_or_unreadable", None
-    return None, None, None
+def entries_from_path(
+    node: FileNode,
+    text: str,
+    path_date: str,
+) -> list[ManifestEntry] | None:
+    entry = _whole_file_entry(node, text, path_date, "path")
+    return [entry] if entry else None
 
 
-def apply_agent_or_mtime(
+def entries_from_agent_date(
+    node: FileNode,
+    text: str,
+    agent_date: str,
+) -> list[ManifestEntry] | None:
+    entry = _whole_file_entry(node, text, agent_date, "agent")
+    return [entry] if entry else None
+
+
+def resolve_after_path_failed(
     node: FileNode,
     date_pattern: str,
     *,
     agent_date: str | None = None,
 ) -> tuple[list[ManifestEntry], str | None]:
     """
-    阶段 3–4：Agent → mtime（仅当目录+正文都未解决时）。
+    路径正则未命中后：Agent 日期（若有）→ 正文正则 → mtime。
+    返回 (entries, error|None)。
     """
     try:
         text = read_file_text(node.abs_path)
     except OSError as exc:
         return [], str(exc)
 
-    if agent_date and is_valid_date(agent_date):
-        # 此时正文正则已确认无命中，不再让 agent 被 regex 覆盖
-        entry = _whole_file_entry(node, text, agent_date, "agent")
-        if entry:
-            return [entry], None
+    if not text.strip():
         return [], "empty_or_unreadable"
 
+    # 2) Agent（路径推断出的 YYYY-MM-DD）
+    if agent_date and is_valid_date(agent_date):
+        got = entries_from_agent_date(node, text, agent_date)
+        if got:
+            return got, None
+        return [], "empty_or_unreadable"
+
+    # 3) 正文正则
+    regex_entries = entries_from_regex(node, text, date_pattern)
+    if regex_entries:
+        return regex_entries, None
+
+    # 4) mtime
     mtime_entry = entry_from_mtime(node, text)
     if mtime_entry:
         return [mtime_entry], None
@@ -138,16 +135,25 @@ def resolve_file_dates(
     suggested_source: str = "agent",
 ) -> tuple[list[ManifestEntry], str | None]:
     """
-    单文件完整级联（供测试/兼容）：
-    1 目录 → 2 正文(可覆盖目录) → 3 Agent → 4 mtime
+    单文件完整级联（测试/兼容）：
+    1 path → 2 agent → 3 content_regex → 4 mtime
     """
-    got, err, _path_date = resolve_path_and_content(node, date_pattern)
-    if err:
-        return [], err
-    if got is not None:
-        return got, None
+    try:
+        text = read_file_text(node.abs_path)
+    except OSError as exc:
+        return [], str(exc)
+
+    path_date = try_path_date(node)
+    if path_date:
+        got = entries_from_path(node, text, path_date)
+        if got:
+            return got, None
+        return [], "empty_or_unreadable"
+
     agent_date = suggested_date if suggested_source == "agent" else None
-    return apply_agent_or_mtime(node, date_pattern, agent_date=agent_date)
+    return resolve_after_path_failed(
+        node, date_pattern, agent_date=agent_date
+    )
 
 
 def resolve_unresolved_file(

@@ -369,6 +369,8 @@ class ContextEngine:
         memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
         retrieval_trace: dict[str, Any] | None = None,
         prior_memories: Iterable[RetrievedMemory] | None = None,
+        system_override: str | None = None,
+        extra_system_blocks: Iterable[str] | None = None,
     ) -> BuiltContext:
         """
         Context Builder：按流水线组装最终 LLM messages。
@@ -385,6 +387,8 @@ class ContextEngine:
             memories=memories,
             retrieval_trace=retrieval_trace,
             prior_memories=prior_memories,
+            system_override=system_override,
+            extra_system_blocks=extra_system_blocks,
         )
 
     def build_context(
@@ -395,12 +399,22 @@ class ContextEngine:
         memories: Iterable[Candidate | RetrievedMemory | dict[str, Any]] | None = None,
         retrieval_trace: dict[str, Any] | None = None,
         prior_memories: Iterable[RetrievedMemory] | None = None,
+        system_override: str | None = None,
+        extra_system_blocks: Iterable[str] | None = None,
     ) -> BuiltContext:
+        """
+        组装 messages。Query Agent 与 Answer 共用同一流水线：
+        仅通过 system_override / extra_system_blocks 区分角色指令。
+        """
         budget = self.budget
         window = self.session_window_turns()
 
         # --- 1. System Prompt ---
-        system = fit_text(self.system_prompt(), budget.allot("system"))
+        # Agent 覆盖的系统提示（工具契约）不截断，避免 JSON 格式说明被裁掉
+        if system_override and str(system_override).strip():
+            system = str(system_override).strip()
+        else:
+            system = fit_text(self.system_prompt(), budget.allot("system"))
 
         # --- 2. Conversation Summary（溢出窗口的压缩记忆）---
         summary = fit_text(state.summary or "", budget.allot("summary"))
@@ -444,6 +458,10 @@ class ContextEngine:
                 messages.append({"role": m.role, "content": m.content})
         if mem_block:
             messages.append({"role": "system", "content": mem_block})
+        for block in extra_system_blocks or []:
+            text = str(block or "").strip()
+            if text:
+                messages.append({"role": "system", "content": text})
         messages.append({"role": "user", "content": q_text})
 
         total_est = sum(estimate_tokens(m["content"]) for m in messages)

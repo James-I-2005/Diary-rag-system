@@ -49,6 +49,8 @@ data/extract_manifest.json
 data/manifests/
 data/retrieval_runs/
 data/rag_sentences_export.json
+data/day_insights/
+data/_wc_debug.txt
 
 # ----- Tag / 词表旁路缓存（可重建）-----
 data/vocabulary.json

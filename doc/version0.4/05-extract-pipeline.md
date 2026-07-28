@@ -16,11 +16,12 @@
 日期级联（严格顺序）：
 
 ```text
-1. 目录/文件名（path）
-2. 正文正则（content_regex）—— 命中则覆盖步骤 1 的目录结果
-3. Extract Agent（仅对 1+2 仍未知的文件；需 --agent）
+1. 目录/文件名标准年月日正则（path）
+2. Extract Agent（仅对 path 未解决；轻量、只看路径；需 --agent）
+   → date | unknown（如 2026/八月/31）
+3. 正文正则（content_regex）—— 仅 path+agent 仍未知时
 4. mtime（confidence=low）
-→ Manifest → Ingest
+→ Manifest（维护已正确提取的 entries 集合）→ Ingest
 ```
 
 ---
@@ -36,25 +37,24 @@
 └─────────┬─────────┘
           ▼
 ┌───────────────────┐
-│ 2. Extract Agent  │  输入：目录树（+ 可选弱线索）
-│    （唯一 LLM）   │  输出：resolved_by_agent[] + unresolved_paths[]
+│ 2. path 正则      │  标准年月日；命中 → 加入已提取集合
+└─────────┬─────────┘
+          ▼（未解决）
+┌───────────────────┐
+│ 3. Extract Agent  │  轻量、只看路径（如 2026/八月/31）
+│    （可选 LLM）   │  → date | unknown
+└─────────┬─────────┘
+          ▼（仍未知）
+┌───────────────────┐
+│ 4. 正文正则/mtime │  content_regex 切分；再不行整文件 mtime
 └─────────┬─────────┘
           ▼
 ┌───────────────────┐
-│ 3. fallback       │  纯代码，无 LLM
-│    （死规则）     │  对 unresolved：
-│                   │    a) 正文 date_pattern 切分 → Entry（source=content_regex）
-│                   │    b) 仍无 → 整文件一条，date=mtime 日（source=mtime）
+│ 5. Manifest       │  已正确提取的 entries 集合
 └─────────┬─────────┘
           ▼
 ┌───────────────────┐
-│ 4. Manifest       │  写出 data/extract_manifest.json（或按 root 命名）
-│                   │  含 entries[] + unresolved_after_agent（审计用，最终应为空或仅告警）
-└─────────┬─────────┘
-          ▼
-┌───────────────────┐
-│ 5. Ingest         │  读 Manifest.entries → chunk → SQLite chunks
-│                   │  （其后仍接 sentences → index → tags）
+│ 6. Ingest         │  读 Manifest.entries → chunk → SQLite
 └───────────────────┘
 ```
 

@@ -42,8 +42,9 @@ def load_query_rewrite_prompt() -> str:
 class QueryAgent:
     """Raw Query → 1~3 检索主题短语。"""
 
-    def __init__(self) -> None:
+    def __init__(self, context_engine: Any | None = None) -> None:
         self._cfg = self._load_cfg()
+        self.context_engine = context_engine
 
     def _load_cfg(self) -> dict[str, Any]:
         return load_config().get("query_agent") or {}
@@ -150,22 +151,42 @@ class QueryAgent:
         *,
         state: ConversationState | None,
     ) -> StructuredQuery:
-        context = self._format_context(state)
-        user_parts = [f"用户输入：{original}"]
-        if context:
-            user_parts.append(context)
-        user_parts.append(
+        # 与 Answer / React Agent 同构：摘要 + 窗口对话 + 曾召回记忆 + 当前问题
+        rewrite_system = (
+            load_query_rewrite_prompt()
+            + "\n\n请结合会话上下文理解指代（如「其他的呢」），"
+            "再改写成 1~3 个客观主题短语；不要把追问套话本身当作主题。"
+        )
+        task_block = (
+            "【Query Agent 本轮任务】\n"
             "请只输出 1~3 条主题短语，每行一条，可用 `- ` 开头；不要解释。"
         )
-        user_content = "\n\n".join(user_parts)
+        if state is not None:
+            engine = self.context_engine
+            if engine is None:
+                from src.context.engine import ContextEngine
+
+                engine = ContextEngine()
+                self.context_engine = engine
+            built = engine.build_context(
+                query=original,
+                state=state,
+                memories=[],
+                system_override=rewrite_system,
+                extra_system_blocks=[task_block],
+            )
+            messages = list(built.messages)
+        else:
+            messages = [
+                {"role": "system", "content": rewrite_system},
+                {"role": "system", "content": task_block},
+                {"role": "user", "content": original},
+            ]
 
         client = get_llm_client(self.llm_role())
         resp = client.chat.completions.create(
             model=get_llm_model(self.llm_role()),
-            messages=[
-                {"role": "system", "content": load_query_rewrite_prompt()},
-                {"role": "user", "content": user_content},
-            ],
+            messages=messages,
             temperature=0.1,
         )
         raw = (resp.choices[0].message.content or "").strip()

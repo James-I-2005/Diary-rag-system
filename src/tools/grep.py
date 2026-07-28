@@ -33,6 +33,7 @@ def grep_chunks(
     terms: list[str] | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
+    dates: list[str] | None = None,
     top_k: int = 20,
     **_extra: Any,
 ) -> dict[str, Any]:
@@ -43,6 +44,8 @@ def grep_chunks(
       hits: 原始命中
       chunks: 已按 chunk 聚合、可供 Context 使用的证据列表
     """
+    from src.engine.date_range import normalize_date_list
+
     cleaned = [str(t).strip() for t in (terms or []) if str(t).strip()]
     # 去重保序
     seen: set[str] = set()
@@ -61,6 +64,7 @@ def grep_chunks(
             "count": 0,
         }
 
+    dset = normalize_date_list(dates)
     start = _norm_date(date_from)
     end = _norm_date(date_to)
     if start and end and start > end:
@@ -70,12 +74,17 @@ def grep_chunks(
     try:
         sql = "SELECT id, date, text, source_file FROM chunks WHERE 1=1"
         params: list[Any] = []
-        if start:
-            sql += " AND date >= ?"
-            params.append(start)
-        if end:
-            sql += " AND date <= ?"
-            params.append(end)
+        if dset:
+            ph = ",".join("?" * len(dset))
+            sql += f" AND date IN ({ph})"
+            params.extend(dset)
+        else:
+            if start:
+                sql += " AND date >= ?"
+                params.append(start)
+            if end:
+                sql += " AND date <= ?"
+                params.append(end)
         # 至少一个 term 命中（OR），缩小扫描
         like_parts = []
         for t in terms_u:

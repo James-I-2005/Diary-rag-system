@@ -8,83 +8,222 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-top">
-        <div class="logo">
-          <span class="logo-icon">📔</span>
-          <span class="logo-text">Memory Assistant</span>
-        </div>
-        <button type="button" class="btn-new-chat" id="btn-new-chat">
-          <span class="icon">+</span>
-          新建聊天
-        </button>
-      </div>
-
-      <nav class="conversation-list" id="conversation-list" aria-label="历史对话">
-        <!-- 动态填充 -->
-      </nav>
-
-      <div class="sidebar-footer">
-        <span class="sidebar-hint">个人日记 RAG</span>
-      </div>
-    </aside>
-
-    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
-
-    <main class="workspace">
-      <header class="workspace-header">
-        <button type="button" class="btn-menu" id="btn-menu" aria-label="打开菜单">☰</button>
-        <h1 class="workspace-title" id="workspace-title">Memory Assistant</h1>
-        <div class="scheme-picker">
-          <label for="scheme-select">检索方案</label>
-          <select id="scheme-select" aria-label="检索方案">
-            <option value="weighted_50_50">Tag + RAG 加权 (0.5/0.5)</option>
-          </select>
-        </div>
-      </header>
-
-      <section class="message-area" id="message-area">
-        <div class="empty-state" id="empty-state">
-          <h2>你好！</h2>
-          <p>今天想回忆些什么？</p>
-          <ul class="example-questions" id="example-questions">
-            <li><button type="button" data-q="碧蓮做了什么？">碧蓮做了什么？</button></li>
-            <li><button type="button" data-q="討論水泥定價的日记有哪些？">討論水泥定價的日记有哪些？</button></li>
-            <li><button type="button" data-q="有没有写过关于藤田君的记录？">有没有写过关于藤田君的记录？</button></li>
-          </ul>
-        </div>
-        <div class="messages" id="messages"></div>
-      </section>
-
-      <footer class="input-area">
-        <div class="composer">
-          <div class="date-range" title="本轮召回日期范围；留空表示不限制">
-            <label for="date-from">召回自</label>
-            <input type="date" id="date-from" aria-label="召回起始日期" />
-            <span class="date-sep">至</span>
-            <input type="date" id="date-to" aria-label="召回结束日期" />
-            <button type="button" class="btn-date-clear" id="btn-date-clear" title="清除日期">清除</button>
+  <div class="shell">
+    <div class="app" id="view-chat" data-view="chat">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+          <div class="logo">
+            <span class="logo-icon">📔</span>
+            <span class="logo-text">Memory Assistant</span>
           </div>
-          <div class="input-box">
-            <textarea
-              id="message-input"
-              rows="1"
-              placeholder="输入问题，Enter 发送，Shift+Enter 换行"
-              aria-label="消息输入"
-            ></textarea>
-            <button type="button" class="btn-send" id="btn-send" disabled aria-label="发送">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-              </svg>
+          <button type="button" class="btn-new-chat" id="btn-new-chat">
+            <span class="icon">+</span>
+            新建聊天
+          </button>
+          <button type="button" class="btn-import" id="btn-import">
+            <span class="icon">📁</span>
+            导入日记库
+          </button>
+        </div>
+
+        <nav class="conversation-list" id="conversation-list" aria-label="历史对话">
+          <!-- 动态填充 -->
+        </nav>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-db" id="sidebar-db">库：—</p>
+          <span class="sidebar-hint">个人日记 RAG · 本机目录导入</span>
+        </div>
+      </aside>
+
+      <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+      <main class="workspace">
+        <header class="workspace-header">
+          <button type="button" class="btn-menu" id="btn-menu" aria-label="打开菜单">☰</button>
+          <h1 class="workspace-title" id="workspace-title">Memory Assistant</h1>
+          <div class="scheme-picker">
+            <label for="scheme-select">检索方案</label>
+            <select id="scheme-select" aria-label="检索方案">
+              <option value="weighted_50_50">Tag + RAG 加权 (0.5/0.5)</option>
+            </select>
+          </div>
+        </header>
+
+        <section class="message-area" id="message-area">
+          <div class="empty-state" id="empty-state">
+            <h2>你好！</h2>
+            <p>今天想回忆些什么？</p>
+            <ul class="example-questions" id="example-questions">
+              <li><button type="button" data-q="碧蓮做了什么？">碧蓮做了什么？</button></li>
+              <li><button type="button" data-q="討論水泥定價的日记有哪些？">討論水泥定價的日记有哪些？</button></li>
+              <li><button type="button" data-q="有没有写过关于藤田君的记录？">有没有写过关于藤田君的记录？</button></li>
+            </ul>
+          </div>
+          <div class="messages" id="messages"></div>
+        </section>
+
+        <footer class="input-area">
+          <div class="composer">
+            <div class="date-picker-bar">
+              <button type="button" class="btn-date-picker" id="btn-date-picker-toggle">
+                📅 <span id="mini-cal-summary">召回：不限日期</span>
+              </button>
+              <button type="button" class="btn-date-clear" id="mini-cal-clear" title="清除已选日期">
+                清除
+              </button>
+            </div>
+            <div class="mini-cal-panel" id="mini-cal-panel" hidden>
+              <div class="mini-cal-toolbar">
+                <button type="button" class="cal-nav" id="mini-cal-prev">‹</button>
+                <span id="mini-cal-label">2026年7月</span>
+                <button type="button" class="cal-nav" id="mini-cal-next">›</button>
+              </div>
+              <div class="mini-cal-grid" id="mini-cal-grid"></div>
+              <p class="mini-cal-hint">勾选要召回的日期（可多选，不必连续）</p>
+            </div>
+            <div class="input-box">
+              <textarea
+                id="message-input"
+                rows="1"
+                placeholder="输入问题，Enter 发送，Shift+Enter 换行"
+                aria-label="消息输入"
+              ></textarea>
+              <button type="button" class="btn-send" id="btn-send" disabled aria-label="发送">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="input-hint">召回记忆仅用于本轮回答；上方可勾选日期集合，留空则不限制</p>
+        </footer>
+      </main>
+    </div>
+
+    <div class="app calendar-app" id="view-calendar" data-view="calendar" hidden>
+      <div class="calendar-month-view" id="calendar-month-view">
+        <section class="calendar-pane">
+          <header class="calendar-toolbar">
+            <button type="button" class="cal-nav" id="cal-prev" aria-label="上一月">‹</button>
+            <h1 class="calendar-month-title" id="calendar-month-title">2026年7月</h1>
+            <button type="button" class="cal-nav" id="cal-next" aria-label="下一月">›</button>
+            <button type="button" class="cal-today" id="cal-today">今天</button>
+          </header>
+          <div class="calendar-actions">
+            <button type="button" class="cal-action" id="cal-select-week">选本周</button>
+            <button type="button" class="cal-action" id="cal-select-month">选整月</button>
+            <button type="button" class="cal-action" id="cal-select-diary-month">选本月有日记</button>
+            <button type="button" class="cal-action" id="cal-clear-selection">清空选择</button>
+            <span class="cal-selection-summary" id="cal-selection-summary">未选择日期</span>
+            <button type="button" class="cal-action primary" id="cal-new-chat" disabled>
+              以此新建对话
             </button>
           </div>
-        </div>
-        <p class="input-hint">召回记忆仅用于本轮回答；日期范围每轮由上方选择，留空则不限制</p>
-      </footer>
-    </main>
+          <div class="calendar-legend">
+            <span><i class="dot has"></i> 已录入</span>
+            <span><i class="dot empty"></i> 未录入</span>
+            <span><i class="dot checked"></i> 已勾选</span>
+            <span class="hint">单击打开日记；Ctrl+单击勾选召回范围</span>
+          </div>
+          <div class="calendar-grid" id="calendar-grid" aria-label="日记日历"></div>
+        </section>
+        <aside class="month-side-slot" id="month-side-slot" aria-label="本月词云">
+          <h3 class="day-side-title">本月词云</h3>
+          <div class="day-cloud-wrap month-cloud-wrap">
+            <canvas id="month-wordcloud" width="320" height="480"></canvas>
+          </div>
+          <p class="day-side-status" id="month-cloud-status"></p>
+        </aside>
+      </div>
+
+      <div class="calendar-day-view" id="calendar-day-view" hidden>
+        <section class="day-reader" id="day-reader">
+          <header class="day-reader-header">
+            <button type="button" class="btn-day-back" id="btn-day-back" aria-label="返回日历">
+              ← 返回日历
+            </button>
+            <div class="day-reader-heading">
+              <h2 id="day-panel-title">选择一天</h2>
+              <p class="day-panel-meta" id="day-panel-meta"></p>
+            </div>
+          </header>
+          <div class="day-panel-body day-reader-body" id="day-panel-body">
+            <p class="day-panel-empty">点击日历中的一天阅读原文。</p>
+          </div>
+        </section>
+        <aside class="day-side-slot" id="day-side-slot" aria-label="一日印象">
+          <section class="day-side-poetic" aria-label="诗意总结">
+            <div class="day-side-poetic-head">
+              <h3 class="day-side-title">今日印象</h3>
+              <button type="button" class="btn-poetic-refresh" id="btn-poetic-refresh" hidden>
+                重新生成
+              </button>
+            </div>
+            <p class="day-summary" id="day-summary"></p>
+            <blockquote class="day-verse" id="day-verse"></blockquote>
+            <p class="day-verse-source" id="day-verse-source"></p>
+            <dl class="day-verse-meta" id="day-verse-meta" hidden>
+              <div>
+                <dt>释义</dt>
+                <dd id="day-verse-explain"></dd>
+              </div>
+              <div>
+                <dt>为何此句</dt>
+                <dd id="day-verse-why"></dd>
+              </div>
+            </dl>
+            <p class="day-side-status" id="day-poetic-status"></p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" aria-label="主导航">
+      <button type="button" class="nav-item active" data-nav="chat" id="nav-chat">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">聊天</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="calendar" id="nav-calendar">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">日历</span>
+      </button>
+    </nav>
   </div>
 
+  <div class="modal-backdrop" id="import-modal" hidden>
+    <div class="modal" role="dialog" aria-labelledby="import-title" aria-modal="true">
+      <h2 id="import-title">导入日记库</h2>
+      <p class="modal-desc">
+        填写本机日记根目录（服务端将递归扫描）。浏览器无法直接选取系统路径，请粘贴如
+        <code>D:/Notes/diary</code>。
+      </p>
+      <label class="modal-label" for="import-root">根目录</label>
+      <input
+        type="text"
+        id="import-root"
+        class="modal-input"
+        placeholder="D:/path/to/diary"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <label class="modal-check">
+        <input type="checkbox" id="import-agent" />
+        启用路径 Agent（识别「八月」等非标准目录名）
+      </label>
+      <label class="modal-check">
+        <input type="checkbox" id="import-vectors" checked />
+        生成 rag-sentence 并建向量索引（可问答，较慢）
+      </label>
+      <pre class="modal-status" id="import-status" hidden></pre>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" id="import-cancel">取消</button>
+        <button type="button" class="btn-modal-ok" id="import-submit">开始导入</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/calendar.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

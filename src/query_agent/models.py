@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from src.engine.date_range import normalize_date_list
+
 
 @dataclass
 class StructuredQuery:
@@ -20,7 +22,8 @@ class StructuredQuery:
     embedding_query: str = ""
     source: str = "llm"
     meta: dict[str, Any] = field(default_factory=dict)
-    # 本轮召回日期闭区间（YYYY-MM-DD）；空=不限制。完全由前端传入。
+    # 召回日期：优先 dates 集合；空则回退 date_from~date_to 闭区间。皆空=不限制。
+    dates: list[str] = field(default_factory=list)
     date_from: str = ""
     date_to: str = ""
 
@@ -29,8 +32,15 @@ class StructuredQuery:
         """检索主题列表（1~3）。"""
         return [s.strip() for s in self.query_sentences if str(s).strip()]
 
+    def allowed_dates(self) -> list[str]:
+        """规范化后的日期集合；空列表表示未用集合过滤。"""
+        return normalize_date_list(self.dates)
+
     def date_range(self) -> tuple[str | None, str | None]:
-        """归一化日期范围；from>to 时自动对调。"""
+        """归一化日期范围；若有 dates 则取 min/max；from>to 时自动对调。"""
+        ds = self.allowed_dates()
+        if ds:
+            return ds[0], ds[-1]
         start = (self.date_from or "").strip() or None
         end = (self.date_to or "").strip() or None
         if start and end and start > end:
@@ -58,6 +68,8 @@ class StructuredQuery:
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
         d["query_themes"] = self.query_themes
+        ds = self.allowed_dates()
+        d["dates"] = ds
         start, end = self.date_range()
         d["date_from"] = start or ""
         d["date_to"] = end or ""

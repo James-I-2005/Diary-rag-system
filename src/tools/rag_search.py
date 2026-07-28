@@ -23,6 +23,7 @@ def rag_search(
     themes: list[str] | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
+    dates: list[str] | None = None,
     top_k: int | None = None,
     scheme: str | None = None,
     **_extra: Any,
@@ -31,6 +32,8 @@ def rag_search(
     语义召回。themes 优先；否则用 query。
     日期通过 StructuredQuery 传给 EmbeddingOperator / Chroma where。
     """
+    from src.engine.date_range import normalize_date_list
+
     theme_list = [str(t).strip() for t in (themes or []) if str(t).strip()]
     q = (query or "").strip()
     if not theme_list and q:
@@ -48,6 +51,7 @@ def rag_search(
     k = int(top_k) if top_k is not None else int(cfg.top_k)
     pool = sentence_pool_size(k)
     sch = (scheme or _default_scheme()).strip() or "embedding_only"
+    dset = normalize_date_list(dates)
 
     structured = StructuredQuery(
         original_query=q or "；".join(theme_list),
@@ -57,8 +61,9 @@ def rag_search(
         retrieval_plan=["embedding"],
         embedding_query="\n".join(theme_list),
         source="tool",
-        date_from=(date_from or "").strip(),
-        date_to=(date_to or "").strip(),
+        dates=dset,
+        date_from=(date_from or "").strip() if not dset else "",
+        date_to=(date_to or "").strip() if not dset else "",
     )
     search_q = structured.retrieval_query()
     candidates, used = run_scheme(

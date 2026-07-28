@@ -482,7 +482,7 @@ class TestMockPathways(unittest.TestCase):
             print("[PASS] embedding: fake ANN → sentence candidates")
 
     def test_06_extract_regex_mtime_then_ingest(self):
-        """无 Agent：扫盘 → 正文正则 / mtime → Manifest → ingest_from_manifest。"""
+        """无 Agent：扫盘 → path → 正文正则 → mtime → Manifest → ingest。"""
         with PathwayHarness() as h:
             from src.extract.manifest import load_manifest
             from src.extract.pipeline import run_extract_pipeline
@@ -493,7 +493,7 @@ class TestMockPathways(unittest.TestCase):
             sub = diary_root / "nested"
             sub.mkdir(parents=True)
 
-            # 有标准日期标题 → content_regex（即使文件名也有日期，正文覆盖）
+            # 文件名含日期 → path（整文件一条；正文多日标题不再覆盖 path）
             (diary_root / "2024-07-01_dated.md").write_text(
                 "# 2024-07-01\n\n今天吃了火锅。\n\n"
                 "# 2024-07-02\n\n去打球了。\n",
@@ -504,7 +504,7 @@ class TestMockPathways(unittest.TestCase):
                 "文件名带来的日期。\n",
                 encoding="utf-8",
             )
-            # 正文内嵌点号日期（无 #）→ 应拆成两条 content_regex
+            # 路径无日期、正文内嵌点号日期 → content_regex 两条
             (diary_root / "tech_split.md").write_text(
                 "2024.7.3\n第一段内容。\n2024.7.5\n第二段内容。\n",
                 encoding="utf-8",
@@ -535,9 +535,9 @@ class TestMockPathways(unittest.TestCase):
 
             by_source = (manifest.stats or {}).get("by_source") or {}
             self.assertEqual(manifest.stats.get("files_total"), 5)
-            # dated.md 2 条 + tech_split.md 2 条
-            self.assertEqual(by_source.get("content_regex"), 4)
-            self.assertEqual(by_source.get("path"), 2)
+            # tech_split.md 2 条 content_regex；path：dated + note + 04.md = 3
+            self.assertEqual(by_source.get("content_regex"), 2)
+            self.assertEqual(by_source.get("path"), 3)
             self.assertEqual(by_source.get("mtime"), 1)
 
             split_e = [
@@ -546,11 +546,11 @@ class TestMockPathways(unittest.TestCase):
             self.assertEqual(len(split_e), 2)
             self.assertEqual({e.date for e in split_e}, {"2024-07-03", "2024-07-05"})
             self.assertTrue(all(e.date_source == "content_regex" for e in split_e))
-            self.assertEqual(len(manifest.entries), 7)
+            self.assertEqual(len(manifest.entries), 6)
 
-            # 被覆盖：files note 应含 overridden_by
-            dated_rec = next(f for f in manifest.files if f.path == "2024-07-01_dated.md")
-            self.assertIn("overridden_by=content_regex", dated_rec.note)
+            dated = next(e for e in manifest.entries if e.path == "2024-07-01_dated.md")
+            self.assertEqual(dated.date_source, "path")
+            self.assertEqual(dated.date, "2024-07-01")
 
             path_entries = {e.path: e for e in manifest.entries if e.date_source == "path"}
             self.assertEqual(path_entries["2024-07-03_note.md"].date, "2024-07-03")
@@ -561,10 +561,10 @@ class TestMockPathways(unittest.TestCase):
 
             n = ingest_from_manifest(h.cfg["extract"]["manifest_path"])
             self.assertGreater(n, 0)
-            print("[PASS] extract: 目录→正文(可覆盖)→mtime")
+            print("[PASS] extract: path→正文→mtime")
 
     def test_07_extract_agent_mock_then_fallback(self):
-        """Agent 只处理「目录+正文」都未解决的文件。"""
+        """Agent 只处理 path 正则未解决的文件；再交正文/mtime。"""
         with PathwayHarness() as h:
             from src.extract import agent as agent_mod
             from src.extract.pipeline import run_extract_pipeline
@@ -576,22 +576,34 @@ class TestMockPathways(unittest.TestCase):
                 encoding="utf-8",
             )
             (diary_root / "need_regex.md").write_text(
-                "# 2024-08-10\n\n正文正则在 Agent 之前解决。\n",
+                "# 2024-08-10\n\n正文正则在 Agent unknown 之后解决。\n",
                 encoding="utf-8",
             )
             (diary_root / "2024-08-20_named.md").write_text(
                 "文件名已有日期。\n",
                 encoding="utf-8",
             )
+            # 标准正则搞不定的中文月目录 → 应交 Agent
+            cn = diary_root / "2026" / "八月" / "31"
+            cn.mkdir(parents=True)
+            (cn / "note.md").write_text("中文月路径。\n", encoding="utf-8")
 
             class FakeExtractAgent:
                 def resolve_dates(self, nodes):
                     seen = {n.path for n in nodes}
-                    # 目录已解决、正文已解决的都不应进 Agent
+                    # path 已解决的不应进 Agent
                     assert "2024-08-20_named.md" not in seen
-                    assert "need_regex.md" not in seen
-                    assert seen == {"from_agent.md"}
-                    return ({"from_agent.md": "2024-08-01"}, [])
+                    # path 未解决的都会进 Agent（含将来靠正文的）
+                    assert "from_agent.md" in seen
+                    assert "need_regex.md" in seen
+                    assert "2026/八月/31/note.md" in seen
+                    return (
+                        {
+                            "from_agent.md": "2024-08-01",
+                            "2026/八月/31/note.md": "2026-08-31",
+                        },
+                        ["need_regex.md"],
+                    )
 
             with patch.object(agent_mod, "ExtractAgent", FakeExtractAgent):
                 manifest = run_extract_pipeline(
@@ -601,18 +613,21 @@ class TestMockPathways(unittest.TestCase):
                 )
 
             by_source = (manifest.stats or {}).get("by_source") or {}
-            self.assertEqual(by_source.get("agent"), 1)
+            self.assertEqual(by_source.get("agent"), 2)
             self.assertEqual(by_source.get("content_regex"), 1)
             self.assertEqual(by_source.get("path"), 1)
-            self.assertEqual(manifest.agent_unresolved, [])
+            self.assertEqual(manifest.agent_unresolved, ["need_regex.md"])
 
             agent_e = next(e for e in manifest.entries if e.path == "from_agent.md")
             self.assertEqual(agent_e.date_source, "agent")
+            cn_e = next(e for e in manifest.entries if e.path == "2026/八月/31/note.md")
+            self.assertEqual(cn_e.date_source, "agent")
+            self.assertEqual(cn_e.date, "2026-08-31")
             regex_e = next(e for e in manifest.entries if e.path == "need_regex.md")
             self.assertEqual(regex_e.date_source, "content_regex")
             path_e = next(e for e in manifest.entries if e.path == "2024-08-20_named.md")
             self.assertEqual(path_e.date_source, "path")
-            print("[PASS] extract: 目录→正文→agent→mtime")
+            print("[PASS] extract: path→agent→正文→mtime")
 
 
 def run() -> int:

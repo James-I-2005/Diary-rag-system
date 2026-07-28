@@ -163,8 +163,16 @@ def _parse_sentence_results(results: dict) -> list[dict]:
 def _chroma_date_where(
     date_from: str | None = None,
     date_to: str | None = None,
+    dates: list[str] | None = None,
 ) -> dict | None:
-    """构建 Chroma metadata 日期过滤；date 存 YYYY-MM-DD 时可字典序比较。"""
+    """构建 Chroma metadata 日期过滤；优先 dates 集合（$in）。"""
+    from src.engine.date_range import normalize_date_list
+
+    dset = normalize_date_list(dates)
+    if dset:
+        if len(dset) == 1:
+            return {"date": dset[0]}
+        return {"date": {"$in": dset}}
     start = (date_from or "").strip() or None
     end = (date_to or "").strip() or None
     if start and end and start > end:
@@ -184,8 +192,9 @@ def search_similar(
     *,
     date_from: str | None = None,
     date_to: str | None = None,
+    dates: list[str] | None = None,
 ) -> list[dict]:
-    """向量检索 rag-sentences；可选按 date 闭区间过滤。"""
+    """向量检索 rag-sentences；可选按日期集合或闭区间过滤。"""
     cfg = load_config()
     k = top_k or cfg["retrieval"]["top_k"]
 
@@ -194,7 +203,7 @@ def search_similar(
         return []
 
     query_embedding = embed_texts([query])[0]
-    where = _chroma_date_where(date_from, date_to)
+    where = _chroma_date_where(date_from, date_to, dates=dates)
     kwargs: dict = {
         "query_embeddings": [query_embedding],
         "n_results": min(k, collection.count()),

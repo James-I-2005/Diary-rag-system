@@ -19,29 +19,67 @@ const btnNewChat = $("#btn-new-chat");
 const btnMenu = $("#btn-menu");
 const exampleQuestions = $("#example-questions");
 const schemeSelect = $("#scheme-select");
-const dateFromInput = $("#date-from");
-const dateToInput = $("#date-to");
-const btnDateClear = $("#btn-date-clear");
+const dateFromInput = null;
+const dateToInput = null;
+const btnDateClear = null;
+const btnImport = $("#btn-import");
+const importModal = $("#import-modal");
+const importRoot = $("#import-root");
+const importAgent = $("#import-agent");
+const importVectors = $("#import-vectors");
+const importStatus = $("#import-status");
+const importCancel = $("#import-cancel");
+const importSubmit = $("#import-submit");
+const sidebarDb = $("#sidebar-db");
 
 let conversations = [];
 let activeId = null;
 let isSending = false;
 let userScrolledUp = false;
 let currentScheme = localStorage.getItem("retrieval_scheme") || "embedding_only";
+let isImporting = false;
+let currentView = "chat";
 
 function getDateRangePayload() {
-  const date_from = (dateFromInput?.value || "").trim();
-  const date_to = (dateToInput?.value || "").trim();
-  const payload = {};
-  if (date_from) payload.date_from = date_from;
-  if (date_to) payload.date_to = date_to;
-  return payload;
+  const dates = typeof DateSelection !== "undefined" ? DateSelection.get() : [];
+  if (dates.length) return { dates };
+  return {};
 }
 
-function clearDateRange() {
-  if (dateFromInput) dateFromInput.value = "";
-  if (dateToInput) dateToInput.value = "";
+function persistActiveDates() {
+  if (activeId && typeof DateSelection !== "undefined") {
+    DateSelection.saveForConversation(activeId);
+  }
 }
+
+window.persistActiveDates = persistActiveDates;
+
+async function createChatWithDates(dates) {
+  if (typeof DateSelection !== "undefined") {
+    DateSelection.set(dates || []);
+  }
+  const created = await api("/conversations", {
+    method: "POST",
+    body: JSON.stringify({
+      title: dates?.length ? `日记·${dates.length}天` : "新对话",
+    }),
+  });
+  await loadConversations();
+  activeId = created.id;
+  if (typeof DateSelection !== "undefined") {
+    DateSelection.set(dates || []);
+    DateSelection.saveForConversation(activeId);
+  }
+  workspaceTitle.textContent = created.title || "新对话";
+  clearMessages();
+  renderConversationList();
+  switchView("chat");
+  MiniDatePicker?.render?.();
+  messageInput.focus();
+  showError(`已新建对话，召回限定 ${dates.length} 天`);
+}
+
+window.createChatWithDates = createChatWithDates;
 
 function formatTime(iso) {
   if (!iso) return "";
@@ -219,6 +257,10 @@ async function selectConversation(id) {
 
   activeId = id;
   userScrolledUp = false;
+  if (typeof DateSelection !== "undefined") {
+    DateSelection.loadForConversation(id);
+    MiniDatePicker?.render?.();
+  }
   renderConversationList();
 
   const data = await api(`/conversations/${id}`);
@@ -247,6 +289,11 @@ async function createNewChat() {
   });
   await loadConversations();
   activeId = created.id;
+  if (typeof DateSelection !== "undefined") {
+    DateSelection.clear();
+    DateSelection.saveForConversation(activeId);
+    MiniDatePicker?.render?.();
+  }
   workspaceTitle.textContent = "新对话";
   clearMessages();
   renderConversationList();
@@ -303,6 +350,23 @@ async function sendMessage() {
   }
 }
 
+function switchView(name) {
+  currentView = name === "calendar" ? "calendar" : "chat";
+  const chat = $("#view-chat");
+  const cal = $("#view-calendar");
+  if (chat) chat.hidden = currentView !== "chat";
+  if (cal) cal.hidden = currentView !== "calendar";
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.nav === currentView);
+  });
+  if (currentView === "calendar" && typeof CalendarPage !== "undefined") {
+    CalendarPage.show();
+  }
+  if (currentView === "chat") {
+    closeSidebarMobile();
+  }
+}
+
 function closeSidebarMobile() {
   sidebar.classList.remove("open");
   sidebarBackdrop.hidden = true;
@@ -311,6 +375,112 @@ function closeSidebarMobile() {
 function openSidebarMobile() {
   sidebar.classList.add("open");
   sidebarBackdrop.hidden = false;
+}
+
+async function loadLibraryStatus() {
+  try {
+    const data = await api("/library");
+    const db = data.db || {};
+    const last = data.last;
+    let text = `库：${db.chunks ?? 0} chunks / ${db.sentences ?? 0} sentences`;
+    if (last?.root) {
+      const name = String(last.root).split("/").filter(Boolean).pop() || last.root;
+      text += ` · 最近：${name}`;
+    }
+    if (sidebarDb) sidebarDb.textContent = text;
+    if (last?.root && importRoot && !importRoot.value) {
+      importRoot.value = last.root;
+    } else if (!importRoot?.value) {
+      const saved = localStorage.getItem("import_root");
+      if (saved && importRoot) importRoot.value = saved;
+    }
+  } catch (err) {
+    console.warn("加载库状态失败", err);
+  }
+}
+
+function openImportModal() {
+  if (!importModal) return;
+  importModal.hidden = false;
+  if (importStatus) {
+    importStatus.hidden = true;
+    importStatus.textContent = "";
+  }
+  const saved = localStorage.getItem("import_root");
+  if (saved && importRoot && !importRoot.value) importRoot.value = saved;
+  importRoot?.focus();
+  importRoot?.select();
+}
+
+function closeImportModal() {
+  if (isImporting) return;
+  if (importModal) importModal.hidden = true;
+}
+
+async function submitImport() {
+  if (isImporting) return;
+  const root = (importRoot?.value || "").trim();
+  if (!root) {
+    showError("请填写本机日记根目录");
+    importRoot?.focus();
+    return;
+  }
+
+  isImporting = true;
+  if (importSubmit) importSubmit.disabled = true;
+  if (importCancel) importCancel.disabled = true;
+  if (btnImport) btnImport.disabled = true;
+  if (importStatus) {
+    importStatus.hidden = false;
+    importStatus.textContent =
+      "导入进行中…\nextract → ingest" +
+      (importVectors?.checked ? " → sentences/index" : "") +
+      "\n请勿关闭页面。";
+  }
+
+  try {
+    const result = await api("/library/import", {
+      method: "POST",
+      body: JSON.stringify({
+        root,
+        use_agent: !!importAgent?.checked,
+        build_vectors: importVectors ? !!importVectors.checked : true,
+      }),
+    });
+    localStorage.setItem("import_root", root);
+    const phases = result.phases || {};
+    const lines = [
+      "导入完成",
+      `根目录：${result.root}`,
+      `extract：${phases.extract?.entries_total ?? "?"} entries / ${phases.extract?.files_total ?? "?"} files`,
+      `ingest：${phases.ingest?.chunks ?? "?"} chunks`,
+    ];
+    if (phases.sentences) {
+      lines.push(
+        `sentences：ok=${phases.sentences.ok ?? 0} fail=${phases.sentences.fail ?? 0} chroma=${phases.sentences.chroma ?? "?"}`
+      );
+    }
+    if (importStatus) importStatus.textContent = lines.join("\n");
+    await loadLibraryStatus();
+    if (typeof CalendarPage !== "undefined") {
+      try {
+        await CalendarPage.refreshDates();
+      } catch {
+        /* ignore */
+      }
+    }
+  } catch (err) {
+    if (importStatus) {
+      importStatus.hidden = false;
+      importStatus.textContent = `导入失败：${err.message}`;
+    }
+    showError(err.message);
+  } finally {
+    isImporting = false;
+    if (importSubmit) importSubmit.disabled = false;
+    if (importCancel) importCancel.disabled = false;
+    if (btnImport) btnImport.disabled = false;
+  }
 }
 
 async function loadSchemes() {
@@ -361,31 +531,26 @@ async function init() {
     localStorage.setItem("retrieval_scheme", currentScheme);
   });
 
-  btnDateClear?.addEventListener("click", clearDateRange);
+  btnDateClear?.addEventListener("click", () => {});
 
-  // 起止互校：若 from>to 时发送前后端也会对调；这里仅提示互换输入
-  dateFromInput?.addEventListener("change", () => {
-    if (
-      dateFromInput.value &&
-      dateToInput?.value &&
-      dateFromInput.value > dateToInput.value
-    ) {
-      const tmp = dateFromInput.value;
-      dateFromInput.value = dateToInput.value;
-      dateToInput.value = tmp;
+  btnImport?.addEventListener("click", openImportModal);
+  importCancel?.addEventListener("click", closeImportModal);
+  importSubmit?.addEventListener("click", submitImport);
+  importModal?.addEventListener("click", (e) => {
+    if (e.target === importModal) closeImportModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && importModal && !importModal.hidden) {
+      closeImportModal();
     }
   });
-  dateToInput?.addEventListener("change", () => {
-    if (
-      dateFromInput?.value &&
-      dateToInput.value &&
-      dateFromInput.value > dateToInput.value
-    ) {
-      const tmp = dateFromInput.value;
-      dateFromInput.value = dateToInput.value;
-      dateToInput.value = tmp;
-    }
-  });
+
+  $("#nav-chat")?.addEventListener("click", () => switchView("chat"));
+  $("#nav-calendar")?.addEventListener("click", () => switchView("calendar"));
+
+  if (typeof MiniDatePicker !== "undefined") {
+    MiniDatePicker.init();
+  }
 
   exampleQuestions.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-q]");
@@ -399,6 +564,15 @@ async function init() {
   try {
     await api("/health");
     await loadSchemes();
+    await loadLibraryStatus();
+    // 预热日记日期给小型日历着色
+    try {
+      if (typeof CalendarPage !== "undefined") {
+        await CalendarPage.refreshDates();
+      }
+    } catch {
+      /* ignore */
+    }
     await loadConversations();
 
     if (conversations.length) {

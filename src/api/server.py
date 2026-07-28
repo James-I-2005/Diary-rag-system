@@ -65,7 +65,8 @@ class SendMessageBody(BaseModel):
     message: str = Field(..., min_length=1)
     use_vector: bool = True
     scheme: str | None = None  # weighted_50_50 | union_max | tag_only | embedding_only
-    # 本轮召回日期闭区间（YYYY-MM-DD）；空/省略=不限制。完全由前端传入，不持久化。
+    # 召回日期集合（优先）；空/省略=不限制。兼容旧 date_from/date_to 闭区间。
+    dates: list[str] | None = None
     date_from: str | None = None
     date_to: str | None = None
 
@@ -76,8 +77,23 @@ class ChatResponse(BaseModel):
     user_message: dict[str, Any]
     assistant_message: dict[str, Any]
     scheme: dict[str, Any] | None = None
+    dates: list[str] | None = None
     date_from: str | None = None
     date_to: str | None = None
+
+
+class ImportLibraryBody(BaseModel):
+    """本机日记根目录导入建库。"""
+
+    root: str = Field(..., min_length=1, description="本机绝对或相对目录路径")
+    use_agent: bool = False
+    build_vectors: bool = True  # extract+ingest 后再跑 sentences+index
+
+
+def _normalize_client_dates(values: list[str] | None) -> list[str]:
+    from src.engine.date_range import normalize_date_list
+
+    return normalize_date_list(values)
 
 
 def _normalize_client_date(value: str | None) -> str | None:
@@ -130,6 +146,96 @@ def retrieval_schemes() -> dict:
     if default_id not in ids:
         default_id = schemes[0]["id"] if schemes else "weighted_50_50"
     return {"default": default_id, "schemes": schemes}
+
+
+@app.get("/api/library")
+def library_status() -> dict:
+    from src.library import get_import_status
+
+    return get_import_status()
+
+
+@app.post("/api/library/import")
+def library_import(body: ImportLibraryBody) -> dict:
+    """
+    选择本机根目录 → extract → ingest →（可选）rag-sentence + 向量索引。
+    浏览器无法直接传 OS 路径，由用户在前端填入本机目录。
+    """
+    from src.library import run_library_import
+
+    try:
+        return run_library_import(
+            body.root,
+            use_agent=body.use_agent,
+            build_vectors=body.build_vectors,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/calendar")
+def diary_calendar() -> dict:
+    """有日记的日期集合（日历着色用）。"""
+    from src.diary_calendar import list_diary_dates
+
+    return list_diary_dates()
+
+
+@app.get("/api/diary/days/{day}")
+def diary_day(day: str) -> dict:
+    """某日 chunk 拼合原文。"""
+    from src.diary_calendar import get_diary_by_date
+
+    try:
+        return get_diary_by_date(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/days/{day}/wordcloud")
+def diary_day_wordcloud(day: str) -> dict:
+    """某日词云：jieba 词频，不调用 LLM。"""
+    from src.day_insights import wordcloud_for_date
+
+    try:
+        return wordcloud_for_date(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/months/{year_month}/wordcloud")
+def diary_month_wordcloud(year_month: str, refresh: bool = False) -> dict:
+    """整月词云：默认读缓存；refresh=true 强制重算。year_month=YYYY-MM。"""
+    from src.day_insights import wordcloud_for_month
+
+    m = (year_month or "").strip()
+    if len(m) != 7 or m[4] != "-":
+        raise HTTPException(status_code=400, detail="月份格式须为 YYYY-MM")
+    try:
+        year = int(m[:4])
+        month = int(m[5:7])
+        return wordcloud_for_month(year, month, refresh=refresh)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/days/{day}/poetic")
+def diary_day_poetic(day: str, refresh: bool = False) -> dict:
+    """某日总结段落 + 诗句（默认读本地缓存；refresh=true 强制重生成）。"""
+    from src.day_insights import poetic_summary_for_date
+
+    try:
+        return poetic_summary_for_date(day, refresh=refresh)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"诗意总结失败: {exc}") from exc
 
 
 @app.get("/api/conversations")
@@ -187,6 +293,7 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
 
     date_from = _normalize_client_date(body.date_from)
     date_to = _normalize_client_date(body.date_to)
+    dates = _normalize_client_dates(body.dates)
 
     result = svc.handle_turn(
         query,
@@ -196,6 +303,7 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
         persist=True,
         date_from=date_from,
         date_to=date_to,
+        dates=dates or None,
     )
     _maybe_set_title_from_first_message(conversation_id, query)
 
@@ -209,6 +317,7 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
         conversation_id=result["conversation_id"],
         answer=result["answer"],
         scheme=result.get("scheme") or None,
+        dates=sq.get("dates") or dates or None,
         date_from=sq.get("date_from") or date_from,
         date_to=sq.get("date_to") or date_to,
         user_message={

@@ -34,8 +34,12 @@ class ContextService:
         self.context_engine = context_engine or ContextEngine(
             conversation=self.conversation
         )
-        self.query_agent = query_agent or QueryAgent()
-        self.react_agent = react_agent or ReactQueryAgent()
+        self.query_agent = query_agent or QueryAgent(
+            context_engine=self.context_engine
+        )
+        self.react_agent = react_agent or ReactQueryAgent(
+            context_engine=self.context_engine
+        )
 
     def _query_mode(self) -> str:
         cfg = load_config().get("query_agent") or {}
@@ -94,17 +98,20 @@ class ContextService:
         persist: bool = True,
         date_from: str | None = None,
         date_to: str | None = None,
+        dates: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         完整一轮：
         1) 确保 conversation
         2) 会话短期记忆：溢出滑动窗口 → 更新 summary
-        3) Query Agent → Structured Query（并挂上本轮前端日期范围）
-        4) 按需 Memory Engine 召回（仅在 date_from~date_to 内，若指定）
+        3) Query Agent → Structured Query（并挂上本轮前端日期集合/区间）
+        4) 按需 Memory Engine 召回（仅在选定日期内，若指定）
         5) Context Builder：System + Summary + Recent(窗口) + (本轮∪窗口内曾召回) Memories + Query
         6) LLM 回答
         7) 写入 user/assistant，并持久化本轮 retrieval_trace（供后续轮次回灌）
         """
+        from src.engine.date_range import normalize_date_list
+
         cid = self.conversation.get_or_create(conversation_id)
         state = self.conversation.load(cid)
 
@@ -114,7 +121,9 @@ class ContextService:
         mode = self._query_mode()
         scheme_meta: dict = {}
         tool_trace: list = []
+        timeline: list = []
         analysis: dict = {}
+        dset = normalize_date_list(dates)
 
         if mode == "react" and (load_config().get("query_agent") or {}).get(
             "enabled", True
@@ -125,27 +134,38 @@ class ContextService:
                 state=state,
                 date_from=date_from,
                 date_to=date_to,
+                dates=dset,
                 scheme=scheme,
             )
             structured = result.structured
-            structured.date_from = (date_from or "").strip()
-            structured.date_to = (date_to or "").strip()
+            structured.dates = dset
+            if not dset:
+                structured.date_from = (date_from or "").strip()
+                structured.date_to = (date_to or "").strip()
+            else:
+                structured.date_from = ""
+                structured.date_to = ""
             chunks = result.chunks
             plan = ["react"]
             scheme_meta = {
                 "id": "react",
-                "tool_trace": result.tool_trace,
                 "stop_reason": result.stop_reason,
-                "analysis": result.analysis,
+                "timeline": result.timeline,
             }
             tool_trace = result.tool_trace
+            timeline = result.timeline
             analysis = result.analysis
             if not structured.need_retrieval:
                 chunks = []
         else:
             structured = self._run_query_agent(query, state)
-            structured.date_from = (date_from or "").strip()
-            structured.date_to = (date_to or "").strip()
+            structured.dates = dset
+            if not dset:
+                structured.date_from = (date_from or "").strip()
+                structured.date_to = (date_to or "").strip()
+            else:
+                structured.date_from = ""
+                structured.date_to = ""
             if structured.need_retrieval:
                 chunks, plan, scheme_meta = self._retrieve(
                     structured.retrieval_query(),
@@ -168,9 +188,11 @@ class ContextService:
             "chunks": chunks,
             "plan": plan,
             "scheme": scheme_meta,
+            "dates": structured.allowed_dates(),
             "date_from": start or "",
             "date_to": end or "",
             "structured_query": structured.to_dict(),
+            "timeline": timeline,
             "tool_trace": tool_trace,
             "analysis": analysis,
             "query_tags": {
@@ -185,8 +207,10 @@ class ContextService:
             "scheme": scheme_meta,
             "structured_query": structured.to_dict(),
             "themes": structured.query_themes,
+            "dates": structured.allowed_dates(),
             "date_from": start or "",
             "date_to": end or "",
+            "timeline": timeline,
             "tool_trace": tool_trace,
             "candidate_ids": [c["id"] for c in chunks],
             "scores": {c["id"]: c.get("score") for c in chunks},
