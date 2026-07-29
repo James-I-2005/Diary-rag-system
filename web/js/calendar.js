@@ -511,6 +511,8 @@ const CalendarPage = (() => {
     el.textContent = n ? `已选 ${n} 天` : "未选择日期（召回不限范围）";
     const btn = $("#cal-new-chat");
     if (btn) btn.disabled = n === 0;
+    const exportBtn = $("#cal-export-diary");
+    if (exportBtn) exportBtn.disabled = n === 0;
   }
 
   function shiftMonth(delta) {
@@ -568,6 +570,59 @@ const CalendarPage = (() => {
     }
   }
 
+  async function exportDiarySelection() {
+    const dates = DateSelection.get();
+    if (!dates.length) {
+      showError("请先勾选至少一个日期");
+      return;
+    }
+
+    const btn = $("#cal-export-diary");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "打包中…";
+    }
+    try {
+      const response = await fetch("/api/diary/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dates }),
+      });
+      if (!response.ok) {
+        let detail = response.statusText;
+        try {
+          const body = await response.json();
+          detail = body.detail || detail;
+        } catch {
+          /* ignore */
+        }
+        throw new Error(
+          typeof detail === "string" ? detail : JSON.stringify(detail)
+        );
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const match = disposition.match(/filename="?([^";]+)"?/i);
+      const filename =
+        match?.[1] ||
+        `diary_${dates[0].replaceAll("-", "")}-${dates.at(-1).replaceAll("-", "")}.zip`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } finally {
+      if (btn) {
+        btn.textContent = "导出原文 ZIP";
+        btn.disabled = DateSelection.get().length === 0;
+      }
+    }
+  }
+
   function bind() {
     if (bound) return;
     bound = true;
@@ -584,6 +639,9 @@ const CalendarPage = (() => {
     });
     $("#cal-new-chat")?.addEventListener("click", () => {
       newChatWithSelection().catch((e) => showError(e.message));
+    });
+    $("#cal-export-diary")?.addEventListener("click", () => {
+      exportDiarySelection().catch((e) => showError(e.message));
     });
     $("#btn-day-back")?.addEventListener("click", () => {
       showMonthView();
@@ -604,6 +662,10 @@ const CalendarPage = (() => {
     bind();
     showMonthView();
     try {
+      // 打开日历前先做跨日归档，确保昨日写作已入库
+      if (typeof api === "function") {
+        await api("/write/rollover", { method: "POST", body: "{}" });
+      }
       await refreshDates();
     } catch (err) {
       console.warn("日历加载失败", err);

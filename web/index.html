@@ -119,6 +119,9 @@
             <button type="button" class="cal-action primary" id="cal-new-chat" disabled>
               以此新建对话
             </button>
+            <button type="button" class="cal-action" id="cal-export-diary" disabled>
+              导出原文 ZIP
+            </button>
           </div>
           <div class="calendar-legend">
             <span><i class="dot has"></i> 已录入</span>
@@ -179,6 +182,79 @@
       </div>
     </div>
 
+    <div class="app write-app" id="view-write" data-view="write" hidden>
+      <div class="write-shell" id="write-shell">
+        <header class="write-toolbar">
+          <h1 class="write-page-title">写日记</h1>
+          <button type="button" class="btn-write-mode" id="btn-write-mode" title="切换写作模式">
+            文稿模式
+            <span class="mode-hint">切换</span>
+          </button>
+        </header>
+
+        <div class="write-mode-papers" id="write-mode-papers">
+          <section class="manuscript-gallery" id="manuscript-gallery" aria-label="文稿列表">
+            <!-- 动态填充文稿卡片 -->
+          </section>
+          <button type="button" class="btn-new-manuscript" id="btn-new-manuscript">
+            <span class="plus">+</span>
+            新建文稿
+          </button>
+        </div>
+
+        <div class="write-editor" id="write-editor" hidden>
+          <header class="write-editor-header">
+            <button type="button" class="btn-write-back" id="btn-write-back">← 返回文稿</button>
+            <input
+              type="text"
+              class="write-title-input"
+              id="write-title-input"
+              placeholder="给文稿起个标题…"
+              maxlength="80"
+              autocomplete="off"
+            />
+            <button type="button" class="btn-write-delete" id="btn-write-delete" title="删除文稿">
+              删除
+            </button>
+          </header>
+          <div class="write-paper">
+            <textarea
+              id="write-content"
+              class="write-content"
+              placeholder="在这张文稿上开始写…"
+              spellcheck="true"
+            ></textarea>
+          </div>
+          <p class="write-save-hint" id="write-save-hint">自动保存到本机</p>
+        </div>
+
+        <div class="write-mode-chat" id="write-mode-chat" hidden>
+          <aside class="write-chat-contacts">
+            <header class="write-chat-contacts-head">
+              <h2>文稿</h2>
+              <button type="button" id="btn-chat-new-manuscript" aria-label="新建文稿">＋</button>
+            </header>
+            <nav id="write-chat-contact-list" class="write-chat-contact-list" aria-label="文稿联系人"></nav>
+          </aside>
+          <section class="write-chat-panel">
+            <header class="write-chat-header">
+              <h2 id="write-chat-title">新建文稿1</h2>
+            </header>
+            <div class="write-chat-messages" id="write-chat-messages"></div>
+            <div class="write-chat-composer">
+              <textarea
+                id="write-chat-input"
+                rows="1"
+                placeholder="输入一条记录，Enter 发送"
+                aria-label="写入当前文稿"
+              ></textarea>
+              <button type="button" id="btn-write-chat-send" aria-label="发送">发送</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <nav class="bottom-nav" aria-label="主导航">
       <button type="button" class="nav-item active" data-nav="chat" id="nav-chat">
         <span class="nav-icon">💬</span>
@@ -187,6 +263,10 @@
       <button type="button" class="nav-item" data-nav="calendar" id="nav-calendar">
         <span class="nav-icon">📅</span>
         <span class="nav-label">日历</span>
+      </button>
+      <button type="button" class="nav-item" data-nav="write" id="nav-write">
+        <span class="nav-icon">✍️</span>
+        <span class="nav-label">写日记</span>
       </button>
     </nav>
   </div>
@@ -224,6 +304,7 @@
   </div>
 
   <script src="/static/js/calendar.js"></script>
+  <script src="/static/js/write.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+from io import BytesIO
 from pathlib import Path
 from typing import Any
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -18,6 +21,23 @@ ROOT = Path(__file__).resolve().parents[2]
 WEB_DIR = ROOT / "web"
 
 _service: ContextService | None = None
+
+
+@asynccontextmanager
+async def _lifespan(_app: FastAPI):
+    """启动时检查写日记跨日归档 → 入库，使日历可见昨日日记。"""
+    try:
+        from src.write_diary import ensure_day_rollover
+
+        info = ensure_day_rollover()
+        if info.get("rolled"):
+            print(
+                f"[write_diary] 跨日归档: archived={info.get('archived')} "
+                f"ingested={info.get('ingested')}"
+            )
+    except Exception as exc:
+        print(f"[write_diary] 启动归档失败（可忽略）: {exc}")
+    yield
 
 
 def get_service() -> ContextService:
@@ -90,6 +110,15 @@ class ImportLibraryBody(BaseModel):
     build_vectors: bool = True  # extract+ingest 后再跑 sentences+index
 
 
+class WriteManuscriptsBody(BaseModel):
+    mode: str | None = None
+    items: list[dict[str, Any]] | None = None
+
+
+class ExportDiaryBody(BaseModel):
+    dates: list[str] = Field(..., min_length=1, max_length=366)
+
+
 def _normalize_client_dates(values: list[str] | None) -> list[str]:
     from src.engine.date_range import normalize_date_list
 
@@ -110,7 +139,7 @@ def _normalize_client_date(value: str | None) -> str | None:
     return s
 
 
-app = FastAPI(title="Diary RAG Chat API", version="0.2.0")
+app = FastAPI(title="Diary RAG Chat API", version="0.2.0", lifespan=_lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -187,6 +216,37 @@ def diary_calendar() -> dict:
     return list_diary_dates()
 
 
+@app.post("/api/diary/export")
+def export_diary_days(body: ExportDiaryBody) -> StreamingResponse:
+    """将选中日期的拼合原文导出为 ZIP；每天一个 YYYY-MM-DD.txt。"""
+    from src.diary_calendar import get_diary_by_date
+
+    dates = _normalize_client_dates(body.dates)
+    if not dates:
+        raise HTTPException(status_code=400, detail="请至少选择一个日期")
+
+    archive = BytesIO()
+    with ZipFile(archive, mode="w", compression=ZIP_DEFLATED) as zf:
+        for day in dates:
+            diary = get_diary_by_date(day)
+            # UTF-8 BOM 方便 Windows 记事本直接正确识别中文。
+            content = "\ufeff" + str(diary.get("text") or "")
+            zf.writestr(f"{day}.txt", content.encode("utf-8"))
+
+    archive.seek(0)
+    first = dates[0].replace("-", "")
+    last = dates[-1].replace("-", "")
+    filename = f"diary_{first}.zip" if first == last else f"diary_{first}-{last}.zip"
+    return StreamingResponse(
+        archive,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Exported-Days": str(len(dates)),
+        },
+    )
+
+
 @app.get("/api/diary/days/{day}")
 def diary_day(day: str) -> dict:
     """某日 chunk 拼合原文。"""
@@ -236,6 +296,41 @@ def diary_day_poetic(day: str, refresh: bool = False) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"诗意总结失败: {exc}") from exc
+
+
+@app.get("/api/write/manuscripts")
+def write_get_manuscripts() -> dict:
+    """读取写日记文稿（必要时先跨日归档入库）。"""
+    from src.write_diary import get_manuscripts
+
+    return get_manuscripts()
+
+
+@app.post("/api/write/manuscripts")
+def write_sync_manuscripts(body: WriteManuscriptsBody) -> dict:
+    """同步文稿到本地 data/write_diary；跨日则归档并建 chunk。"""
+    from src.write_diary import sync_manuscripts
+
+    try:
+        return sync_manuscripts(mode=body.mode, items=body.items)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/write/rollover")
+def write_rollover() -> dict:
+    """手动触发跨日检查（归档昨日 → 入库）。"""
+    from src.write_diary import ensure_day_rollover
+
+    return ensure_day_rollover()
+
+
+@app.post("/api/write/archive-now")
+def write_archive_now() -> dict:
+    """把当前文稿按 active_day 立刻归档入库（不换日、不清空）。"""
+    from src.write_diary import force_archive_active_day
+
+    return force_archive_active_day()
 
 
 @app.get("/api/conversations")

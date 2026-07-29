@@ -351,16 +351,26 @@ async function sendMessage() {
 }
 
 function switchView(name) {
-  currentView = name === "calendar" ? "calendar" : "chat";
+  const allowed = new Set(["chat", "calendar", "write"]);
+  const next = allowed.has(name) ? name : "chat";
+  if (currentView === "write" && next !== "write" && typeof WritePage !== "undefined") {
+    WritePage.flush?.();
+  }
+  currentView = next;
   const chat = $("#view-chat");
   const cal = $("#view-calendar");
+  const write = $("#view-write");
   if (chat) chat.hidden = currentView !== "chat";
   if (cal) cal.hidden = currentView !== "calendar";
+  if (write) write.hidden = currentView !== "write";
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.nav === currentView);
   });
   if (currentView === "calendar" && typeof CalendarPage !== "undefined") {
     CalendarPage.show();
+  }
+  if (currentView === "write" && typeof WritePage !== "undefined") {
+    Promise.resolve(WritePage.show()).catch((e) => console.warn(e));
   }
   if (currentView === "chat") {
     closeSidebarMobile();
@@ -547,6 +557,7 @@ async function init() {
 
   $("#nav-chat")?.addEventListener("click", () => switchView("chat"));
   $("#nav-calendar")?.addEventListener("click", () => switchView("calendar"));
+  $("#nav-write")?.addEventListener("click", () => switchView("write"));
 
   if (typeof MiniDatePicker !== "undefined") {
     MiniDatePicker.init();

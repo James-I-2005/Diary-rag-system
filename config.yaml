@@ -192,6 +192,11 @@ llm:
     http_referer: "https://github.com/James-I-2005/Diary-rag-system"
     x_title: "Personal Diary RAG"
 
+# 写日记：本机落盘 + 跨日归档成 chunk（日历可见）
+write_diary:
+  root: "data/write_diary"
+  auto_ingest: true
+
 # 日历洞察：整月词云（无 LLM）+ 日总结/诗句（轻量 Agent，本地缓存）
 day_insights:
   llm_role: "tags"
