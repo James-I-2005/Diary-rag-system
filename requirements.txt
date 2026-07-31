@@ -19,3 +19,4 @@ psycopg[binary]>=3.1  # 可选：词表/停用词 PostgreSQL 后端
 # Web UI
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
+python-multipart>=0.0.9

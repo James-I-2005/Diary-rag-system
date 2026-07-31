@@ -134,6 +134,12 @@ async function api(path, options = {}) {
   return res.json();
 }
 
+function closeConvMenus() {
+  document.querySelectorAll(".conv-menu.open").forEach((el) => {
+    el.classList.remove("open");
+  });
+}
+
 function renderConversationList() {
   conversationList.innerHTML = "";
   if (!conversations.length) {
@@ -146,17 +152,135 @@ function renderConversationList() {
   }
 
   for (const c of conversations) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "conv-item" + (c.id === activeId ? " active" : "");
-    btn.dataset.id = c.id;
-    btn.innerHTML = `
+    const row = document.createElement("div");
+    row.className = "conv-item" + (c.id === activeId ? " active" : "");
+    row.dataset.id = c.id;
+
+    const main = document.createElement("button");
+    main.type = "button";
+    main.className = "conv-main";
+    main.innerHTML = `
       <span class="conv-title">${escapeHtml(c.title)}</span>
       <span class="conv-meta">${formatTime(c.updated_at)}</span>
     `;
-    btn.addEventListener("click", () => selectConversation(c.id));
-    conversationList.appendChild(btn);
+    main.addEventListener("click", () => {
+      closeConvMenus();
+      selectConversation(c.id);
+    });
+
+    const moreWrap = document.createElement("div");
+    moreWrap.className = "conv-more-wrap";
+
+    const moreBtn = document.createElement("button");
+    moreBtn.type = "button";
+    moreBtn.className = "conv-more-btn";
+    moreBtn.setAttribute("aria-label", "更多操作");
+    moreBtn.textContent = "⋯";
+    moreBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = moreWrap.querySelector(".conv-menu");
+      const willOpen = !menu.classList.contains("open");
+      closeConvMenus();
+      if (willOpen) menu.classList.add("open");
+    });
+
+    const menu = document.createElement("div");
+    menu.className = "conv-menu";
+    menu.innerHTML = `
+      <button type="button" data-act="rename">重命名</button>
+      <button type="button" data-act="export">导出 Markdown</button>
+      <button type="button" data-act="delete" class="danger">删除</button>
+    `;
+    menu.addEventListener("click", (e) => e.stopPropagation());
+    menu.querySelector('[data-act="rename"]').addEventListener("click", () => {
+      closeConvMenus();
+      renameConversation(c.id, c.title).catch((err) => showError(err.message));
+    });
+    menu.querySelector('[data-act="export"]').addEventListener("click", () => {
+      closeConvMenus();
+      exportConversationMd(c.id, c.title).catch((err) => showError(err.message));
+    });
+    menu.querySelector('[data-act="delete"]').addEventListener("click", () => {
+      closeConvMenus();
+      deleteConversation(c.id, c.title).catch((err) => showError(err.message));
+    });
+
+    moreWrap.appendChild(moreBtn);
+    moreWrap.appendChild(menu);
+    row.appendChild(main);
+    row.appendChild(moreWrap);
+    conversationList.appendChild(row);
   }
+}
+
+async function renameConversation(id, currentTitle) {
+  const next = prompt("重命名对话", currentTitle || "新对话");
+  if (next === null) return;
+  const title = next.trim();
+  if (!title) {
+    showError("标题不能为空");
+    return;
+  }
+  const updated = await api(`/conversations/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+  const conv = conversations.find((c) => c.id === id);
+  if (conv) conv.title = updated.title;
+  if (id === activeId) workspaceTitle.textContent = updated.title;
+  renderConversationList();
+}
+
+async function deleteConversation(id, title) {
+  const label = title || "此对话";
+  if (!confirm(`确定删除「${label}」？此操作不可恢复。`)) return;
+  await api(`/conversations/${id}`, { method: "DELETE" });
+  conversations = conversations.filter((c) => c.id !== id);
+  if (activeId === id) {
+    activeId = null;
+    clearMessages();
+    workspaceTitle.textContent = "Memory Assistant";
+    if (conversations.length) {
+      await selectConversation(conversations[0].id);
+    } else {
+      renderConversationList();
+    }
+  } else {
+    renderConversationList();
+  }
+}
+
+async function exportConversationMd(id, title) {
+  const response = await fetch(`/api/conversations/${id}/export.md`);
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const body = await response.json();
+      detail = body.detail || detail;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") || "";
+  let filename = `${(title || "chat").slice(0, 40)}_${id.slice(0, 8)}.md`;
+  const star = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (star?.[1]) {
+    try {
+      filename = decodeURIComponent(star[1]);
+    } catch {
+      /* keep fallback */
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function escapeHtml(s) {
@@ -351,7 +475,7 @@ async function sendMessage() {
 }
 
 function switchView(name) {
-  const allowed = new Set(["chat", "calendar", "write"]);
+  const allowed = new Set(["chat", "calendar", "write", "explore"]);
   const next = allowed.has(name) ? name : "chat";
   if (currentView === "write" && next !== "write" && typeof WritePage !== "undefined") {
     WritePage.flush?.();
@@ -360,9 +484,11 @@ function switchView(name) {
   const chat = $("#view-chat");
   const cal = $("#view-calendar");
   const write = $("#view-write");
+  const explore = $("#view-explore");
   if (chat) chat.hidden = currentView !== "chat";
   if (cal) cal.hidden = currentView !== "calendar";
   if (write) write.hidden = currentView !== "write";
+  if (explore) explore.hidden = currentView !== "explore";
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.nav === currentView);
   });
@@ -371,6 +497,9 @@ function switchView(name) {
   }
   if (currentView === "write" && typeof WritePage !== "undefined") {
     Promise.resolve(WritePage.show()).catch((e) => console.warn(e));
+  }
+  if (currentView === "explore" && typeof ExplorePage !== "undefined") {
+    ExplorePage.show();
   }
   if (currentView === "chat") {
     closeSidebarMobile();
@@ -553,11 +682,18 @@ async function init() {
     if (e.key === "Escape" && importModal && !importModal.hidden) {
       closeImportModal();
     }
+    if (e.key === "Escape") closeConvMenus();
   });
+  document.addEventListener("click", () => closeConvMenus());
 
   $("#nav-chat")?.addEventListener("click", () => switchView("chat"));
   $("#nav-calendar")?.addEventListener("click", () => switchView("calendar"));
   $("#nav-write")?.addEventListener("click", () => switchView("write"));
+  $("#nav-explore")?.addEventListener("click", () => switchView("explore"));
+
+  if (typeof SelectionTag !== "undefined") {
+    SelectionTag.bind();
+  }
 
   if (typeof MiniDatePicker !== "undefined") {
     MiniDatePicker.init();

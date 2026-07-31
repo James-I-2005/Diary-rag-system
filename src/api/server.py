@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,6 +37,12 @@ async def _lifespan(_app: FastAPI):
             )
     except Exception as exc:
         print(f"[write_diary] 启动归档失败（可忽略）: {exc}")
+    try:
+        from src.user_tags import ensure_system_folders
+
+        ensure_system_folders()
+    except Exception as exc:
+        print(f"[user_tags] 初始化系统文件夹失败（可忽略）: {exc}")
     yield
 
 
@@ -81,10 +87,14 @@ class CreateConversationBody(BaseModel):
     title: str = ""
 
 
+class RenameConversationBody(BaseModel):
+    title: str = Field(..., min_length=1, max_length=120)
+
+
 class SendMessageBody(BaseModel):
     message: str = Field(..., min_length=1)
     use_vector: bool = True
-    scheme: str | None = None  # weighted_50_50 | union_max | tag_only | embedding_only
+    scheme: str | None = None  # embedding_only 等
     # 召回日期集合（优先）；空/省略=不限制。兼容旧 date_from/date_to 闭区间。
     dates: list[str] | None = None
     date_from: str | None = None
@@ -117,6 +127,40 @@ class WriteManuscriptsBody(BaseModel):
 
 class ExportDiaryBody(BaseModel):
     dates: list[str] = Field(..., min_length=1, max_length=366)
+
+
+class CreateUserTagBody(BaseModel):
+    name: str = Field(..., min_length=1, max_length=64)
+    folder_id: str | None = None
+    color: str | None = None
+
+
+class UpdateUserTagBody(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=64)
+    color: str | None = None
+    folder_id: str | None = None
+    clear_folder: bool = False
+    sort_order: int | None = None
+
+
+class CreateTagFolderBody(BaseModel):
+    name: str = Field(..., min_length=1, max_length=64)
+    parent_id: str | None = None
+
+
+class UpdateTagFolderBody(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=64)
+    parent_id: str | None = None
+    clear_parent: bool = False
+    sort_order: int | None = None
+
+
+class BindTagBody(BaseModel):
+    chunk_ids: list[str] = Field(..., min_length=1)
+
+
+class UpdatePersonBody(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=64)
 
 
 def _normalize_client_dates(values: list[str] | None) -> list[str]:
@@ -166,6 +210,295 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/api/explore/search")
+def explore_search(q: str = "", limit: int = 50) -> dict:
+    """原文 grep：先完全匹配，再相近匹配。"""
+    from src.explore import search_chunks
+
+    return search_chunks(q, limit=limit)
+
+
+@app.get("/api/explore/entities")
+def explore_entities(type: str = "person", limit: int = 200) -> dict:
+    from src.explore import list_entities
+
+    try:
+        items = list_entities(type, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"entity_type": type, "items": items, "total": len(items)}
+
+
+@app.get("/api/explore/entities/chunks")
+def explore_entity_chunks(name: str, type: str = "person", limit: int = 30) -> dict:
+    from src.explore import entity_chunks
+
+    try:
+        items = entity_chunks(name, type, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"name": name, "entity_type": type, "items": items, "total": len(items)}
+
+
+@app.get("/api/explore/tags")
+def explore_tags(frequent_limit: int = 12) -> dict:
+    """管理页首屏：常用 tag + 根目录树（与 /api/tags 同源）。"""
+    from src.user_tags import management_home
+
+    return management_home(frequent_limit=frequent_limit)
+
+
+@app.get("/api/tags/palette")
+def tags_palette() -> dict:
+    from src.user_tags import list_preset_colors
+
+    colors = list_preset_colors()
+    return {"colors": colors}
+
+
+@app.get("/api/tags/folders")
+def tags_folders_list() -> dict:
+    from src.user_tags import list_folders_flat
+
+    items = list_folders_flat()
+    return {"items": items, "total": len(items)}
+
+
+@app.get("/api/tags/tree")
+def tags_tree(folder_id: str | None = None) -> dict:
+    from src.user_tags import list_tree
+
+    fid = (folder_id or "").strip() or None
+    try:
+        return list_tree(folder_id=fid)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/api/tags/recent")
+def tags_recent(limit: int = 4) -> dict:
+    from src.user_tags import list_recent
+
+    items = list_recent(limit=limit)
+    return {"items": items, "total": len(items)}
+
+
+@app.get("/api/tags/frequent")
+def tags_frequent(limit: int = 12) -> dict:
+    from src.user_tags import list_frequent
+
+    items = list_frequent(limit=limit)
+    return {"items": items, "total": len(items)}
+
+
+@app.post("/api/tags")
+def tags_create(body: CreateUserTagBody) -> dict:
+    from src.user_tags import create_tag
+
+    try:
+        return create_tag(body.name, folder_id=body.folder_id, color=body.color)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.patch("/api/tags/{tag_id}")
+def tags_update(tag_id: str, body: UpdateUserTagBody) -> dict:
+    from src.user_tags import update_tag
+
+    kwargs: dict[str, Any] = {}
+    if body.name is not None:
+        kwargs["name"] = body.name
+    if body.color is not None:
+        kwargs["color"] = body.color
+    if body.clear_folder:
+        kwargs["folder_id"] = None
+    elif body.folder_id is not None:
+        kwargs["folder_id"] = body.folder_id
+    if body.sort_order is not None:
+        kwargs["sort_order"] = body.sort_order
+    try:
+        return update_tag(tag_id, **kwargs)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.delete("/api/tags/{tag_id}")
+def tags_delete(tag_id: str) -> dict:
+    from src.user_tags import delete_tag
+
+    try:
+        return delete_tag(tag_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/tags/folders")
+def tags_folders_create(body: CreateTagFolderBody) -> dict:
+    from src.user_tags import create_folder
+
+    try:
+        return create_folder(body.name, parent_id=body.parent_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.patch("/api/tags/folders/{folder_id}")
+def tags_folders_update(folder_id: str, body: UpdateTagFolderBody) -> dict:
+    from src.user_tags import update_folder
+
+    kwargs: dict[str, Any] = {}
+    if body.name is not None:
+        kwargs["name"] = body.name
+    if body.clear_parent:
+        kwargs["parent_id"] = None
+    elif body.parent_id is not None:
+        kwargs["parent_id"] = body.parent_id
+    if body.sort_order is not None:
+        kwargs["sort_order"] = body.sort_order
+    try:
+        return update_folder(folder_id, **kwargs)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.delete("/api/tags/folders/{folder_id}")
+def tags_folders_delete(folder_id: str, move_up: bool = True) -> dict:
+    from src.user_tags import delete_folder
+
+    try:
+        return delete_folder(folder_id, move_up=move_up)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/tags/{tag_id}/bind")
+def tags_bind(tag_id: str, body: BindTagBody) -> dict:
+    from src.user_tags import bind_chunks
+
+    try:
+        return bind_chunks(tag_id, body.chunk_ids)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/people")
+def people_list() -> dict:
+    from src.people import list_people
+
+    items = list_people()
+    return {"items": items, "total": len(items)}
+
+
+@app.post("/api/people")
+async def people_create(
+    name: str = Form(...),
+    photo: UploadFile | None = File(None),
+) -> dict:
+    """新建人物：同步在「人物」系统文件夹下创建同名 tag；可选上传头像。"""
+    from src.people import create_person
+
+    photo_bytes = None
+    original_name = ""
+    content_type = None
+    if photo is not None and (photo.filename or "").strip():
+        photo_bytes = await photo.read()
+        original_name = photo.filename or ""
+        content_type = photo.content_type
+    try:
+        return create_person(
+            name,
+            photo_data=photo_bytes,
+            original_name=original_name,
+            content_type=content_type,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/people/{person_id}")
+def people_get(person_id: str) -> dict:
+    from src.people import get_person
+
+    try:
+        return get_person(person_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.patch("/api/people/{person_id}")
+def people_update(person_id: str, body: UpdatePersonBody) -> dict:
+    from src.people import update_person
+
+    try:
+        return update_person(person_id, name=body.name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.delete("/api/people/{person_id}")
+def people_delete(person_id: str) -> dict:
+    from src.people import delete_person
+
+    try:
+        return delete_person(person_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/people/{person_id}/photo")
+async def people_upload_photo(
+    person_id: str,
+    file: UploadFile = File(...),
+) -> dict:
+    from src.people import save_person_photo
+
+    data = await file.read()
+    try:
+        return save_person_photo(
+            person_id,
+            data=data,
+            original_name=file.filename or "",
+            content_type=file.content_type,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/people/{person_id}/photo")
+def people_photo_file(person_id: str) -> FileResponse:
+    from src.people import resolve_photo_file
+
+    try:
+        path, mime = resolve_photo_file(person_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return FileResponse(path, media_type=mime)
+
+
+@app.get("/api/people/{person_id}/chunks")
+def people_chunks(person_id: str, limit: int = 50) -> dict:
+    from src.people import get_person, person_chunks
+
+    try:
+        person = get_person(person_id)
+        items = person_chunks(person_id, limit=limit)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "person": person,
+        "items": items,
+        "total": len(items),
+    }
+
+
 @app.get("/api/retrieval/schemes")
 def retrieval_schemes() -> dict:
     default_id = resolve_default_scheme_id()
@@ -173,7 +506,7 @@ def retrieval_schemes() -> dict:
     # 确保 default 存在
     ids = {s["id"] for s in schemes}
     if default_id not in ids:
-        default_id = schemes[0]["id"] if schemes else "weighted_50_50"
+        default_id = schemes[0]["id"] if schemes else "embedding_only"
     return {"default": default_id, "schemes": schemes}
 
 
@@ -256,6 +589,66 @@ def diary_day(day: str) -> dict:
         return get_diary_by_date(day)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/days/{day}/images")
+def diary_day_images(day: str) -> dict:
+    """某日图片列表（元数据；文件另取 /file）。"""
+    from src.day_images import list_images
+
+    try:
+        items = list_images(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"date": day, "images": items}
+
+
+@app.post("/api/diary/days/{day}/images")
+async def upload_diary_day_image(
+    day: str,
+    file: UploadFile = File(...),
+) -> dict:
+    """上传图片到指定日期（文件落盘 + SQLite 元数据）。"""
+    from src.day_images import save_image
+
+    data = await file.read()
+    try:
+        return save_image(
+            day,
+            data=data,
+            original_name=file.filename or "",
+            content_type=file.content_type,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/diary/days/{day}/images/{image_id}/file")
+def diary_day_image_file(day: str, image_id: str) -> FileResponse:
+    from src.day_images import resolve_image_file
+
+    try:
+        path, mime = resolve_image_file(day, image_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return FileResponse(path, media_type=mime)
+
+
+@app.delete("/api/diary/days/{day}/images/{image_id}")
+def delete_diary_day_image(day: str, image_id: str) -> dict:
+    from src.day_images import delete_image
+
+    try:
+        ok = delete_image(day, image_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not ok:
+        raise HTTPException(status_code=404, detail="图片不存在")
+    return {"ok": True, "id": image_id}
 
 
 @app.get("/api/diary/days/{day}/wordcloud")
@@ -372,6 +765,73 @@ def get_conversation(conversation_id: str) -> dict:
             for m in state.messages
         ],
     }
+
+
+@app.patch("/api/conversations/{conversation_id}")
+def rename_conversation(conversation_id: str, body: RenameConversationBody) -> dict:
+    """仅更新 title；主键 id 不变，前端与其它引用仍按 id 定位。"""
+    svc = get_service()
+    title = (body.title or "").strip() or "新对话"
+    try:
+        svc.conversation.set_title(conversation_id, title)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"id": conversation_id, "title": title}
+
+
+@app.delete("/api/conversations/{conversation_id}")
+def delete_conversation(conversation_id: str) -> dict:
+    svc = get_service()
+    ok = svc.conversation.delete(conversation_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail=f"conversation 不存在: {conversation_id}")
+    return {"ok": True, "id": conversation_id}
+
+
+@app.get("/api/conversations/{conversation_id}/export.md")
+def export_conversation_markdown(conversation_id: str) -> StreamingResponse:
+    """按 id 导出 Markdown；文件名用当前标题，正文内保留 id。"""
+    import re
+
+    svc = get_service()
+    try:
+        state = svc.conversation.load(conversation_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    rows = svc.conversation.list_conversations(limit=500)
+    row = next((r for r in rows if r["id"] == conversation_id), None)
+    title = (row.get("title") if row else None) or "新对话"
+
+    lines: list[str] = [
+        f"# {title}",
+        "",
+        f"- conversation_id: `{conversation_id}`",
+        "",
+    ]
+    for m in state.messages:
+        role = "你" if m.role == "user" else "助手" if m.role == "assistant" else m.role
+        lines.append(f"## {role}")
+        lines.append("")
+        lines.append((m.content or "").rstrip())
+        lines.append("")
+
+    raw = "\n".join(lines).rstrip() + "\n"
+    safe = re.sub(r'[\\/:*?"<>|]+', "_", title).strip() or "chat"
+    safe = safe[:40]
+    filename = f"{safe}_{conversation_id[:8]}.md"
+    # RFC 5987 方便中文文件名
+    from urllib.parse import quote
+
+    disposition = (
+        f"attachment; filename=\"{conversation_id[:8]}.md\"; "
+        f"filename*=UTF-8''{quote(filename)}"
+    )
+    return StreamingResponse(
+        iter([raw.encode("utf-8")]),
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": disposition},
+    )
 
 
 @app.post("/api/conversations/{conversation_id}/messages")

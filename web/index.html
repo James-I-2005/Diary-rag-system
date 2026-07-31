@@ -20,10 +20,6 @@
             <span class="icon">+</span>
             新建聊天
           </button>
-          <button type="button" class="btn-import" id="btn-import">
-            <span class="icon">📁</span>
-            导入日记库
-          </button>
         </div>
 
         <nav class="conversation-list" id="conversation-list" aria-label="历史对话">
@@ -32,7 +28,7 @@
 
         <div class="sidebar-footer">
           <p class="sidebar-db" id="sidebar-db">库：—</p>
-          <span class="sidebar-hint">个人日记 RAG · 本机目录导入</span>
+          <span class="sidebar-hint">个人日记 RAG</span>
         </div>
       </aside>
 
@@ -108,26 +104,29 @@
             <button type="button" class="cal-nav" id="cal-prev" aria-label="上一月">‹</button>
             <h1 class="calendar-month-title" id="calendar-month-title">2026年7月</h1>
             <button type="button" class="cal-nav" id="cal-next" aria-label="下一月">›</button>
-            <button type="button" class="cal-today" id="cal-today">今天</button>
           </header>
           <div class="calendar-actions">
+            <button type="button" class="cal-action" id="btn-import">导入日记库</button>
+            <button type="button" class="cal-action" id="cal-export-diary" disabled>
+              导出原文 ZIP
+            </button>
+            <button type="button" class="cal-action" id="cal-select-mode">选择</button>
+            <button type="button" class="cal-action primary" id="cal-new-chat" disabled>
+              以此新建对话
+            </button>
+          </div>
+          <div class="calendar-select-tools" id="calendar-select-tools" hidden>
             <button type="button" class="cal-action" id="cal-select-week">选本周</button>
             <button type="button" class="cal-action" id="cal-select-month">选整月</button>
             <button type="button" class="cal-action" id="cal-select-diary-month">选本月有日记</button>
             <button type="button" class="cal-action" id="cal-clear-selection">清空选择</button>
             <span class="cal-selection-summary" id="cal-selection-summary">未选择日期</span>
-            <button type="button" class="cal-action primary" id="cal-new-chat" disabled>
-              以此新建对话
-            </button>
-            <button type="button" class="cal-action" id="cal-export-diary" disabled>
-              导出原文 ZIP
-            </button>
           </div>
           <div class="calendar-legend">
             <span><i class="dot has"></i> 已录入</span>
             <span><i class="dot empty"></i> 未录入</span>
             <span><i class="dot checked"></i> 已勾选</span>
-            <span class="hint">单击打开日记；Ctrl+单击勾选召回范围</span>
+            <span class="hint" id="cal-legend-hint">单击打开日记</span>
           </div>
           <div class="calendar-grid" id="calendar-grid" aria-label="日记日历"></div>
         </section>
@@ -149,6 +148,19 @@
             <div class="day-reader-heading">
               <h2 id="day-panel-title">选择一天</h2>
               <p class="day-panel-meta" id="day-panel-meta"></p>
+            </div>
+            <div class="day-header-images" id="day-header-images">
+              <div class="day-image-strip" id="day-image-strip" aria-label="当日图片"></div>
+              <button type="button" class="btn-add-day-image" id="btn-add-day-image" title="添加图片">
+                ＋ 图片
+              </button>
+              <input
+                type="file"
+                id="day-image-input"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                multiple
+                hidden
+              />
             </div>
           </header>
           <div class="day-panel-body day-reader-body" id="day-panel-body">
@@ -186,6 +198,12 @@
       <div class="write-shell" id="write-shell">
         <header class="write-toolbar">
           <h1 class="write-page-title">写日记</h1>
+          <div class="write-toolbar-actions" id="write-gallery-actions">
+            <button type="button" class="btn-write-tool" id="btn-write-select-mode">选择</button>
+            <button type="button" class="btn-write-tool" id="btn-write-select-all" hidden>全选</button>
+            <button type="button" class="btn-write-tool danger" id="btn-write-batch-delete" hidden>删除</button>
+            <button type="button" class="btn-write-tool" id="btn-write-clear-selection" hidden>取消选中</button>
+          </div>
           <button type="button" class="btn-write-mode" id="btn-write-mode" title="切换写作模式">
             文稿模式
             <span class="mode-hint">切换</span>
@@ -213,9 +231,6 @@
               maxlength="80"
               autocomplete="off"
             />
-            <button type="button" class="btn-write-delete" id="btn-write-delete" title="删除文稿">
-              删除
-            </button>
           </header>
           <div class="write-paper">
             <textarea
@@ -255,6 +270,88 @@
       </div>
     </div>
 
+    <div class="app explore-app" id="view-explore" data-view="explore" hidden>
+      <div class="explore-shell">
+        <nav class="explore-tabs" id="explore-tabs" aria-label="探索分类">
+          <button type="button" class="explore-tab active" data-explore="search">搜索</button>
+          <button type="button" class="explore-tab" data-explore="people">人物</button>
+          <button type="button" class="explore-tab" data-explore="places">地点</button>
+          <button type="button" class="explore-tab" data-explore="tags">其他 tag</button>
+        </nav>
+
+        <div class="explore-panels">
+          <section class="explore-panel" id="explore-panel-search" data-panel="search">
+            <form class="explore-search-bar" id="explore-search-form">
+              <input
+                type="search"
+                id="explore-search-input"
+                placeholder="对日记原文 grep，例如：图书馆"
+                autocomplete="off"
+              />
+              <button type="submit" class="btn-explore-search">搜索</button>
+            </form>
+            <div class="explore-search-toolbar" id="explore-search-toolbar" hidden>
+              <label class="explore-search-select-all">
+                <input type="checkbox" id="explore-search-select-all" />
+                全选
+              </label>
+              <span class="explore-search-selected" id="explore-search-selected">已选 0</span>
+              <button type="button" class="btn-explore-add-tag" id="explore-search-add-tag" disabled>
+                添加到 tag
+              </button>
+            </div>
+            <div class="explore-results" id="explore-search-results">
+              <p class="explore-empty">输入关键词，检索日记片段。</p>
+            </div>
+          </section>
+
+          <section class="explore-panel" id="explore-panel-people" data-panel="people" hidden>
+            <div class="people-board">
+              <div class="people-rail-wrap">
+                <div class="people-rail" id="explore-people-rail" aria-label="人物列表"></div>
+              </div>
+              <div class="explore-detail people-detail" id="explore-people-detail">
+                <p class="explore-empty">点击人物头像，查看绑定到其 tag 的日记片段。</p>
+              </div>
+            </div>
+            <dialog class="people-add-dialog" id="people-add-dialog">
+              <form method="dialog" class="people-add-form" id="people-add-form">
+                <h3>添加人物</h3>
+                <label class="people-add-field">
+                  <span>姓名</span>
+                  <input type="text" id="people-add-name" maxlength="64" required placeholder="例如：小明" autocomplete="off" />
+                </label>
+                <label class="people-add-field">
+                  <span>头像（可选）</span>
+                  <input type="file" id="people-add-photo" accept="image/*" />
+                </label>
+                <div class="people-add-preview" id="people-add-preview" hidden></div>
+                <div class="people-add-actions">
+                  <button type="button" class="tag-mgmt-btn" id="people-add-cancel">取消</button>
+                  <button type="submit" class="tag-mgmt-btn primary" id="people-add-submit">保存</button>
+                </div>
+              </form>
+            </dialog>
+          </section>
+
+          <section class="explore-panel" id="explore-panel-places" data-panel="places" hidden>
+            <div class="explore-split">
+              <aside class="explore-list" id="explore-places-list" aria-label="地点列表"></aside>
+              <div class="explore-detail" id="explore-places-detail">
+                <p class="explore-empty">选择左侧地点，查看相关日记。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="explore-panel" id="explore-panel-tags" data-panel="tags" hidden>
+            <div class="explore-tags-body" id="explore-tags-body">
+              <p class="explore-empty">加载标签中…</p>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
     <nav class="bottom-nav" aria-label="主导航">
       <button type="button" class="nav-item active" data-nav="chat" id="nav-chat">
         <span class="nav-icon">💬</span>
@@ -268,7 +365,109 @@
         <span class="nav-icon">✍️</span>
         <span class="nav-label">写日记</span>
       </button>
+      <button type="button" class="nav-item" data-nav="explore" id="nav-explore">
+        <span class="nav-icon">🔎</span>
+        <span class="nav-label">探索</span>
+      </button>
     </nav>
+  </div>
+
+  <div class="day-image-lightbox" id="day-image-lightbox" hidden>
+    <button type="button" class="day-image-lightbox-close" id="day-image-lightbox-close" aria-label="关闭">
+      ×
+    </button>
+    <img id="day-image-lightbox-img" alt="当日图片预览" />
+  </div>
+
+  <div class="explore-day-backdrop" id="explore-day-backdrop" hidden>
+    <div
+      class="explore-day-modal"
+      id="explore-day-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="explore-day-title"
+    >
+      <header class="explore-day-header">
+        <div class="explore-day-heading">
+          <h2 id="explore-day-title">日记</h2>
+          <p class="explore-day-meta" id="explore-day-meta"></p>
+        </div>
+        <button type="button" class="explore-day-close" id="explore-day-close" aria-label="关闭">
+          ×
+        </button>
+      </header>
+      <div class="explore-day-body" id="explore-day-body">
+        <p class="explore-empty">加载中…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tag-mgmt-modal-backdrop" id="tag-mgmt-modal-backdrop" hidden>
+    <div
+      class="tag-mgmt-modal"
+      id="tag-mgmt-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tag-mgmt-modal-title"
+    >
+      <header class="tag-mgmt-modal-header">
+        <div class="tag-mgmt-modal-heading">
+          <h2 id="tag-mgmt-modal-title">选择或管理 tag</h2>
+          <p class="tag-mgmt-modal-pending" id="tag-mgmt-modal-pending" hidden></p>
+        </div>
+        <button type="button" class="tag-mgmt-modal-close" id="tag-mgmt-modal-close" aria-label="关闭">
+          ×
+        </button>
+      </header>
+      <div class="tag-mgmt-modal-body" id="tag-mgmt-modal-body">
+        <p class="explore-empty">加载中…</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tag-name-grep-backdrop" id="tag-name-grep-backdrop" hidden>
+    <div
+      class="tag-name-grep-modal"
+      id="tag-name-grep-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tag-name-grep-title"
+    >
+      <header class="tag-name-grep-header">
+        <div class="tag-name-grep-heading">
+          <h2 id="tag-name-grep-title">检索 tag 名</h2>
+          <p class="tag-name-grep-sub" id="tag-name-grep-sub"></p>
+        </div>
+        <button type="button" class="tag-name-grep-close" id="tag-name-grep-close" aria-label="关闭">
+          ×
+        </button>
+      </header>
+      <form class="explore-search-bar tag-name-grep-bar" id="tag-name-grep-form">
+        <input
+          type="search"
+          id="tag-name-grep-input"
+          placeholder="对日记原文 grep"
+          autocomplete="off"
+        />
+        <button type="submit" class="btn-explore-search">搜索</button>
+      </form>
+      <div class="explore-search-toolbar" id="tag-name-grep-toolbar" hidden>
+        <label class="explore-search-select-all">
+          <input type="checkbox" id="tag-name-grep-select-all" />
+          全选
+        </label>
+        <span class="explore-search-selected" id="tag-name-grep-selected">已选 0</span>
+        <button type="button" class="btn-explore-add-tag" id="tag-name-grep-bind-tag" hidden>
+          绑定到此 tag
+        </button>
+        <button type="button" class="btn-explore-add-tag" id="tag-name-grep-add-tag" disabled>
+          添加到 tag
+        </button>
+      </div>
+      <div class="explore-results tag-name-grep-results" id="tag-name-grep-results">
+        <p class="explore-empty">输入关键词检索。</p>
+      </div>
+    </div>
   </div>
 
   <div class="modal-backdrop" id="import-modal" hidden>
@@ -303,8 +502,11 @@
     </div>
   </div>
 
+  <script src="/static/js/user-tag.js"></script>
+  <script src="/static/js/selection-tag.js"></script>
   <script src="/static/js/calendar.js"></script>
   <script src="/static/js/write.js"></script>
+  <script src="/static/js/explore.js"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

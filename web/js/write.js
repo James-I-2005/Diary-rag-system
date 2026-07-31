@@ -19,6 +19,8 @@ const WritePage = (() => {
   let syncTimer = null;
   let bound = false;
   let syncing = false;
+  let selectMode = false;
+  let selectedIds = new Set();
 
   function $(sel) {
     return document.querySelector(sel);
@@ -183,11 +185,13 @@ const WritePage = (() => {
     const gallery = $("#manuscript-gallery");
     if (!gallery) return;
     gallery.innerHTML = "";
+    gallery.classList.toggle("is-select-mode", selectMode);
 
     state.items.forEach((item, index) => {
       const card = document.createElement("button");
       card.type = "button";
-      card.className = "manuscript-card";
+      card.className =
+        "manuscript-card" + (selectedIds.has(item.id) ? " selected" : "");
       card.dataset.id = item.id;
       card.style.setProperty("--tilt", `${((index % 5) - 2) * 1.2}deg`);
       card.innerHTML = `
@@ -196,9 +200,80 @@ const WritePage = (() => {
         </div>
         <h2 class="manuscript-title">${escapeHtml(displayTitle(item))}</h2>
       `;
-      card.addEventListener("click", () => openEditor(item.id));
+      card.addEventListener("click", () => {
+        if (selectMode) {
+          if (selectedIds.has(item.id)) selectedIds.delete(item.id);
+          else selectedIds.add(item.id);
+          updateSelectUi();
+          renderGallery();
+          return;
+        }
+        openEditor(item.id);
+      });
       gallery.appendChild(card);
     });
+    updateSelectUi();
+  }
+
+  function updateSelectUi() {
+    const papersVisible = !$("#write-mode-papers")?.hidden;
+    const actions = $("#write-gallery-actions");
+    const modeBtn = $("#btn-write-select-mode");
+    const allBtn = $("#btn-write-select-all");
+    const delBtn = $("#btn-write-batch-delete");
+    const clearBtn = $("#btn-write-clear-selection");
+    const newBtn = $("#btn-new-manuscript");
+
+    if (actions) actions.hidden = !papersVisible || state.mode !== MODE_PAPERS;
+    if (!papersVisible || state.mode !== MODE_PAPERS) return;
+
+    if (modeBtn) {
+      modeBtn.textContent = selectMode ? "退出选择" : "选择";
+      modeBtn.classList.toggle("active", selectMode);
+    }
+    const showBatch = selectMode;
+    if (allBtn) allBtn.hidden = !showBatch;
+    if (delBtn) {
+      delBtn.hidden = !showBatch;
+      delBtn.disabled = selectedIds.size === 0;
+    }
+    if (clearBtn) {
+      clearBtn.hidden = !showBatch;
+      clearBtn.disabled = selectedIds.size === 0;
+    }
+    if (newBtn) newBtn.hidden = selectMode;
+  }
+
+  function exitSelectMode() {
+    selectMode = false;
+    selectedIds.clear();
+    updateSelectUi();
+    renderGallery();
+  }
+
+  function enterSelectMode() {
+    selectMode = true;
+    updateSelectUi();
+    renderGallery();
+  }
+
+  function deleteSelected() {
+    const ids = [...selectedIds];
+    if (!ids.length) return;
+    if (!confirm(`确定删除选中的 ${ids.length} 篇文稿？`)) return;
+
+    const remaining = state.items.filter((x) => !selectedIds.has(x.id));
+    if (!remaining.length) {
+      // 至少保留一张空白文稿
+      const keep = blankManuscript();
+      state.items = [keep];
+    } else {
+      state.items = remaining;
+    }
+    selectedIds.clear();
+    persist();
+    renderGallery();
+    updateSelectUi();
   }
 
   function escapeHtml(s) {
@@ -219,20 +294,24 @@ const WritePage = (() => {
     if (modeButton) modeButton.hidden = false;
     renderGallery();
     updateModeButton();
+    updateSelectUi();
   }
 
   function openEditor(id) {
     const item = findItem(id);
     if (!item) return;
+    if (selectMode) exitSelectMode();
     activeId = id;
     const galleryWrap = $("#write-mode-papers");
     const editor = $("#write-editor");
     const chat = $("#write-mode-chat");
     const modeButton = $("#btn-write-mode");
+    const actions = $("#write-gallery-actions");
     if (galleryWrap) galleryWrap.hidden = true;
     if (editor) editor.hidden = false;
     if (chat) chat.hidden = true;
     if (modeButton) modeButton.hidden = true;
+    if (actions) actions.hidden = true;
 
     const titleInput = $("#write-title-input");
     const content = $("#write-content");
@@ -269,6 +348,7 @@ const WritePage = (() => {
   }
 
   function createManuscript() {
+    if (selectMode) exitSelectMode();
     const item = blankManuscript();
     state.items.unshift(item);
     persist();
@@ -278,24 +358,6 @@ const WritePage = (() => {
       renderGallery();
       openEditor(item.id);
     }
-  }
-
-  function deleteActive() {
-    if (!activeId) return;
-    if (state.items.length <= 1) {
-      const only = state.items[0];
-      only.title = "";
-      only.content = "";
-      only.updatedAt = new Date().toISOString();
-      persist();
-      openEditor(only.id);
-      setSaveHint("已清空（至少保留一张文稿）");
-      return;
-    }
-    if (!confirm("确定删除这张文稿？")) return;
-    state.items = state.items.filter((x) => x.id !== activeId);
-    persist();
-    showGallery();
   }
 
   function updateModeButton() {
@@ -309,6 +371,7 @@ const WritePage = (() => {
   }
 
   function toggleMode() {
+    if (selectMode) exitSelectMode();
     if (state.mode === MODE_PAPERS) {
       if (activeId) commitEditor();
       state.mode = MODE_CHAT;
@@ -387,14 +450,17 @@ const WritePage = (() => {
   }
 
   function showChatMode(preferredId = null) {
+    if (selectMode) exitSelectMode();
     const galleryWrap = $("#write-mode-papers");
     const editor = $("#write-editor");
     const chat = $("#write-mode-chat");
     const modeButton = $("#btn-write-mode");
+    const actions = $("#write-gallery-actions");
     if (galleryWrap) galleryWrap.hidden = true;
     if (editor) editor.hidden = true;
     if (chat) chat.hidden = false;
     if (modeButton) modeButton.hidden = false;
+    if (actions) actions.hidden = true;
     updateModeButton();
 
     const id =
@@ -429,7 +495,19 @@ const WritePage = (() => {
       commitEditor();
       showGallery();
     });
-    $("#btn-write-delete")?.addEventListener("click", deleteActive);
+    $("#btn-write-select-mode")?.addEventListener("click", () => {
+      if (selectMode) exitSelectMode();
+      else enterSelectMode();
+    });
+    $("#btn-write-select-all")?.addEventListener("click", () => {
+      state.items.forEach((item) => selectedIds.add(item.id));
+      renderGallery();
+    });
+    $("#btn-write-clear-selection")?.addEventListener("click", () => {
+      selectedIds.clear();
+      renderGallery();
+    });
+    $("#btn-write-batch-delete")?.addEventListener("click", deleteSelected);
     $("#btn-write-mode")?.addEventListener("click", toggleMode);
     $("#write-title-input")?.addEventListener("input", scheduleSave);
     $("#write-content")?.addEventListener("input", scheduleSave);

@@ -57,7 +57,7 @@ class ContextService:
         cfg = resolve_retrieval_config()
         pool = sentence_pool_size(cfg.top_k)
         if not use_vector and scheme is None and plan_names is None:
-            scheme = "tag_only"
+            scheme = "embedding_only"
         if plan_names is not None and scheme is None:
             from src.engine.schemes import RetrievalScheme, run_scheme as _run
 

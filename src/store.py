@@ -135,6 +135,61 @@ def _init_tables(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_rag_sentences_chunk ON rag_sentences(chunk_id);
         CREATE INDEX IF NOT EXISTS idx_rag_sentences_date ON rag_sentences(date);
+
+        CREATE TABLE IF NOT EXISTS day_images (
+            id TEXT PRIMARY KEY,
+            date TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            original_name TEXT,
+            mime TEXT,
+            size_bytes INTEGER DEFAULT 0,
+            sort_index INTEGER DEFAULT 0,
+            created_at TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_day_images_date ON day_images(date, sort_index, created_at);
+
+        CREATE TABLE IF NOT EXISTS tag_folders (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            parent_id TEXT REFERENCES tag_folders(id) ON DELETE SET NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            system_key TEXT,
+            locked INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_tag_folders_parent ON tag_folders(parent_id, sort_order);
+
+        CREATE TABLE IF NOT EXISTS user_tags (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            color TEXT NOT NULL,
+            folder_id TEXT REFERENCES tag_folders(id) ON DELETE SET NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            last_used_at TEXT,
+            use_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_tags_folder ON user_tags(folder_id, sort_order);
+        CREATE INDEX IF NOT EXISTS idx_user_tags_recent ON user_tags(last_used_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_user_tags_frequent ON user_tags(use_count DESC);
+
+        CREATE TABLE IF NOT EXISTS chunk_user_tags (
+            chunk_id TEXT NOT NULL REFERENCES chunks(id) ON DELETE CASCADE,
+            tag_id TEXT NOT NULL REFERENCES user_tags(id) ON DELETE CASCADE,
+            created_at TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY (chunk_id, tag_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_chunk_user_tags_tag ON chunk_user_tags(tag_id);
+
+        CREATE TABLE IF NOT EXISTS people (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            tag_id TEXT NOT NULL UNIQUE REFERENCES user_tags(id) ON DELETE CASCADE,
+            photo_filename TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_people_sort ON people(sort_order, name, id);
         """
     )
     # 兼容旧库：补列
@@ -145,6 +200,16 @@ def _init_tables(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE chunk_tags ADD COLUMN tag_method TEXT")
     if "entities" not in cols:
         conn.execute("ALTER TABLE chunk_tags ADD COLUMN entities TEXT")
+
+    folder_cols = {
+        r[1] for r in conn.execute("PRAGMA table_info(tag_folders)").fetchall()
+    }
+    if "system_key" not in folder_cols:
+        conn.execute("ALTER TABLE tag_folders ADD COLUMN system_key TEXT")
+    if "locked" not in folder_cols:
+        conn.execute(
+            "ALTER TABLE tag_folders ADD COLUMN locked INTEGER NOT NULL DEFAULT 0"
+        )
     conn.commit()
 
 
@@ -187,6 +252,9 @@ def delete_chunks_by_source(source_file: str, conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         f"DELETE FROM chunk_tags WHERE chunk_id IN ({placeholders})", ids
+    )
+    conn.execute(
+        f"DELETE FROM chunk_user_tags WHERE chunk_id IN ({placeholders})", ids
     )
     conn.execute(
         f"DELETE FROM memory_views WHERE chunk_id IN ({placeholders})", ids

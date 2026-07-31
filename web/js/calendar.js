@@ -99,6 +99,7 @@ const CalendarPage = (() => {
   let diaryDates = new Set();
   let diaryCounts = {};
   let bound = false;
+  let selectMode = false;
 
   function $(sel) {
     return document.querySelector(sel);
@@ -214,11 +215,10 @@ const CalendarPage = (() => {
         <span class="cal-check" aria-hidden="true">${checked ? "✓" : ""}</span>
       `;
       btn.title = has
-        ? `${dateStr} · ${diaryCounts[dateStr] || 0} 段 · 单击打开；Ctrl+单击勾选`
-        : `${dateStr} · 未录入 · Ctrl+单击可勾选`;
-      btn.addEventListener("click", (e) => {
-        // Ctrl/Cmd：仅勾选召回范围
-        if (e.ctrlKey || e.metaKey) {
+        ? `${dateStr} · ${diaryCounts[dateStr] || 0} 段`
+        : `${dateStr} · 未录入`;
+      btn.addEventListener("click", () => {
+        if (selectMode) {
           DateSelection.toggle(dateStr);
           renderGrid();
           updateSelectionBar();
@@ -241,6 +241,7 @@ const CalendarPage = (() => {
     const day = $("#calendar-day-view");
     if (month) month.hidden = false;
     if (day) day.hidden = true;
+    closeDayImageLightbox();
     loadMonthWordcloud();
   }
 
@@ -259,8 +260,131 @@ const CalendarPage = (() => {
   let dayInsightsSeq = 0;
   let monthCloudSeq = 0;
   let currentInsightDate = "";
+  let currentDayViewDate = "";
   let monthCloudCacheKey = "";
   let monthCloudCacheWords = null;
+  let dayImagesBound = false;
+
+  function clearDayImages() {
+    const strip = $("#day-image-strip");
+    if (strip) strip.innerHTML = "";
+  }
+
+  function closeDayImageLightbox() {
+    const box = $("#day-image-lightbox");
+    const img = $("#day-image-lightbox-img");
+    if (box) box.hidden = true;
+    if (img) img.removeAttribute("src");
+  }
+
+  function openDayImageLightbox(url) {
+    const box = $("#day-image-lightbox");
+    const img = $("#day-image-lightbox-img");
+    if (!box || !img) return;
+    img.src = url;
+    box.hidden = false;
+  }
+
+  function renderDayImages(images) {
+    const strip = $("#day-image-strip");
+    if (!strip) return;
+    strip.innerHTML = "";
+    (images || []).forEach((item) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "day-image-thumb";
+      btn.title = item.original_name || "图片";
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.alt = item.original_name || "当日图片";
+      img.loading = "lazy";
+      btn.appendChild(img);
+      btn.addEventListener("click", () => openDayImageLightbox(item.url));
+      strip.appendChild(btn);
+    });
+  }
+
+  async function loadDayImages(dateStr) {
+    clearDayImages();
+    if (!dateStr) return;
+    try {
+      const data = await api(`/diary/days/${dateStr}/images`);
+      renderDayImages(data.images || []);
+    } catch (err) {
+      console.warn("加载日图片失败", err);
+    }
+  }
+
+  async function uploadDayImages(files) {
+    if (!currentDayViewDate || !files?.length) return;
+    const btn = $("#btn-add-day-image");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "上传中…";
+    }
+    try {
+      for (const file of files) {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await fetch(`/api/diary/days/${currentDayViewDate}/images`, {
+          method: "POST",
+          body: form,
+        });
+        if (!res.ok) {
+          let detail = res.statusText;
+          try {
+            const body = await res.json();
+            detail = body.detail || detail;
+          } catch {
+            /* ignore */
+          }
+          throw new Error(
+            typeof detail === "string" ? detail : JSON.stringify(detail)
+          );
+        }
+      }
+      await loadDayImages(currentDayViewDate);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "＋ 图片";
+      }
+    }
+  }
+
+  function bindDayImages() {
+    if (dayImagesBound) return;
+    dayImagesBound = true;
+    const strip = $("#day-image-strip");
+    strip?.addEventListener(
+      "wheel",
+      (e) => {
+        if (!strip) return;
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          strip.scrollLeft += e.deltaY;
+        }
+      },
+      { passive: false }
+    );
+    $("#btn-add-day-image")?.addEventListener("click", () => {
+      $("#day-image-input")?.click();
+    });
+    $("#day-image-input")?.addEventListener("change", (e) => {
+      const files = [...(e.target.files || [])];
+      e.target.value = "";
+      uploadDayImages(files).catch((err) => showError(err.message));
+    });
+    $("#day-image-lightbox-close")?.addEventListener("click", closeDayImageLightbox);
+    $("#day-image-lightbox")?.addEventListener("click", (e) => {
+      if (e.target && e.target.id === "day-image-lightbox") {
+        closeDayImageLightbox();
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDayImageLightbox();
+    });
+  }
 
   function clearDaySide() {
     const poeticStatus = $("#day-poetic-status");
@@ -469,10 +593,13 @@ const CalendarPage = (() => {
     const body = $("#day-panel-body");
     if (!body) return;
 
+    currentDayViewDate = dateStr;
     if (title) title.textContent = dateStr;
     if (meta) meta.textContent = "加载中…";
     body.innerHTML = `<p class="day-panel-empty">加载中…</p>`;
     clearDaySide();
+    clearDayImages();
+    loadDayImages(dateStr);
 
     try {
       const data = await api(`/diary/days/${dateStr}`);
@@ -485,11 +612,24 @@ const CalendarPage = (() => {
         return;
       }
       if (meta) meta.textContent = `${n} 个片段`;
-      const pre = document.createElement("pre");
-      pre.className = "day-text";
-      pre.textContent = data.text;
+      const wrap = document.createElement("div");
+      wrap.className = "day-text";
+      wrap.setAttribute("data-taggable", "1");
+      const chunks = Array.isArray(data.chunks) ? data.chunks : [];
+      if (chunks.length) {
+        chunks.forEach((c, i) => {
+          const span = document.createElement("span");
+          span.className = "day-chunk";
+          span.setAttribute("data-chunk-id", c.id);
+          const raw = (c.text || "").replace(/^\s+/, i === 0 ? "" : "").replace(/\s+$/, "");
+          span.textContent = i === 0 ? raw : "\n\n" + raw;
+          wrap.appendChild(span);
+        });
+      } else {
+        wrap.textContent = data.text || "";
+      }
       body.innerHTML = "";
-      body.appendChild(pre);
+      body.appendChild(wrap);
       await loadDayInsights(dateStr, true);
     } catch (err) {
       if (meta) meta.textContent = "加载失败";
@@ -506,13 +646,41 @@ const CalendarPage = (() => {
 
   function updateSelectionBar() {
     const el = $("#cal-selection-summary");
-    if (!el) return;
-    const n = DateSelection.get().length;
-    el.textContent = n ? `已选 ${n} 天` : "未选择日期（召回不限范围）";
+    if (el) {
+      const n = DateSelection.get().length;
+      el.textContent = n ? `已选 ${n} 天` : "未选择日期";
+    }
     const btn = $("#cal-new-chat");
-    if (btn) btn.disabled = n === 0;
+    if (btn) btn.disabled = DateSelection.get().length === 0;
     const exportBtn = $("#cal-export-diary");
-    if (exportBtn) exportBtn.disabled = n === 0;
+    if (exportBtn) exportBtn.disabled = DateSelection.get().length === 0;
+  }
+
+  function updateSelectModeUi() {
+    const tools = $("#calendar-select-tools");
+    const modeBtn = $("#cal-select-mode");
+    const pane = $("#calendar-month-view");
+    const hint = $("#cal-legend-hint");
+    if (tools) tools.hidden = !selectMode;
+    if (modeBtn) {
+      modeBtn.textContent = selectMode ? "退出选择" : "选择";
+      modeBtn.classList.toggle("active", selectMode);
+    }
+    if (pane) pane.classList.toggle("is-select-mode", selectMode);
+    if (hint) {
+      hint.textContent = selectMode
+        ? "选择模式：单击日期勾选 / 取消"
+        : "单击打开日记";
+    }
+  }
+
+  function setSelectMode(on) {
+    selectMode = !!on;
+    if (!selectMode) {
+      // 退出选择模式时保留已选日期，便于「以此新建对话」
+    }
+    updateSelectModeUi();
+    renderGrid();
   }
 
   function shiftMonth(delta) {
@@ -524,14 +692,6 @@ const CalendarPage = (() => {
       viewMonth = 0;
       viewYear += 1;
     }
-    renderGrid();
-    MiniDatePicker.syncMonth(viewYear, viewMonth);
-  }
-
-  function goToday() {
-    const t = new Date();
-    viewYear = t.getFullYear();
-    viewMonth = t.getMonth();
     renderGrid();
     MiniDatePicker.syncMonth(viewYear, viewMonth);
   }
@@ -628,7 +788,9 @@ const CalendarPage = (() => {
     bound = true;
     $("#cal-prev")?.addEventListener("click", () => shiftMonth(-1));
     $("#cal-next")?.addEventListener("click", () => shiftMonth(1));
-    $("#cal-today")?.addEventListener("click", goToday);
+    $("#cal-select-mode")?.addEventListener("click", () => {
+      setSelectMode(!selectMode);
+    });
     $("#cal-select-week")?.addEventListener("click", selectCurrentWeek);
     $("#cal-select-month")?.addEventListener("click", selectCurrentMonth);
     $("#cal-select-diary-month")?.addEventListener("click", selectDiaryInMonth);
@@ -656,10 +818,12 @@ const CalendarPage = (() => {
       renderGrid();
       MiniDatePicker.render();
     });
+    updateSelectModeUi();
   }
 
   async function show() {
     bind();
+    bindDayImages();
     showMonthView();
     try {
       // 打开日历前先做跨日归档，确保昨日写作已入库

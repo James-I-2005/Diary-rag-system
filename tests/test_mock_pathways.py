@@ -411,48 +411,6 @@ class TestMockPathways(unittest.TestCase):
             self.assertIn("窗口内曾召回", mem_sys[0])
             print("[PASS] online: retrieve → context → llm → prior reuse")
 
-    def test_04_tag_operator_expands_to_sentences(self):
-        """Tag 命中 chunk 后展开为 sentences，再 hydrate 回 chunk。"""
-        with PathwayHarness() as h:
-            from src.engine.operators.tag import TagOperator
-            from src.ingest import Chunk
-            from src.paraphrase.pipeline import run_paraphrase_pipeline
-            from src.query import hydrate_candidates
-            from src.store import get_db, save_chunks
-
-            chunk = Chunk(
-                id="c_tag_01",
-                date="2024-06-04",
-                text="和朋友吃火锅，很开心。",
-                chunk_index=0,
-                source_file="tag.md",
-                word_count=15,
-            )
-            conn = get_db()
-            save_chunks([chunk], conn)
-            conn.close()
-            run_paraphrase_pipeline(chunk_id=chunk.id, force=True)
-
-            fake_hits = [
-                {"id": chunk.id, "tag_score": 0.88, "score": 0.88},
-            ]
-            with patch(
-                "src.engine.operators.tag.tag_match", return_value=fake_hits
-            ):
-                op = TagOperator(top_k=10)
-                cands = op.execute("火锅", [])
-
-            self.assertGreaterEqual(len(cands), 2)  # 2 sentences
-            self.assertTrue(all(c.source == "tag" for c in cands))
-            self.assertTrue(
-                all(c.meta.get("parent_chunk_id") == chunk.id for c in cands)
-            )
-
-            hydrated = hydrate_candidates(cands, top_k=5)
-            self.assertEqual(len(hydrated), 1)
-            self.assertEqual(hydrated[0]["chunk_id"], chunk.id)
-            print("[PASS] tag: chunk hit → sentence expand → chunk hydrate")
-
     def test_05_embedding_operator_uses_sentence_ann(self):
         """EmbeddingOperator 走 search_similar（假 ANN）返回 sentence id。"""
         with PathwayHarness() as h:

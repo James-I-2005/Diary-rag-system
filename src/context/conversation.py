@@ -103,11 +103,42 @@ class ConversationManager:
         conn = get_db()
         try:
             _ensure_conversation_tables(conn)
+            row = conn.execute(
+                "SELECT id FROM conversations WHERE id = ?", (conversation_id,)
+            ).fetchone()
+            if not row:
+                raise KeyError(f"conversation 不存在: {conversation_id}")
             conn.execute(
                 "UPDATE conversations SET title = ?, updated_at = ? WHERE id = ?",
                 (title.strip() or "chat", _now(), conversation_id),
             )
             conn.commit()
+        finally:
+            conn.close()
+
+    def delete(self, conversation_id: str) -> bool:
+        """按稳定 id 删除对话及其消息 / 召回痕迹。title 变更不影响定位。"""
+        conn = get_db()
+        try:
+            _ensure_conversation_tables(conn)
+            row = conn.execute(
+                "SELECT id FROM conversations WHERE id = ?", (conversation_id,)
+            ).fetchone()
+            if not row:
+                return False
+            conn.execute(
+                "DELETE FROM retrieval_traces WHERE conversation_id = ?",
+                (conversation_id,),
+            )
+            conn.execute(
+                "DELETE FROM conversation_messages WHERE conversation_id = ?",
+                (conversation_id,),
+            )
+            conn.execute(
+                "DELETE FROM conversations WHERE id = ?", (conversation_id,)
+            )
+            conn.commit()
+            return True
         finally:
             conn.close()
 

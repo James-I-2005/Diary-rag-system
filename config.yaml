@@ -29,25 +29,8 @@ retrieval:
   # 默认：仅多主题 Embedding（Query Agent 产出 1~3 主题，分别 ANN 再并集）
   scheme: "embedding_only"
   plan: ["embedding"]
-  w_vector: 0.5             # 加权方案中的 embedding 权重（与 schemes 可分别覆盖）
-  w_tag: 0.5
+  w_vector: 1.0
   schemes:
-    weighted_50_50:
-      label: "Tag + Sentence 加权 (0.5/0.5)"
-      description: "Tag 展开 sentence + rag-sentence 向量加权"
-      operators: ["tag", "embedding"]
-      merge: "weighted"
-      w_tag: 0.5
-      w_embedding: 0.5
-    union_max:
-      label: "并集取 max"
-      description: "顺序执行，同分取较大值"
-      operators: ["tag", "embedding"]
-      merge: "max"
-    tag_only:
-      label: "仅 Tag"
-      operators: ["tag"]
-      merge: "max"
     embedding_only:
       label: "仅多主题 Sentence 向量"
       description: "每个改写主题分别 ANN，并集 max，再按 chunk 取 top_k"
@@ -56,15 +39,6 @@ retrieval:
   save_json: true           # 每次召回写入 JSON，便于审阅
   log_path: "data/last_retrieval.json"
   history_dir: "data/retrieval_runs"  # 同时按时间戳留一份；空则不留历史
-  tag_score:
-    # tag_score = entity_weight * n_entity + entity_hit_bonus*(n_entity>0)
-    #           + keyword_weight * n_keyword   （或 Σ tfidf，见 use_keyword_tfidf）
-    entity_weight: 10.0     # 每个重合实体加分（应远大于 keyword）
-    keyword_weight: 1.0     # 每个重合关键词加分
-    entity_hit_bonus: 5.0   # 只要有任意实体重合再额外加
-    use_keyword_tfidf: false  # true 时用 chunk_term.weight 累加代替纯个数
-    min_score: 0.0
-    top_k: 50               # TagOperator 召回上限
 
 # Context Engine（会话短期记忆 = 滑动窗口 + 溢出摘要 + 窗口内曾召回 chunk）
 context:
@@ -196,6 +170,16 @@ llm:
 write_diary:
   root: "data/write_diary"
   auto_ingest: true
+
+# 日历日视图图片：原图落盘，元数据进 SQLite
+day_images:
+  root: "data/day_images"
+  max_bytes: 12582912  # 12MB
+
+# 探索页人物头像：照片落盘，人物记录与 user_tag 绑定
+people:
+  root: "data/people"
+  max_bytes: 12582912  # 12MB
 
 # 日历洞察：整月词云（无 LLM）+ 日总结/诗句（轻量 Agent，本地缓存）
 day_insights:
