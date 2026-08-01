@@ -381,6 +381,19 @@ def tags_bind(tag_id: str, body: BindTagBody) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.get("/api/tags/{tag_id}/chunks")
+def tags_chunks(tag_id: str, limit: int = 80) -> dict:
+    """列出某 tag 绑定的全部 chunk（与人物详情同源）。"""
+    from src.user_tags import UserTag
+
+    try:
+        return UserTag.get(tag_id).chunks_payload(limit=limit)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.get("/api/people")
 def people_list() -> dict:
     from src.people import list_people

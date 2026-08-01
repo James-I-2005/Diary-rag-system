@@ -97,4 +97,34 @@ class UserTag {
     }
     return res;
   }
+
+  /**
+   * 拉取本 tag 绑定的 chunk 列表。
+   * @param {{ limit?: number }} [opts]
+   */
+  async listChunks(opts = {}) {
+    if (!this.id) throw new Error("缺少 tag id");
+    const limit = opts.limit || 80;
+    const data = await api(
+      `/tags/${encodeURIComponent(this.id)}/chunks?limit=${encodeURIComponent(limit)}`
+    );
+    if (data.tag) Object.assign(this, UserTag.from(data.tag));
+    return data;
+  }
+
+  /**
+   * 任意位置点击 tag：展示绑定 chunk +「进入和 xxx 的故事」侧栏（故事逻辑暂空）。
+   */
+  async openDetail() {
+    if (!this.id) throw new Error("缺少 tag id");
+    if (typeof ExplorePage === "undefined" || !ExplorePage.openTagDetailModal) {
+      showError?.("Tag 详情界面未就绪");
+      return;
+    }
+    await ExplorePage.openTagDetailModal({
+      tagId: this.id,
+      tagName: this.name,
+      color: this.color,
+    });
+  }
 }

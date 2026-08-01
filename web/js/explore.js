@@ -19,6 +19,8 @@ const ExplorePage = (() => {
   let selectedNameGrepIds = new Set();
   let nameGrepTagId = "";
   let nameGrepTagName = "";
+  let tagDetailBound = false;
+  let tagDetailOpen = false;
 
   function $(sel) {
     return document.querySelector(sel);
@@ -467,6 +469,8 @@ const ExplorePage = (() => {
       if (!nameGrepOpen) return;
       if (document.querySelector(".tag-picker-backdrop")) return;
       if (tagPickerOpen) return;
+      const day = $("#explore-day-backdrop");
+      if (day && !day.hidden) return;
       closeNameGrepModal();
     });
     document.addEventListener("selection-tag-bound", () => {
@@ -499,6 +503,96 @@ const ExplorePage = (() => {
     if (backdrop) backdrop.hidden = false;
     updateNameGrepSelectUi();
     await runNameGrepSearch(query);
+  }
+
+  function closeTagDetailModal() {
+    const backdrop = $("#tag-detail-backdrop");
+    if (backdrop) backdrop.hidden = true;
+    tagDetailOpen = false;
+  }
+
+  function bindTagDetailModal() {
+    if (tagDetailBound) return;
+    tagDetailBound = true;
+    $("#tag-detail-close")?.addEventListener("click", closeTagDetailModal);
+    $("#tag-detail-backdrop")?.addEventListener("click", (e) => {
+      if (e.target && e.target.id === "tag-detail-backdrop") closeTagDetailModal();
+    });
+    // 故事入口：逻辑暂不实现
+    $("#tag-story-enter")?.addEventListener("click", (e) => {
+      e.preventDefault();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (!tagDetailOpen) return;
+      if (nameGrepOpen || tagPickerOpen) return;
+      if (document.querySelector(".tag-picker-backdrop")) return;
+      const day = $("#explore-day-backdrop");
+      if (day && !day.hidden) return;
+      closeTagDetailModal();
+    });
+  }
+
+  async function openTagDetailModal(opts = {}) {
+    bind();
+    bindTagDetailModal();
+    const tagId = String(opts.tagId || "").trim();
+    if (!tagId) return;
+    tagDetailOpen = true;
+    const backdrop = $("#tag-detail-backdrop");
+    const title = $("#tag-detail-title");
+    const meta = $("#tag-detail-meta");
+    const main = $("#tag-detail-main");
+    const storyName = $("#tag-story-name");
+    const storyBtn = $("#tag-story-enter");
+    if (backdrop) backdrop.hidden = false;
+    const fallbackName = String(opts.tagName || "Tag");
+    if (title) {
+      title.textContent = fallbackName;
+      if (opts.color) title.style.setProperty("--tag-color", opts.color);
+    }
+    if (storyName) storyName.textContent = fallbackName;
+    if (storyBtn) storyBtn.disabled = true;
+    if (meta) meta.textContent = "加载中…";
+    if (main) main.innerHTML = `<p class="explore-empty">加载中…</p>`;
+
+    try {
+      const tag = UserTag.from({
+        id: tagId,
+        name: opts.tagName,
+        color: opts.color,
+      });
+      const data = await tag.listChunks({ limit: 80 });
+      const t = data.tag || tag.toJSON();
+      const name = t.name || fallbackName;
+      if (title) {
+        title.textContent = name;
+        title.style.setProperty("--tag-color", t.color || opts.color || "#6b7280");
+      }
+      if (storyName) storyName.textContent = name;
+      if (meta) {
+        meta.textContent = `绑定片段 ${data.total || 0}`;
+      }
+      if (!main) return;
+      main.innerHTML = "";
+      const head = document.createElement("div");
+      head.className = "tag-detail-pill-row";
+      head.innerHTML = `<span class="tag-pill" style="--tag-color:${escapeHtml(t.color || "#6b7280")}">${escapeHtml(name)}</span>`;
+      main.appendChild(head);
+      const wrap = document.createElement("div");
+      wrap.className = "explore-detail-hits";
+      renderHitList(
+        wrap,
+        data.items || [],
+        "还没有绑定片段。可在搜索或多选结果里「添加到 tag」。"
+      );
+      main.appendChild(wrap);
+    } catch (err) {
+      if (meta) meta.textContent = "加载失败";
+      if (main) {
+        main.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
+      }
+    }
   }
 
   function renderEntityList(listEl, detailEl, items, entityType) {
@@ -1098,7 +1192,7 @@ const ExplorePage = (() => {
     }
   }
 
-  async function onTagActivate(tagId) {
+  async function onTagActivate(tagId, tagMeta = {}) {
     if (!tagId) return;
     if (pendingChunkIds.length) {
       try {
@@ -1125,6 +1219,15 @@ const ExplorePage = (() => {
         showError?.(err.message || "绑定失败");
       }
       return;
+    }
+    try {
+      await UserTag.from({
+        id: tagId,
+        name: tagMeta.name || "",
+        color: tagMeta.color || "",
+      }).openDetail();
+    } catch (err) {
+      showError?.(err.message || "打开 tag 失败");
     }
   }
 
@@ -1422,7 +1525,14 @@ const ExplorePage = (() => {
     body.querySelector("#tag-mgmt-new-folder")?.addEventListener("click", createFolderHere);
 
     body.querySelectorAll(".tag-mgmt-chip-wrap[data-tag-id]").forEach((btn) => {
-      btn.addEventListener("click", () => onTagActivate(btn.dataset.tagId));
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.tagId;
+        const pill = btn.querySelector(".tag-pill");
+        onTagActivate(id, {
+          name: (pill?.textContent || "").trim(),
+          color: getComputedStyle(pill || btn).getPropertyValue("--tag-color").trim(),
+        });
+      });
     });
 
     body.querySelector("#tag-mgmt-select-mode")?.addEventListener("click", () => {
@@ -1596,7 +1706,7 @@ const ExplorePage = (() => {
           toggleItemSelected(tile);
           return;
         }
-        if (pendingChunkIds.length) onTagActivate(t.id);
+        onTagActivate(t.id, { name: t.name, color: t.color });
       });
       bindTagRowMenu(tile, t);
       grid.appendChild(tile);
@@ -1742,5 +1852,12 @@ const ExplorePage = (() => {
     setTab(active);
   }
 
-  return { show, setTab, openTagManager, openTagPickerModal, openNameGrepModal };
+  return {
+    show,
+    setTab,
+    openTagManager,
+    openTagPickerModal,
+    openNameGrepModal,
+    openTagDetailModal,
+  };
 })();

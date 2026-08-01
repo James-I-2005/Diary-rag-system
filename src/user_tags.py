@@ -317,6 +317,33 @@ class UserTag:
     def list_chunks(self, *, limit: int = 50) -> list[dict[str, Any]]:
         return list_chunks_for_tag(self.id, limit=limit)
 
+    @classmethod
+    def get(cls, tag_id: str) -> UserTag:
+        return cls.from_dict(get_tag(tag_id))
+
+    def chunks_payload(self, *, limit: int = 80) -> dict[str, Any]:
+        """详情页：tag + 绑定 chunk 列表。"""
+        items = list_chunks_for_tag(self.id, limit=limit)
+        tag = get_tag(self.id)
+        return {"tag": tag, "items": items, "total": len(items)}
+
+
+def get_tag(tag_id: str) -> dict[str, Any]:
+    tid = (tag_id or "").strip()
+    if not tid:
+        raise ValueError("tag_id 不能为空")
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM user_tags WHERE id = ?", (tid,)).fetchone()
+        if not row:
+            raise KeyError(f"tag 不存在: {tid}")
+        bind_count = conn.execute(
+            "SELECT COUNT(*) FROM chunk_user_tags WHERE tag_id = ?", (tid,)
+        ).fetchone()[0]
+        return _row_tag(row, bind_count=int(bind_count))
+    finally:
+        conn.close()
+
 
 def _folder_exists(conn, folder_id: str | None) -> bool:
     if folder_id is None:

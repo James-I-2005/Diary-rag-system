@@ -470,6 +470,37 @@
     </div>
   </div>
 
+  <div class="tag-detail-backdrop" id="tag-detail-backdrop" hidden>
+    <div
+      class="tag-detail-modal"
+      id="tag-detail-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tag-detail-title"
+    >
+      <header class="tag-detail-header">
+        <div class="tag-detail-heading">
+          <h2 id="tag-detail-title">Tag</h2>
+          <p class="tag-detail-meta" id="tag-detail-meta"></p>
+        </div>
+        <button type="button" class="tag-detail-close" id="tag-detail-close" aria-label="关闭">
+          ×
+        </button>
+      </header>
+      <div class="tag-detail-layout">
+        <div class="tag-detail-main" id="tag-detail-main">
+          <p class="explore-empty">加载中…</p>
+        </div>
+        <aside class="tag-detail-side" aria-label="故事入口">
+          <button type="button" class="tag-story-enter" id="tag-story-enter" disabled>
+            进入和 <span id="tag-story-name">…</span> 的故事
+          </button>
+          <p class="tag-story-hint">故事功能即将开放</p>
+        </aside>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="import-modal" hidden>
     <div class="modal" role="dialog" aria-labelledby="import-title" aria-modal="true">
       <h2 id="import-title">导入日记库</h2>
