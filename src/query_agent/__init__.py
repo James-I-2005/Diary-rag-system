@@ -1,4 +1,4 @@
-"""Query Agent：rewrite 主题改写，或 react 中枢召回。"""
+"""Query Agent：guide（预选池+Judge）/ react / rewrite。"""
 
 from src.query_agent.models import StructuredQuery
 
@@ -6,6 +6,7 @@ __all__ = [
     "QueryAgent",
     "StructuredQuery",
     "ReactQueryAgent",
+    "GuideQueryAgent",
     "AgentRetrievalResult",
 ]
 
@@ -19,6 +20,10 @@ def __getattr__(name: str):
         from src.query_agent.react_agent import ReactQueryAgent
 
         return ReactQueryAgent
+    if name == "GuideQueryAgent":
+        from src.query_agent.guide_agent import GuideQueryAgent
+
+        return GuideQueryAgent
     if name == "AgentRetrievalResult":
         from src.query_agent.react_agent import AgentRetrievalResult
 

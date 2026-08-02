@@ -121,7 +121,11 @@ def grep_chunks(
             }
         )
 
-    scored.sort(key=lambda x: (-float(x["score"]), x.get("date") or "", x["id"]))
+    # 硬顶场景：优先日期最近，同日再按命中分
+    scored.sort(
+        key=lambda x: (x.get("date") or "", float(x["score"]), x["id"]),
+        reverse=True,
+    )
     top = scored[: max(1, int(top_k))]
 
     chunks = [

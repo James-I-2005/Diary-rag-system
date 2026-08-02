@@ -15,6 +15,7 @@ from src.engine import run_scheme
 from src.llm import get_llm_client, get_llm_model
 from src.query import hydrate_candidates, save_retrieval_json, sentence_pool_size
 from src.query_agent.agent import QueryAgent
+from src.query_agent.guide_agent import GuideQueryAgent
 from src.query_agent.models import StructuredQuery
 from src.query_agent.react_agent import AgentRetrievalResult, ReactQueryAgent
 from src.store import load_config, resolve_path
@@ -29,6 +30,7 @@ class ContextService:
         context_engine: ContextEngine | None = None,
         query_agent: QueryAgent | None = None,
         react_agent: ReactQueryAgent | None = None,
+        guide_agent: GuideQueryAgent | None = None,
     ):
         self.conversation = conversation or ConversationManager()
         self.context_engine = context_engine or ContextEngine(
@@ -40,10 +42,13 @@ class ContextService:
         self.react_agent = react_agent or ReactQueryAgent(
             context_engine=self.context_engine
         )
+        self.guide_agent = guide_agent or GuideQueryAgent(
+            context_engine=self.context_engine
+        )
 
     def _query_mode(self) -> str:
         cfg = load_config().get("query_agent") or {}
-        return str(cfg.get("mode") or "react").strip().lower()
+        return str(cfg.get("mode") or "guide").strip().lower()
 
     def _retrieve(
         self,
@@ -125,11 +130,12 @@ class ContextService:
         analysis: dict = {}
         dset = normalize_date_list(dates)
 
-        if mode == "react" and (load_config().get("query_agent") or {}).get(
+        if mode in ("guide", "react") and (load_config().get("query_agent") or {}).get(
             "enabled", True
         ):
-            # ReAct 中枢：分析 → grep(chunk原文)/rag → 合并证据
-            result: AgentRetrievalResult = self.react_agent.retrieve(
+            agent = self.guide_agent if mode == "guide" else self.react_agent
+            # guide：Guide→预选池→Judge；react：旧多轮打捞（fallback）
+            result: AgentRetrievalResult = agent.retrieve(
                 query,
                 state=state,
                 date_from=date_from,
@@ -146,9 +152,9 @@ class ContextService:
                 structured.date_from = ""
                 structured.date_to = ""
             chunks = result.chunks
-            plan = ["react"]
+            plan = [mode]
             scheme_meta = {
-                "id": "react",
+                "id": mode,
                 "stop_reason": result.stop_reason,
                 "timeline": result.timeline,
             }

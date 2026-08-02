@@ -67,15 +67,23 @@ context:
   save_debug_json: true
   debug_path: "data/last_context.json"
 
-# Query Agent：mode=react 时先分析再调 grep/rag；rewrite 为旧主题改写
+# Query Agent：mode=guide 为 Guide→预选池→Judge；react 为旧多轮打捞；rewrite 为旧主题改写
 query_agent:
   enabled: true
-  mode: "react"          # react | rewrite
+  mode: "guide"          # guide | react | rewrite
   llm_role: "tags"
   max_themes: 3
   max_tool_steps: 4
+  max_subquestions: 3
+  k_final: 15            # 本轮最终证据条数（子问题均分）
   save_debug_json: true
   debug_path: "data/last_query.json"
+  pool:
+    rag_top_k: 20
+    grep_match_cap: 150  # grep 命中按日期最近硬顶
+    grep_rerank_top_k: 20
+    tag_match_cap: 150
+    tag_rerank_top_k: 20
   tools:
     grep:
       top_k: 20

@@ -1,6 +1,6 @@
 # Query Agent 中枢与召回工具 · 架构草案
 
-> 状态：**P0 已落地**（`query_agent.mode: react`）  
+> 状态：**P0 已落地**（`query_agent.mode: react`）· **后续主方案见** [`02-Guide预选池Judge召回架构计划.md`](./02-Guide预选池Judge召回架构计划.md)（拟取代本文的打捞式 ReAct）  
 > 范围：仅在线 Runtime 召回编排；不改动 Extract / ingest / paraphrase 写入主线。  
 > 动机：固定 Scheme 召回偏「死」；专名场景需要 Grep；模糊回忆需要 RAG；顺序应由 Agent 按题决策。
 
