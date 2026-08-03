@@ -163,6 +163,10 @@ class UpdatePersonBody(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=64)
 
 
+class UpdatePlaceBody(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=64)
+
+
 def _normalize_client_dates(values: list[str] | None) -> list[str]:
     from src.engine.date_range import normalize_date_list
 
@@ -291,6 +295,15 @@ def tags_frequent(limit: int = 12) -> dict:
     return {"items": items, "total": len(items)}
 
 
+@app.get("/api/tags")
+def tags_list_all() -> dict:
+    """全部用户 tag 列表（提及渲染用）。"""
+    from src.user_tags import list_all_tags
+
+    items = list_all_tags()
+    return {"items": items, "total": len(items)}
+
+
 @app.post("/api/tags")
 def tags_create(body: CreateUserTagBody) -> dict:
     from src.user_tags import create_tag
@@ -377,6 +390,16 @@ def tags_bind(tag_id: str, body: BindTagBody) -> dict:
 
     try:
         return bind_chunks(tag_id, body.chunk_ids)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/tags/{tag_id}/unbind")
+def tags_unbind(tag_id: str, body: BindTagBody) -> dict:
+    from src.user_tags import unbind_chunks
+
+    try:
+        return unbind_chunks(tag_id, body.chunk_ids)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -507,6 +530,124 @@ def people_chunks(person_id: str, limit: int = 50) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
         "person": person,
+        "items": items,
+        "total": len(items),
+    }
+
+
+@app.get("/api/places")
+def places_list() -> dict:
+    from src.places import list_places
+
+    items = list_places()
+    return {"items": items, "total": len(items)}
+
+
+@app.post("/api/places")
+async def places_create(
+    name: str = Form(...),
+    photo: UploadFile | None = File(None),
+) -> dict:
+    """新建地点：同步在「地点」系统文件夹下创建同名 tag；可选上传图片。"""
+    from src.places import create_place
+
+    photo_bytes = None
+    original_name = ""
+    content_type = None
+    if photo is not None and (photo.filename or "").strip():
+        photo_bytes = await photo.read()
+        original_name = photo.filename or ""
+        content_type = photo.content_type
+    try:
+        return create_place(
+            name,
+            photo_data=photo_bytes,
+            original_name=original_name,
+            content_type=content_type,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/places/{place_id}")
+def places_get(place_id: str) -> dict:
+    from src.places import get_place
+
+    try:
+        return get_place(place_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.patch("/api/places/{place_id}")
+def places_update(place_id: str, body: UpdatePlaceBody) -> dict:
+    from src.places import update_place
+
+    try:
+        return update_place(place_id, name=body.name)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.delete("/api/places/{place_id}")
+def places_delete(place_id: str) -> dict:
+    from src.places import delete_place
+
+    try:
+        return delete_place(place_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/places/{place_id}/photo")
+async def places_upload_photo(
+    place_id: str,
+    file: UploadFile = File(...),
+) -> dict:
+    from src.places import save_place_photo
+
+    data = await file.read()
+    try:
+        return save_place_photo(
+            place_id,
+            data=data,
+            original_name=file.filename or "",
+            content_type=file.content_type,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/places/{place_id}/photo")
+def places_photo_file(place_id: str) -> FileResponse:
+    from src.places import resolve_photo_file
+
+    try:
+        path, mime = resolve_photo_file(place_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return FileResponse(path, media_type=mime)
+
+
+@app.get("/api/places/{place_id}/chunks")
+def places_chunks(place_id: str, limit: int = 50) -> dict:
+    from src.places import get_place, place_chunks
+
+    try:
+        place = get_place(place_id)
+        items = place_chunks(place_id, limit=limit)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "place": place,
         "items": items,
         "total": len(items),
     }
@@ -737,6 +878,17 @@ def write_archive_now() -> dict:
     from src.write_diary import force_archive_active_day
 
     return force_archive_active_day()
+
+
+@app.get("/api/suggested-questions")
+def suggested_questions() -> dict:
+    """空状态推荐问题：默认召回时间段内随机抽 chunk，轻量 Agent 各生成一问。"""
+    from src.suggested_questions import generate_suggested_questions
+
+    try:
+        return generate_suggested_questions()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"推荐问题生成失败: {exc}") from exc
 
 
 @app.get("/api/conversations")

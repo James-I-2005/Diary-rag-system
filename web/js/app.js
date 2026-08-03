@@ -39,6 +39,7 @@ let userScrolledUp = false;
 let currentScheme = localStorage.getItem("retrieval_scheme") || "embedding_only";
 let isImporting = false;
 let currentView = "chat";
+let suggestedQuestionsToken = 0;
 
 function getDateRangePayload() {
   const dates = typeof DateSelection !== "undefined" ? DateSelection.get() : [];
@@ -72,6 +73,7 @@ async function createChatWithDates(dates) {
   }
   workspaceTitle.textContent = created.title || "新对话";
   clearMessages();
+  loadSuggestedQuestions();
   renderConversationList();
   switchView("chat");
   MiniDatePicker?.render?.();
@@ -243,6 +245,7 @@ async function deleteConversation(id, title) {
     if (conversations.length) {
       await selectConversation(conversations[0].id);
     } else {
+      loadSuggestedQuestions();
       renderConversationList();
     }
   } else {
@@ -305,6 +308,9 @@ function appendMessage(role, content, { scroll = true } = {}) {
   const body = document.createElement("div");
   body.className = "message-content";
   body.innerHTML = renderMarkdown(content);
+  if (typeof TagMention !== "undefined") {
+    TagMention.decorateElement(body);
+  }
 
   inner.appendChild(roleLabel);
   inner.appendChild(body);
@@ -340,6 +346,49 @@ function hideTyping() {
 function clearMessages() {
   messagesEl.innerHTML = "";
   emptyState.classList.remove("hidden");
+}
+
+function renderSuggestedQuestionsLoading() {
+  if (!exampleQuestions) return;
+  exampleQuestions.innerHTML =
+    `<li class="example-questions-hint">正在生成推荐问题…</li>`;
+}
+
+function renderSuggestedQuestions(questions) {
+  if (!exampleQuestions) return;
+  const list = Array.isArray(questions)
+    ? questions.map((q) => String(q || "").trim()).filter(Boolean)
+    : [];
+  if (!list.length) {
+    exampleQuestions.innerHTML =
+      `<li class="example-questions-hint">暂无推荐问题（该时间段内可能还没有日记）</li>`;
+    return;
+  }
+  exampleQuestions.innerHTML = list
+    .map((q) => {
+      const escaped = q
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<li><button type="button" data-q="${escaped}">${escaped}</button></li>`;
+    })
+    .join("");
+}
+
+async function loadSuggestedQuestions() {
+  const token = ++suggestedQuestionsToken;
+  renderSuggestedQuestionsLoading();
+  try {
+    const data = await api("/suggested-questions");
+    if (token !== suggestedQuestionsToken) return;
+    renderSuggestedQuestions(data?.questions || []);
+  } catch (err) {
+    if (token !== suggestedQuestionsToken) return;
+    console.warn("加载推荐问题失败", err);
+    exampleQuestions.innerHTML =
+      `<li class="example-questions-hint">推荐问题暂时不可用</li>`;
+  }
 }
 
 function scrollToBottom(force = false) {
@@ -393,6 +442,7 @@ async function selectConversation(id) {
   messagesEl.innerHTML = "";
   if (!data.messages || !data.messages.length) {
     emptyState.classList.remove("hidden");
+    loadSuggestedQuestions();
   } else {
     emptyState.classList.add("hidden");
     for (const m of data.messages) {
@@ -420,10 +470,55 @@ async function createNewChat() {
   }
   workspaceTitle.textContent = "新对话";
   clearMessages();
+  loadSuggestedQuestions();
   renderConversationList();
   messageInput.focus();
   closeSidebarMobile();
 }
+
+/**
+ * 从 Tag 详情「进入故事」：新建对话并在输入框预填 @tag名。
+ * @param {{ tagId: string, tagName: string, color?: string }} opts
+ */
+async function createChatWithTagStory(opts = {}) {
+  const tagName = String(opts.tagName || "").trim();
+  const tagId = String(opts.tagId || "").trim();
+  if (!tagName) {
+    showError("缺少 tag 名称");
+    return;
+  }
+  if (typeof TagMention !== "undefined") {
+    TagMention.register({
+      id: tagId,
+      name: tagName,
+      color: opts.color || "#6b7280",
+    });
+  }
+  switchView("chat");
+  const title = `和「${tagName}」的故事`;
+  const created = await api("/conversations", {
+    method: "POST",
+    body: JSON.stringify({ title }),
+  });
+  await loadConversations();
+  activeId = created.id;
+  if (typeof DateSelection !== "undefined") {
+    DateSelection.clear();
+    DateSelection.saveForConversation(activeId);
+    MiniDatePicker?.render?.();
+  }
+  workspaceTitle.textContent = title;
+  clearMessages();
+  loadSuggestedQuestions();
+  renderConversationList();
+  messageInput.value = `@${tagName} `;
+  resizeInput();
+  updateSendButton();
+  messageInput.focus();
+  closeSidebarMobile();
+}
+
+window.createChatWithTagStory = createChatWithTagStory;
 
 async function sendMessage() {
   const text = messageInput.value.trim();
@@ -719,6 +814,9 @@ async function init() {
       }
     } catch {
       /* ignore */
+    }
+    if (typeof TagMention !== "undefined") {
+      await TagMention.refresh();
     }
     await loadConversations();
 

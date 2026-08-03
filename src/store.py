@@ -190,6 +190,16 @@ def _init_tables(conn: sqlite3.Connection) -> None:
             created_at TEXT DEFAULT (datetime('now'))
         );
         CREATE INDEX IF NOT EXISTS idx_people_sort ON people(sort_order, name, id);
+
+        CREATE TABLE IF NOT EXISTS places (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            tag_id TEXT NOT NULL UNIQUE REFERENCES user_tags(id) ON DELETE CASCADE,
+            photo_filename TEXT,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_places_sort ON places(sort_order, name, id);
         """
     )
     # 兼容旧库：补列

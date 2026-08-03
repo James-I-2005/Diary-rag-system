@@ -22,6 +22,15 @@ embedding:
   model: "BAAI/bge-small-zh-v1.5"
   batch_size: 32
 
+# 默认召回时间段（天）：今天往前数 N 天（推荐问题抽样等共用）
+default_recall_days: 90
+
+# 聊天空状态推荐问题：在默认召回时间段内随机抽 chunk，轻量 Agent 各生成一问
+suggested_questions:
+  count: 5
+  llm_role: "tags"
+  max_chunk_chars: 400
+
 # 检索（Engine Plan / 命名方案；参数可用环境变量覆盖）
 retrieval:
   # 最终进入 Context 的 chunk 数（多主题 embedding 并集后截断）
@@ -187,6 +196,11 @@ day_images:
 # 探索页人物头像：照片落盘，人物记录与 user_tag 绑定
 people:
   root: "data/people"
+  max_bytes: 12582912  # 12MB
+
+# 探索页地点图片：照片落盘，地点记录与 user_tag 绑定
+places:
+  root: "data/places"
   max_bytes: 12582912  # 12MB
 
 # 日历洞察：整月词云（无 LLM）+ 日总结/诗句（轻量 Agent，本地缓存）

@@ -53,6 +53,7 @@ data/day_insights/
 data/write_diary/
 data/day_images/
 data/people/
+data/places/
 data/_wc_debug.txt
 
 # ----- Tag / 词表旁路缓存（可重建）-----

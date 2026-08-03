@@ -11,10 +11,27 @@ from src.store import get_db
 
 _COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
-# 系统文件夹：人物（不可移动 / 删除）
+# 系统文件夹：人物 / 地点（不可移动 / 删除）
 PEOPLE_FOLDER_SYSTEM_KEY = "people"
 PEOPLE_FOLDER_ID = "folder_system_people"
 PEOPLE_FOLDER_NAME = "人物"
+
+PLACES_FOLDER_SYSTEM_KEY = "places"
+PLACES_FOLDER_ID = "folder_system_places"
+PLACES_FOLDER_NAME = "地点"
+
+_SYSTEM_FOLDER_SPECS: list[dict[str, str]] = [
+    {
+        "key": PEOPLE_FOLDER_SYSTEM_KEY,
+        "id": PEOPLE_FOLDER_ID,
+        "name": PEOPLE_FOLDER_NAME,
+    },
+    {
+        "key": PLACES_FOLDER_SYSTEM_KEY,
+        "id": PLACES_FOLDER_ID,
+        "name": PLACES_FOLDER_NAME,
+    },
+]
 
 # 预定色板（创建 / 改色只能从中选）
 PRESET_COLORS: list[str] = [
@@ -96,73 +113,82 @@ def _row_folder(r) -> dict[str, Any]:
     }
 
 
-def ensure_system_folders() -> dict[str, Any]:
-    """确保根目录存在锁定的「人物」文件夹；返回该文件夹。"""
-    conn = get_db()
-    try:
-        row = conn.execute(
-            "SELECT * FROM tag_folders WHERE system_key = ?",
-            (PEOPLE_FOLDER_SYSTEM_KEY,),
-        ).fetchone()
-        if row:
-            # 纠偏：锁定且保持在根目录
-            if not int(row["locked"] or 0) or row["parent_id"] is not None:
-                conn.execute(
-                    """
-                    UPDATE tag_folders
-                    SET locked = 1, parent_id = NULL
-                    WHERE id = ?
-                    """,
-                    (row["id"],),
-                )
-                conn.commit()
-                row = conn.execute(
-                    "SELECT * FROM tag_folders WHERE id = ?", (row["id"],)
-                ).fetchone()
-            return _row_folder(row)
-
-        # 兼容：同 id 已存在但无 system_key
-        existing = conn.execute(
-            "SELECT * FROM tag_folders WHERE id = ?", (PEOPLE_FOLDER_ID,)
-        ).fetchone()
-        if existing:
+def _ensure_one_system_folder(
+    conn, *, system_key: str, folder_id: str, name: str
+) -> dict[str, Any]:
+    row = conn.execute(
+        "SELECT * FROM tag_folders WHERE system_key = ?",
+        (system_key,),
+    ).fetchone()
+    if row:
+        if not int(row["locked"] or 0) or row["parent_id"] is not None:
             conn.execute(
                 """
                 UPDATE tag_folders
-                SET system_key = ?, locked = 1, parent_id = NULL, name = ?
+                SET locked = 1, parent_id = NULL
                 WHERE id = ?
                 """,
-                (PEOPLE_FOLDER_SYSTEM_KEY, PEOPLE_FOLDER_NAME, PEOPLE_FOLDER_ID),
+                (row["id"],),
             )
             conn.commit()
             row = conn.execute(
-                "SELECT * FROM tag_folders WHERE id = ?", (PEOPLE_FOLDER_ID,)
+                "SELECT * FROM tag_folders WHERE id = ?", (row["id"],)
             ).fetchone()
-            return _row_folder(row)
+        return _row_folder(row)
 
-        min_ord = conn.execute(
-            """
-            SELECT COALESCE(MIN(sort_order), 1) FROM tag_folders
-            WHERE parent_id IS NULL
-            """
-        ).fetchone()[0]
+    existing = conn.execute(
+        "SELECT * FROM tag_folders WHERE id = ?", (folder_id,)
+    ).fetchone()
+    if existing:
         conn.execute(
             """
-            INSERT INTO tag_folders (id, name, parent_id, sort_order, system_key, locked)
-            VALUES (?, ?, NULL, ?, ?, 1)
+            UPDATE tag_folders
+            SET system_key = ?, locked = 1, parent_id = NULL, name = ?
+            WHERE id = ?
             """,
-            (
-                PEOPLE_FOLDER_ID,
-                PEOPLE_FOLDER_NAME,
-                int(min_ord) - 1,
-                PEOPLE_FOLDER_SYSTEM_KEY,
-            ),
+            (system_key, name, folder_id),
         )
         conn.commit()
         row = conn.execute(
-            "SELECT * FROM tag_folders WHERE id = ?", (PEOPLE_FOLDER_ID,)
+            "SELECT * FROM tag_folders WHERE id = ?", (folder_id,)
         ).fetchone()
         return _row_folder(row)
+
+    min_ord = conn.execute(
+        """
+        SELECT COALESCE(MIN(sort_order), 1) FROM tag_folders
+        WHERE parent_id IS NULL
+        """
+    ).fetchone()[0]
+    # 人物略靠前，地点紧随其后
+    ord_offset = 0 if system_key == PEOPLE_FOLDER_SYSTEM_KEY else 1
+    conn.execute(
+        """
+        INSERT INTO tag_folders (id, name, parent_id, sort_order, system_key, locked)
+        VALUES (?, ?, NULL, ?, ?, 1)
+        """,
+        (folder_id, name, int(min_ord) - 2 + ord_offset, system_key),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT * FROM tag_folders WHERE id = ?", (folder_id,)
+    ).fetchone()
+    return _row_folder(row)
+
+
+def ensure_system_folders() -> dict[str, dict[str, Any]]:
+    """确保根目录存在锁定的「人物」「地点」文件夹；返回 {system_key: folder}。"""
+    conn = get_db()
+    try:
+        out: dict[str, dict[str, Any]] = {}
+        for spec in _SYSTEM_FOLDER_SPECS:
+            out[spec["key"]] = _ensure_one_system_folder(
+                conn,
+                system_key=spec["key"],
+                folder_id=spec["id"],
+                name=spec["name"],
+            )
+        return out
     finally:
         conn.close()
 
@@ -282,6 +308,10 @@ class UserTag:
     def bind(self, chunk_ids: list[str]) -> dict[str, Any]:
         """将若干 chunk 绑定到本 tag。"""
         return bind_chunks(self.id, chunk_ids)
+
+    def unbind(self, chunk_ids: list[str]) -> dict[str, Any]:
+        """将若干 chunk 从本 tag 解绑。"""
+        return unbind_chunks(self.id, chunk_ids)
 
     def update(
         self,
@@ -550,6 +580,23 @@ def list_frequent(*, limit: int = 12) -> list[dict[str, Any]]:
         conn.close()
 
 
+def list_all_tags() -> list[dict[str, Any]]:
+    """全部用户 tag（含颜色），供 @提及渲染等。"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT t.*,
+                   (SELECT COUNT(*) FROM chunk_user_tags c WHERE c.tag_id = t.id) AS bind_count
+            FROM user_tags t
+            ORDER BY length(t.name) DESC, t.name, t.id
+            """
+        ).fetchall()
+        return [_row_tag(r, bind_count=int(r["bind_count"] or 0)) for r in rows]
+    finally:
+        conn.close()
+
+
 def management_home(*, frequent_limit: int = 12) -> dict[str, Any]:
     """探索「其他 tag」首屏：常用 + 根目录树。"""
     return {
@@ -588,9 +635,18 @@ def create_tag(
         )
         conn.commit()
         row = conn.execute("SELECT * FROM user_tags WHERE id = ?", (tid,)).fetchone()
-        return _row_tag(row, bind_count=0)
+        out = _row_tag(row, bind_count=0)
     finally:
         conn.close()
+    try:
+        from src.people import sync_tag_people_link
+        from src.places import sync_tag_place_link
+
+        sync_tag_people_link(tid)
+        sync_tag_place_link(tid)
+    except Exception:
+        pass
+    return out
 
 
 def update_tag(
@@ -638,10 +694,14 @@ def update_tag(
             """,
             (new_name, new_color, new_folder, new_ord, tag_id),
         )
-        # 人物 tag 改名时同步 people.name
+        # 人物 / 地点 tag 改名时同步展示名
         if name is not None:
             conn.execute(
                 "UPDATE people SET name = ? WHERE tag_id = ?",
+                (new_name, tag_id),
+            )
+            conn.execute(
+                "UPDATE places SET name = ? WHERE tag_id = ?",
                 (new_name, tag_id),
             )
         conn.commit()
@@ -649,16 +709,29 @@ def update_tag(
         bc = conn.execute(
             "SELECT COUNT(*) FROM chunk_user_tags WHERE tag_id = ?", (tag_id,)
         ).fetchone()[0]
-        return _row_tag(row, bind_count=int(bc))
+        out = _row_tag(row, bind_count=int(bc))
     finally:
         conn.close()
+    # 移入 / 移出「人物」文件夹时同步 people 表
+    if folder_id is not ...:
+        try:
+            from src.people import sync_tag_people_link
+            from src.places import sync_tag_place_link
+
+            sync_tag_people_link(tag_id)
+            sync_tag_place_link(tag_id)
+        except Exception:
+            pass
+    return out
 
 
 def delete_tag(tag_id: str) -> dict[str, Any]:
     try:
-        from src.people import cleanup_photo_for_tag
+        from src.people import cleanup_photo_for_tag as cleanup_people_photo
+        from src.places import cleanup_photo_for_tag as cleanup_places_photo
 
-        cleanup_photo_for_tag(tag_id)
+        cleanup_people_photo(tag_id)
+        cleanup_places_photo(tag_id)
     except Exception:
         pass
     conn = get_db()
@@ -729,7 +802,7 @@ def update_folder(
             new_name = n
         if parent_id is not ...:
             if locked:
-                raise ValueError("系统文件夹「人物」不可移动")
+                raise ValueError("系统文件夹不可移动")
             pid = parent_id
             if pid is not None:
                 pid = str(pid).strip() or None
@@ -768,7 +841,7 @@ def delete_folder(folder_id: str, *, move_up: bool = True) -> dict[str, Any]:
         if not row:
             raise ValueError(f"文件夹不存在: {folder_id}")
         if _folder_is_locked(conn, folder_id):
-            raise ValueError("系统文件夹「人物」不可删除")
+            raise ValueError("系统文件夹不可删除")
         parent = row["parent_id"]
         if move_up:
             conn.execute(
@@ -846,6 +919,41 @@ def bind_chunks(tag_id: str, chunk_ids: list[str]) -> dict[str, Any]:
             "tag": _row_tag(tag, bind_count=int(bc)),
             "bound": sorted(existing),
             "added": added,
+        }
+    finally:
+        conn.close()
+
+
+def unbind_chunks(tag_id: str, chunk_ids: list[str]) -> dict[str, Any]:
+    """从 tag 解除若干 chunk 的绑定。"""
+    ids = [str(c).strip() for c in (chunk_ids or []) if str(c).strip()]
+    if not ids:
+        raise ValueError("chunk_ids 不能为空")
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT * FROM user_tags WHERE id = ?", (tag_id,)).fetchone()
+        if not row:
+            raise ValueError(f"tag 不存在: {tag_id}")
+
+        placeholders = ",".join("?" * len(ids))
+        cur = conn.execute(
+            f"""
+            DELETE FROM chunk_user_tags
+            WHERE tag_id = ? AND chunk_id IN ({placeholders})
+            """,
+            (tag_id, *ids),
+        )
+        removed = int(cur.rowcount or 0)
+        conn.commit()
+        bc = conn.execute(
+            "SELECT COUNT(*) FROM chunk_user_tags WHERE tag_id = ?", (tag_id,)
+        ).fetchone()[0]
+        tag = conn.execute("SELECT * FROM user_tags WHERE id = ?", (tag_id,)).fetchone()
+        return {
+            "ok": True,
+            "tag": _row_tag(tag, bind_count=int(bc)),
+            "unbound": ids,
+            "removed": removed,
         }
     finally:
         conn.close()

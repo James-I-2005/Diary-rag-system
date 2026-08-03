@@ -429,7 +429,11 @@ const WritePage = (() => {
       row.className = "write-chat-message-row";
       const bubble = document.createElement("p");
       bubble.className = "write-chat-bubble";
-      bubble.textContent = line;
+      if (typeof TagMention !== "undefined") {
+        bubble.innerHTML = TagMention.decoratePlainToHtml(line);
+      } else {
+        bubble.textContent = line;
+      }
       row.appendChild(bubble);
       messages.appendChild(row);
     });

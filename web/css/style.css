@@ -563,6 +563,17 @@ button {
   border-color: #ccc;
 }
 
+.example-questions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.example-questions-hint {
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 8px 0;
+}
+
 /* Messages */
 .message {
   display: flex;
@@ -2192,6 +2203,31 @@ button {
   background: linear-gradient(180deg, #faf8f4 0%, #fff 100%);
 }
 
+.tag-detail-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tag-detail-modal.is-select-mode .tag-detail-main {
+  outline: 2px solid #7eb6e8;
+  outline-offset: -2px;
+  background: #f7fbff;
+}
+
+.tag-detail-main.is-select-mode .explore-hit {
+  cursor: pointer;
+}
+
+.tag-detail-main.is-select-mode .explore-hit.is-selected {
+  border-color: #3a8fd0;
+  background: #e8f3fc;
+  box-shadow: inset 0 0 0 1px rgba(58, 143, 208, 0.35);
+}
+
 .tag-detail-heading h2 {
   margin: 0;
   font-size: 17px;
@@ -2269,9 +2305,20 @@ button {
   font-weight: 650;
   line-height: 1.45;
   color: #2c281f;
+  cursor: pointer;
+  opacity: 1;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.tag-story-enter:hover:not(:disabled) {
+  background: #f7f3ec;
+  border-color: #b5aa98;
+}
+
+.tag-story-enter:disabled {
   cursor: not-allowed;
   opacity: 0.72;
-  text-align: left;
 }
 
 .tag-story-hint {
@@ -2279,6 +2326,26 @@ button {
   font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.4;
+}
+
+/* 聊天等内容中的 @tag名 提及方框 */
+.tag-mention {
+  display: inline-block;
+  margin: 0 1px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--tag-color, #6b7280) 55%, #fff);
+  background: color-mix(in srgb, var(--tag-color, #6b7280) 16%, #fff);
+  color: var(--tag-color, #6b7280);
+  font-size: 0.92em;
+  font-weight: 650;
+  line-height: 1.35;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.message-content .tag-mention {
+  font-size: 0.95em;
 }
 
 @media (max-width: 720px) {
@@ -3568,7 +3635,39 @@ button {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 14px 12px 10px;
+  padding: 12px 12px 10px;
+}
+
+.people-rail-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.people-rail-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.people-search-input {
+  width: min(220px, 46vw);
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #2c281f;
+  background: #faf8f4;
+}
+
+.people-search-input:focus {
+  outline: none;
+  border-color: #0f6b52;
+  background: #fff;
 }
 
 .people-rail {
@@ -3576,8 +3675,22 @@ button {
   flex-wrap: nowrap;
   gap: 18px;
   overflow-x: auto;
-  padding: 4px 6px 8px;
+  padding: 4px 6px 10px;
   scrollbar-width: thin;
+  scrollbar-color: #c4bbb0 transparent;
+}
+
+.people-rail::-webkit-scrollbar {
+  height: 8px;
+}
+
+.people-rail::-webkit-scrollbar-thumb {
+  background: #c4bbb0;
+  border-radius: 999px;
+}
+
+.people-rail::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .people-card {
@@ -3646,9 +3759,10 @@ button {
   font-weight: 400;
 }
 
-.people-card.is-add:hover .people-avatar {
-  border-color: #0f6b52;
-  color: #0f6b52;
+.people-rail-empty {
+  margin: 18px 8px 0;
+  white-space: nowrap;
+  align-self: center;
 }
 
 .people-detail {

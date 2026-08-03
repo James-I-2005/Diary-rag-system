@@ -98,6 +98,22 @@ class UserTag {
     return res;
   }
 
+  /** @param {string[]} chunkIds */
+  async unbind(chunkIds) {
+    const ids = [...new Set((chunkIds || []).map(String).filter(Boolean))];
+    if (!this.id || !ids.length) {
+      throw new Error("缺少 tag 或片段");
+    }
+    const res = await api(`/tags/${encodeURIComponent(this.id)}/unbind`, {
+      method: "POST",
+      body: JSON.stringify({ chunk_ids: ids }),
+    });
+    if (res.tag) {
+      Object.assign(this, UserTag.from(res.tag));
+    }
+    return res;
+  }
+
   /**
    * 拉取本 tag 绑定的 chunk 列表。
    * @param {{ limit?: number }} [opts]

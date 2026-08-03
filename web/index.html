@@ -50,10 +50,8 @@
           <div class="empty-state" id="empty-state">
             <h2>你好！</h2>
             <p>今天想回忆些什么？</p>
-            <ul class="example-questions" id="example-questions">
-              <li><button type="button" data-q="碧蓮做了什么？">碧蓮做了什么？</button></li>
-              <li><button type="button" data-q="討論水泥定價的日记有哪些？">討論水泥定價的日记有哪些？</button></li>
-              <li><button type="button" data-q="有没有写过关于藤田君的记录？">有没有写过关于藤田君的记录？</button></li>
+            <ul class="example-questions" id="example-questions" aria-live="polite">
+              <li class="example-questions-hint">正在生成推荐问题…</li>
             </ul>
           </div>
           <div class="messages" id="messages"></div>
@@ -102,7 +100,7 @@
         <section class="calendar-pane">
           <header class="calendar-toolbar">
             <button type="button" class="cal-nav" id="cal-prev" aria-label="上一月">‹</button>
-            <h1 class="calendar-month-title" id="calendar-month-title">2026年7月</h1>
+            <h1 class="calendar-month-title" id="calendar-month-title"></h1>
             <button type="button" class="cal-nav" id="cal-next" aria-label="下一月">›</button>
           </header>
           <div class="calendar-actions">
@@ -308,6 +306,17 @@
           <section class="explore-panel" id="explore-panel-people" data-panel="people" hidden>
             <div class="people-board">
               <div class="people-rail-wrap">
+                <div class="people-rail-toolbar">
+                  <span class="people-rail-hint">滑动浏览全部人物</span>
+                  <input
+                    type="search"
+                    id="explore-people-search"
+                    class="people-search-input"
+                    placeholder="搜索人物…"
+                    autocomplete="off"
+                    aria-label="搜索人物"
+                  />
+                </div>
                 <div class="people-rail" id="explore-people-rail" aria-label="人物列表"></div>
               </div>
               <div class="explore-detail people-detail" id="explore-people-detail">
@@ -335,12 +344,43 @@
           </section>
 
           <section class="explore-panel" id="explore-panel-places" data-panel="places" hidden>
-            <div class="explore-split">
-              <aside class="explore-list" id="explore-places-list" aria-label="地点列表"></aside>
-              <div class="explore-detail" id="explore-places-detail">
-                <p class="explore-empty">选择左侧地点，查看相关日记。</p>
+            <div class="people-board">
+              <div class="people-rail-wrap">
+                <div class="people-rail-toolbar">
+                  <span class="people-rail-hint">滑动浏览全部地点</span>
+                  <input
+                    type="search"
+                    id="explore-places-search"
+                    class="people-search-input"
+                    placeholder="搜索地点…"
+                    autocomplete="off"
+                    aria-label="搜索地点"
+                  />
+                </div>
+                <div class="people-rail" id="explore-places-rail" aria-label="地点列表"></div>
+              </div>
+              <div class="explore-detail people-detail" id="explore-places-detail">
+                <p class="explore-empty">点击地点，查看绑定到其 tag 的日记片段。</p>
               </div>
             </div>
+            <dialog class="people-add-dialog" id="places-add-dialog">
+              <form method="dialog" class="people-add-form" id="places-add-form">
+                <h3>添加地点</h3>
+                <label class="people-add-field">
+                  <span>名称</span>
+                  <input type="text" id="places-add-name" maxlength="64" required placeholder="例如：图书馆" autocomplete="off" />
+                </label>
+                <label class="people-add-field">
+                  <span>图片（可选）</span>
+                  <input type="file" id="places-add-photo" accept="image/*" />
+                </label>
+                <div class="people-add-preview" id="places-add-preview" hidden></div>
+                <div class="people-add-actions">
+                  <button type="button" class="tag-mgmt-btn" id="places-add-cancel">取消</button>
+                  <button type="submit" class="tag-mgmt-btn primary" id="places-add-submit">保存</button>
+                </div>
+              </form>
+            </dialog>
           </section>
 
           <section class="explore-panel" id="explore-panel-tags" data-panel="tags" hidden>
@@ -483,9 +523,16 @@
           <h2 id="tag-detail-title">Tag</h2>
           <p class="tag-detail-meta" id="tag-detail-meta"></p>
         </div>
-        <button type="button" class="tag-detail-close" id="tag-detail-close" aria-label="关闭">
-          ×
-        </button>
+        <div class="tag-detail-header-actions">
+          <span class="tag-mgmt-selection-count" id="tag-detail-selection-count" hidden></span>
+          <button type="button" class="tag-mgmt-btn" id="tag-detail-select-mode">选择</button>
+          <button type="button" class="tag-mgmt-btn" id="tag-detail-select-all" hidden>全选</button>
+          <button type="button" class="tag-mgmt-btn danger" id="tag-detail-unbind" hidden>解除绑定</button>
+          <button type="button" class="tag-mgmt-btn" id="tag-detail-clear-selection" hidden>取消选中</button>
+          <button type="button" class="tag-detail-close" id="tag-detail-close" aria-label="关闭">
+            ×
+          </button>
+        </div>
       </header>
       <div class="tag-detail-layout">
         <div class="tag-detail-main" id="tag-detail-main">
@@ -495,7 +542,7 @@
           <button type="button" class="tag-story-enter" id="tag-story-enter" disabled>
             进入和 <span id="tag-story-name">…</span> 的故事
           </button>
-          <p class="tag-story-hint">故事功能即将开放</p>
+          <p class="tag-story-hint">将新建对话，并在输入框预填 @标签名</p>
         </aside>
       </div>
     </div>
@@ -534,6 +581,7 @@
   </div>
 
   <script src="/static/js/user-tag.js"></script>
+  <script src="/static/js/tag-mention.js"></script>
   <script src="/static/js/selection-tag.js"></script>
   <script src="/static/js/calendar.js"></script>
   <script src="/static/js/write.js"></script>

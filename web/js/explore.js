@@ -21,6 +21,12 @@ const ExplorePage = (() => {
   let nameGrepTagName = "";
   let tagDetailBound = false;
   let tagDetailOpen = false;
+  let tagDetailSelectMode = false;
+  let tagDetailTagId = "";
+  let tagDetailTagName = "";
+  let tagDetailTagColor = "";
+  let tagDetailChunkIds = [];
+  let selectedTagChunkIds = new Set();
 
   function $(sel) {
     return document.querySelector(sel);
@@ -42,7 +48,7 @@ const ExplorePage = (() => {
       panel.hidden = panel.dataset.panel !== name;
     });
     if (name === "people") loadPeople();
-    if (name === "places" && !loaded.places) loadPlaces();
+    if (name === "places") loadPlaces();
     if (name === "tags") loadTags(true);
   }
 
@@ -509,6 +515,153 @@ const ExplorePage = (() => {
     const backdrop = $("#tag-detail-backdrop");
     if (backdrop) backdrop.hidden = true;
     tagDetailOpen = false;
+    tagDetailSelectMode = false;
+    selectedTagChunkIds.clear();
+    tagDetailChunkIds = [];
+    tagDetailTagId = "";
+    tagDetailTagName = "";
+    tagDetailTagColor = "";
+    updateTagDetailSelectUi();
+  }
+
+  function updateTagDetailSelectUi() {
+    const modal = $("#tag-detail-modal");
+    const main = $("#tag-detail-main");
+    const modeBtn = $("#tag-detail-select-mode");
+    const allBtn = $("#tag-detail-select-all");
+    const unbindBtn = $("#tag-detail-unbind");
+    const clearBtn = $("#tag-detail-clear-selection");
+    const countEl = $("#tag-detail-selection-count");
+    const n = selectedTagChunkIds.size;
+    const showTools = tagDetailSelectMode;
+
+    modal?.classList.toggle("is-select-mode", tagDetailSelectMode);
+    main?.classList.toggle("is-select-mode", tagDetailSelectMode);
+
+    if (modeBtn) {
+      modeBtn.textContent = tagDetailSelectMode ? "退出选择" : "选择";
+      modeBtn.classList.toggle("active", tagDetailSelectMode);
+    }
+    if (allBtn) allBtn.hidden = !showTools;
+    if (unbindBtn) {
+      unbindBtn.hidden = !showTools;
+      unbindBtn.disabled = n === 0;
+    }
+    if (clearBtn) {
+      clearBtn.hidden = !showTools;
+      clearBtn.disabled = n === 0;
+    }
+    if (countEl) {
+      countEl.hidden = !showTools || n === 0;
+      countEl.textContent = n ? `已选 ${n}` : "";
+    }
+
+    main?.querySelectorAll(".explore-hit[data-chunk-id]").forEach((el) => {
+      const id = el.getAttribute("data-chunk-id") || "";
+      el.classList.toggle("is-selected", selectedTagChunkIds.has(id));
+    });
+  }
+
+  function enterTagDetailSelectMode() {
+    tagDetailSelectMode = true;
+    updateTagDetailSelectUi();
+  }
+
+  function exitTagDetailSelectMode() {
+    tagDetailSelectMode = false;
+    selectedTagChunkIds.clear();
+    updateTagDetailSelectUi();
+  }
+
+  function toggleTagDetailChunk(chunkId) {
+    const id = String(chunkId || "");
+    if (!id) return;
+    if (selectedTagChunkIds.has(id)) selectedTagChunkIds.delete(id);
+    else selectedTagChunkIds.add(id);
+    updateTagDetailSelectUi();
+  }
+
+  function renderTagDetailHits(container, items, emptyText) {
+    if (!container) return;
+    tagDetailChunkIds = (items || [])
+      .map((it) => String(it.chunk_id || it.id || ""))
+      .filter(Boolean);
+    if (!items.length) {
+      container.innerHTML = `<p class="explore-empty">${escapeHtml(emptyText)}</p>`;
+      return;
+    }
+    container.innerHTML = items
+      .map((it) => {
+        const chunkId = escapeHtml(it.chunk_id || it.id || "");
+        const date = escapeHtml(it.date || "");
+        return `
+      <article class="explore-hit explore-hit-entity" data-chunk-id="${chunkId}" data-date="${date}">
+        <header>
+          <strong>${date}</strong>
+          <span>${escapeHtml(it.source_file || "")}</span>
+        </header>
+        <p>${escapeHtml(it.preview || "")}</p>
+      </article>`;
+      })
+      .join("");
+    container.querySelectorAll(".explore-hit[data-chunk-id]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && el.contains(sel.anchorNode)) return;
+        const chunkId = el.getAttribute("data-chunk-id") || "";
+        const dateStr = el.getAttribute("data-date") || "";
+        if (tagDetailSelectMode) {
+          e.preventDefault();
+          toggleTagDetailChunk(chunkId);
+          return;
+        }
+        openExploreDay(dateStr, chunkId);
+      });
+    });
+  }
+
+  async function reloadTagDetailChunks() {
+    const main = $("#tag-detail-main");
+    const meta = $("#tag-detail-meta");
+    const title = $("#tag-detail-title");
+    const storyName = $("#tag-story-name");
+    if (!tagDetailTagId || !main) return;
+    try {
+      const tag = UserTag.from({
+        id: tagDetailTagId,
+        name: tagDetailTagName,
+        color: tagDetailTagColor,
+      });
+      const data = await tag.listChunks({ limit: 80 });
+      const t = data.tag || tag.toJSON();
+      const name = t.name || tagDetailTagName || "Tag";
+      tagDetailTagName = name;
+      tagDetailTagColor = t.color || tagDetailTagColor || "#6b7280";
+      if (title) {
+        title.textContent = name;
+        title.style.setProperty("--tag-color", tagDetailTagColor);
+      }
+      if (storyName) storyName.textContent = name;
+      if (meta) meta.textContent = `绑定片段 ${data.total || 0}`;
+      selectedTagChunkIds.clear();
+      main.innerHTML = "";
+      const head = document.createElement("div");
+      head.className = "tag-detail-pill-row";
+      head.innerHTML = `<span class="tag-pill" style="--tag-color:${escapeHtml(tagDetailTagColor)}">${escapeHtml(name)}</span>`;
+      main.appendChild(head);
+      const wrap = document.createElement("div");
+      wrap.className = "explore-detail-hits";
+      renderTagDetailHits(
+        wrap,
+        data.items || [],
+        "还没有绑定片段。可在搜索或多选结果里「添加到 tag」。"
+      );
+      main.appendChild(wrap);
+      updateTagDetailSelectUi();
+    } catch (err) {
+      if (meta) meta.textContent = "加载失败";
+      main.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
+    }
   }
 
   function bindTagDetailModal() {
@@ -518,9 +671,55 @@ const ExplorePage = (() => {
     $("#tag-detail-backdrop")?.addEventListener("click", (e) => {
       if (e.target && e.target.id === "tag-detail-backdrop") closeTagDetailModal();
     });
-    // 故事入口：逻辑暂不实现
-    $("#tag-story-enter")?.addEventListener("click", (e) => {
+    $("#tag-detail-select-mode")?.addEventListener("click", () => {
+      if (tagDetailSelectMode) exitTagDetailSelectMode();
+      else enterTagDetailSelectMode();
+    });
+    $("#tag-detail-select-all")?.addEventListener("click", () => {
+      tagDetailChunkIds.forEach((id) => selectedTagChunkIds.add(id));
+      updateTagDetailSelectUi();
+    });
+    $("#tag-detail-clear-selection")?.addEventListener("click", () => {
+      selectedTagChunkIds.clear();
+      updateTagDetailSelectUi();
+    });
+    $("#tag-detail-unbind")?.addEventListener("click", async () => {
+      const ids = [...selectedTagChunkIds];
+      if (!ids.length || !tagDetailTagId) return;
+      if (!confirm(`确定将选中的 ${ids.length} 个片段从该 tag 解除绑定？`)) return;
+      try {
+        const tag = UserTag.from({ id: tagDetailTagId });
+        await tag.unbind(ids);
+        document.dispatchEvent(
+          new CustomEvent("selection-tag-unbound", {
+            detail: { tagId: tagDetailTagId, chunkIds: ids },
+          })
+        );
+        await reloadTagDetailChunks();
+        if (active === "tags") loadTags(true);
+      } catch (err) {
+        showError?.(err.message);
+      }
+    });
+    // 故事入口：新建聊天并预填 @tag名
+    $("#tag-story-enter")?.addEventListener("click", async (e) => {
       e.preventDefault();
+      const name = tagDetailTagName || $("#tag-story-name")?.textContent || "";
+      if (!tagDetailTagId || !String(name).trim()) return;
+      closeTagDetailModal();
+      try {
+        if (typeof window.createChatWithTagStory === "function") {
+          await window.createChatWithTagStory({
+            tagId: tagDetailTagId,
+            tagName: String(name).trim(),
+            color: tagDetailTagColor || "#6b7280",
+          });
+        } else {
+          showError?.("聊天界面未就绪");
+        }
+      } catch (err) {
+        showError?.(err.message || "无法进入故事");
+      }
     });
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
@@ -529,6 +728,10 @@ const ExplorePage = (() => {
       if (document.querySelector(".tag-picker-backdrop")) return;
       const day = $("#explore-day-backdrop");
       if (day && !day.hidden) return;
+      if (tagDetailSelectMode) {
+        exitTagDetailSelectMode();
+        return;
+      }
       closeTagDetailModal();
     });
   }
@@ -539,6 +742,13 @@ const ExplorePage = (() => {
     const tagId = String(opts.tagId || "").trim();
     if (!tagId) return;
     tagDetailOpen = true;
+    tagDetailTagId = tagId;
+    tagDetailTagName = String(opts.tagName || "Tag");
+    tagDetailTagColor = opts.color || "#6b7280";
+    tagDetailSelectMode = false;
+    selectedTagChunkIds.clear();
+    tagDetailChunkIds = [];
+
     const backdrop = $("#tag-detail-backdrop");
     const title = $("#tag-detail-title");
     const meta = $("#tag-detail-meta");
@@ -546,52 +756,25 @@ const ExplorePage = (() => {
     const storyName = $("#tag-story-name");
     const storyBtn = $("#tag-story-enter");
     if (backdrop) backdrop.hidden = false;
-    const fallbackName = String(opts.tagName || "Tag");
     if (title) {
-      title.textContent = fallbackName;
-      if (opts.color) title.style.setProperty("--tag-color", opts.color);
+      title.textContent = tagDetailTagName;
+      title.style.setProperty("--tag-color", tagDetailTagColor);
     }
-    if (storyName) storyName.textContent = fallbackName;
-    if (storyBtn) storyBtn.disabled = true;
+    if (storyName) storyName.textContent = tagDetailTagName;
+    if (storyBtn) {
+      storyBtn.disabled = !tagDetailTagId;
+    }
     if (meta) meta.textContent = "加载中…";
     if (main) main.innerHTML = `<p class="explore-empty">加载中…</p>`;
-
-    try {
-      const tag = UserTag.from({
-        id: tagId,
-        name: opts.tagName,
-        color: opts.color,
+    updateTagDetailSelectUi();
+    await reloadTagDetailChunks();
+    if (storyBtn) storyBtn.disabled = !tagDetailTagId;
+    if (typeof TagMention !== "undefined" && tagDetailTagId) {
+      TagMention.register({
+        id: tagDetailTagId,
+        name: tagDetailTagName,
+        color: tagDetailTagColor,
       });
-      const data = await tag.listChunks({ limit: 80 });
-      const t = data.tag || tag.toJSON();
-      const name = t.name || fallbackName;
-      if (title) {
-        title.textContent = name;
-        title.style.setProperty("--tag-color", t.color || opts.color || "#6b7280");
-      }
-      if (storyName) storyName.textContent = name;
-      if (meta) {
-        meta.textContent = `绑定片段 ${data.total || 0}`;
-      }
-      if (!main) return;
-      main.innerHTML = "";
-      const head = document.createElement("div");
-      head.className = "tag-detail-pill-row";
-      head.innerHTML = `<span class="tag-pill" style="--tag-color:${escapeHtml(t.color || "#6b7280")}">${escapeHtml(name)}</span>`;
-      main.appendChild(head);
-      const wrap = document.createElement("div");
-      wrap.className = "explore-detail-hits";
-      renderHitList(
-        wrap,
-        data.items || [],
-        "还没有绑定片段。可在搜索或多选结果里「添加到 tag」。"
-      );
-      main.appendChild(wrap);
-    } catch (err) {
-      if (meta) meta.textContent = "加载失败";
-      if (main) {
-        main.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
-      }
     }
   }
 
@@ -647,14 +830,19 @@ const ExplorePage = (() => {
     try {
       const data = await api("/people");
       loaded.people = true;
-      renderPeopleRail(rail, detail, data.items || []);
+      peopleCache = data.items || [];
+      bindPeopleSearch();
+      applyPeopleFilter();
     } catch (err) {
+      peopleCache = [];
       if (rail) rail.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
     }
   }
 
   let activePersonId = null;
   let peopleAddBound = false;
+  let peopleSearchBound = false;
+  let peopleCache = [];
 
   function personInitial(name) {
     const s = String(name || "").trim();
@@ -667,6 +855,33 @@ const ExplorePage = (() => {
       return `<span class="people-avatar ${sizeClass}" style="border-color:${color}"><img src="${escapeHtml(person.photo_url)}" alt="" /></span>`;
     }
     return `<span class="people-avatar ${sizeClass}" style="border-color:${color};background:color-mix(in srgb, ${color} 18%, #ebe6dc)">${escapeHtml(personInitial(person.name))}</span>`;
+  }
+
+  function bindPeopleSearch() {
+    if (peopleSearchBound) return;
+    peopleSearchBound = true;
+    $("#explore-people-search")?.addEventListener("input", () => {
+      applyPeopleFilter();
+    });
+  }
+
+  function filteredPeople() {
+    const q = ($("#explore-people-search")?.value || "").trim().toLowerCase();
+    if (!q) return peopleCache.slice();
+    return peopleCache.filter((p) =>
+      String(p.name || "")
+        .toLowerCase()
+        .includes(q)
+    );
+  }
+
+  function applyPeopleFilter() {
+    const rail = $("#explore-people-rail");
+    const detail = $("#explore-people-detail");
+    renderPeopleRail(rail, detail, filteredPeople(), {
+      total: peopleCache.length,
+      query: ($("#explore-people-search")?.value || "").trim(),
+    });
   }
 
   function bindPeopleAddDialog() {
@@ -760,9 +975,11 @@ const ExplorePage = (() => {
     $("#people-add-name")?.focus();
   }
 
-  function renderPeopleRail(railEl, detailEl, items) {
+  function renderPeopleRail(railEl, detailEl, items, meta = {}) {
     if (!railEl || !detailEl) return;
     railEl.innerHTML = "";
+    const total = meta.total != null ? meta.total : items.length;
+    const query = meta.query || "";
 
     const addBtn = document.createElement("button");
     addBtn.type = "button";
@@ -774,8 +991,18 @@ const ExplorePage = (() => {
     addBtn.addEventListener("click", openPeopleAddDialog);
     railEl.appendChild(addBtn);
 
-    if (!items.length) {
+    if (!total) {
       detailEl.innerHTML = `<p class="explore-empty">还没有人物。点击左侧虚线圆圈添加，并可为对方上传头像。</p>`;
+      return;
+    }
+
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "explore-empty people-rail-empty";
+      empty.textContent = query
+        ? `没有匹配「${query}」的人物`
+        : "暂无人物";
+      railEl.appendChild(empty);
       return;
     }
 
@@ -800,14 +1027,18 @@ const ExplorePage = (() => {
       railEl.appendChild(btn);
     });
 
-    const firstId = activePersonId && items.some((p) => p.id === activePersonId)
-      ? activePersonId
-      : items[0].id;
-    activePersonId = firstId;
+    const keepId =
+      activePersonId && items.some((p) => p.id === activePersonId)
+        ? activePersonId
+        : items[0].id;
+    const needReload = keepId !== activePersonId;
+    activePersonId = keepId;
     railEl.querySelectorAll(".people-card[data-person-id]").forEach((el) => {
-      el.classList.toggle("active", el.dataset.personId === firstId);
+      el.classList.toggle("active", el.dataset.personId === keepId);
     });
-    loadPersonDetail(detailEl, firstId);
+    if (needReload || !detailEl.querySelector(".people-detail-head")) {
+      loadPersonDetail(detailEl, keepId);
+    }
   }
 
   async function loadPersonDetail(detailEl, personId) {
@@ -841,15 +1072,234 @@ const ExplorePage = (() => {
   }
 
   async function loadPlaces() {
-    const list = $("#explore-places-list");
+    const rail = $("#explore-places-rail");
     const detail = $("#explore-places-detail");
-    if (list) list.innerHTML = `<p class="explore-empty">加载中…</p>`;
+    if (rail) rail.innerHTML = `<p class="explore-empty">加载中…</p>`;
     try {
-      const data = await api("/explore/entities?type=place");
+      const data = await api("/places");
       loaded.places = true;
-      renderEntityList(list, detail, data.items || [], "place");
+      placesCache = data.items || [];
+      bindPlacesSearch();
+      applyPlacesFilter();
     } catch (err) {
-      if (list) list.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
+      placesCache = [];
+      if (rail) rail.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
+  let activePlaceId = null;
+  let placesAddBound = false;
+  let placesSearchBound = false;
+  let placesCache = [];
+
+  function placeAvatarHtml(place, sizeClass = "") {
+    return personAvatarHtml(place, sizeClass);
+  }
+
+  function bindPlacesSearch() {
+    if (placesSearchBound) return;
+    placesSearchBound = true;
+    $("#explore-places-search")?.addEventListener("input", () => {
+      applyPlacesFilter();
+    });
+  }
+
+  function filteredPlaces() {
+    const q = ($("#explore-places-search")?.value || "").trim().toLowerCase();
+    if (!q) return placesCache.slice();
+    return placesCache.filter((p) =>
+      String(p.name || "")
+        .toLowerCase()
+        .includes(q)
+    );
+  }
+
+  function applyPlacesFilter() {
+    const rail = $("#explore-places-rail");
+    const detail = $("#explore-places-detail");
+    renderPlacesRail(rail, detail, filteredPlaces(), {
+      total: placesCache.length,
+      query: ($("#explore-places-search")?.value || "").trim(),
+    });
+  }
+
+  function bindPlacesAddDialog() {
+    if (placesAddBound) return;
+    placesAddBound = true;
+    const dialog = $("#places-add-dialog");
+    const form = $("#places-add-form");
+    const preview = $("#places-add-preview");
+    const photoInput = $("#places-add-photo");
+    const cancel = $("#places-add-cancel");
+
+    cancel?.addEventListener("click", () => dialog?.close());
+    photoInput?.addEventListener("change", () => {
+      const file = photoInput.files && photoInput.files[0];
+      if (!file || !preview) {
+        if (preview) {
+          preview.hidden = true;
+          preview.innerHTML = "";
+        }
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      preview.hidden = false;
+      preview.innerHTML = `<img src="${url}" alt="" />`;
+    });
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = ($("#places-add-name")?.value || "").trim();
+      if (!name) return;
+      const file = photoInput?.files && photoInput.files[0];
+      const submit = $("#places-add-submit");
+      if (submit) submit.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append("name", name);
+        if (file) fd.append("photo", file);
+        const res = await fetch("/api/places", { method: "POST", body: fd });
+        if (!res.ok) {
+          let detail = res.statusText;
+          try {
+            const body = await res.json();
+            detail = body.detail || detail;
+          } catch {
+            /* ignore */
+          }
+          throw new Error(
+            typeof detail === "string" ? detail : JSON.stringify(detail)
+          );
+        }
+        const place = await res.json();
+        dialog?.close();
+        form.reset();
+        if (preview) {
+          preview.hidden = true;
+          preview.innerHTML = "";
+        }
+        loaded.places = false;
+        await loadPlaces();
+        activePlaceId = place.id;
+        await loadPlaceDetail($("#explore-places-detail"), place.id);
+        const rail = $("#explore-places-rail");
+        rail?.querySelectorAll(".people-card[data-place-id]").forEach((el) => {
+          el.classList.toggle("active", el.dataset.placeId === place.id);
+        });
+      } catch (err) {
+        showError?.(err.message || "添加失败");
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+  }
+
+  function openPlacesAddDialog() {
+    bindPlacesAddDialog();
+    const dialog = $("#places-add-dialog");
+    const form = $("#places-add-form");
+    const preview = $("#places-add-preview");
+    form?.reset();
+    if (preview) {
+      preview.hidden = true;
+      preview.innerHTML = "";
+    }
+    dialog?.showModal();
+    $("#places-add-name")?.focus();
+  }
+
+  function renderPlacesRail(railEl, detailEl, items, meta = {}) {
+    if (!railEl || !detailEl) return;
+    railEl.innerHTML = "";
+    const total = meta.total != null ? meta.total : items.length;
+    const query = meta.query || "";
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "people-card is-add";
+    addBtn.innerHTML = `
+      <span class="people-avatar" aria-hidden="true">＋</span>
+      <span class="people-card-name">添加</span>
+    `;
+    addBtn.addEventListener("click", openPlacesAddDialog);
+    railEl.appendChild(addBtn);
+
+    if (!total) {
+      detailEl.innerHTML = `<p class="explore-empty">还没有地点。点击左侧虚线圆圈添加，并可为地点上传图片。</p>`;
+      return;
+    }
+
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.className = "explore-empty people-rail-empty";
+      empty.textContent = query
+        ? `没有匹配「${query}」的地点`
+        : "暂无地点";
+      railEl.appendChild(empty);
+      return;
+    }
+
+    items.forEach((place) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className =
+        "people-card" + (place.id === activePlaceId ? " active" : "");
+      btn.dataset.placeId = place.id;
+      btn.title = place.name;
+      btn.innerHTML = `
+        ${placeAvatarHtml(place)}
+        <span class="people-card-name">${escapeHtml(place.name)}</span>
+      `;
+      btn.addEventListener("click", () => {
+        activePlaceId = place.id;
+        railEl.querySelectorAll(".people-card[data-place-id]").forEach((el) => {
+          el.classList.toggle("active", el.dataset.placeId === place.id);
+        });
+        loadPlaceDetail(detailEl, place.id);
+      });
+      railEl.appendChild(btn);
+    });
+
+    const keepId =
+      activePlaceId && items.some((p) => p.id === activePlaceId)
+        ? activePlaceId
+        : items[0].id;
+    const needReload = keepId !== activePlaceId;
+    activePlaceId = keepId;
+    railEl.querySelectorAll(".people-card[data-place-id]").forEach((el) => {
+      el.classList.toggle("active", el.dataset.placeId === keepId);
+    });
+    if (needReload || !detailEl.querySelector(".people-detail-head")) {
+      loadPlaceDetail(detailEl, keepId);
+    }
+  }
+
+  async function loadPlaceDetail(detailEl, placeId) {
+    if (!detailEl || !placeId) return;
+    detailEl.innerHTML = `<p class="explore-empty">加载中…</p>`;
+    try {
+      const data = await api(
+        `/places/${encodeURIComponent(placeId)}/chunks?limit=80`
+      );
+      const place = data.place || {};
+      detailEl.innerHTML = `
+        <div class="people-detail-head">
+          ${placeAvatarHtml(place)}
+          <div class="people-detail-meta">
+            <strong>${escapeHtml(place.name || "")}</strong>
+            <small>绑定片段 ${data.total || 0} · tag 可在「其他 tag → 地点」中管理</small>
+          </div>
+        </div>
+      `;
+      const wrap = document.createElement("div");
+      wrap.className = "explore-detail-hits";
+      renderHitList(
+        wrap,
+        data.items || [],
+        "还没有绑定片段。可在搜索或多选结果里「添加到 tag」，选择此地点对应的 tag。"
+      );
+      detailEl.appendChild(wrap);
+    } catch (err) {
+      detailEl.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
     }
   }
 
@@ -1638,7 +2088,8 @@ const ExplorePage = (() => {
     grid.innerHTML = "";
 
     folders.forEach((f) => {
-      const locked = !!f.locked || f.system_key === "people";
+      const locked =
+        !!f.locked || f.system_key === "people" || f.system_key === "places";
       const tile = document.createElement("div");
       tile.className =
         "tag-fs-item tag-fs-folder" +
@@ -1742,6 +2193,9 @@ const ExplorePage = (() => {
       ]);
       if (!tagPickerOpen) loaded.tags = true;
       renderTagManager(home.frequent || [], tree);
+      if (typeof TagMention !== "undefined") {
+        TagMention.refresh();
+      }
     } catch (err) {
       body.innerHTML = `<p class="explore-empty">${escapeHtml(err.message)}</p>`;
     }

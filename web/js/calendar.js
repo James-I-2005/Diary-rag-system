@@ -96,6 +96,7 @@ const CalendarPage = (() => {
   let viewYear = new Date().getFullYear();
   let viewMonth = new Date().getMonth();
   let focusDate = null; // 左侧阅读焦点（可与勾选独立）
+  let lastPickedDate = null; // 选择模式下最近一次点击的日期
   let diaryDates = new Set();
   let diaryCounts = {};
   let bound = false;
@@ -121,17 +122,7 @@ const CalendarPage = (() => {
     const data = await api("/diary/calendar");
     diaryDates = new Set(data.dates || []);
     diaryCounts = data.counts || {};
-    if (diaryDates.size && data.max_date) {
-      const [yy, mm] = data.max_date.split("-").map(Number);
-      const hasInView = [...diaryDates].some((d) => {
-        const [a, b] = d.split("-").map(Number);
-        return a === viewYear && b === viewMonth + 1;
-      });
-      if (!hasInView) {
-        viewYear = yy;
-        viewMonth = mm - 1;
-      }
-    }
+    // 首页固定落在「今天」所在月，不因日记分布跳转到 max_date
     renderGrid();
     MiniDatePicker.render();
     updateSelectionBar();
@@ -219,6 +210,7 @@ const CalendarPage = (() => {
         : `${dateStr} · 未录入`;
       btn.addEventListener("click", () => {
         if (selectMode) {
+          lastPickedDate = dateStr;
           DateSelection.toggle(dateStr);
           renderGrid();
           updateSelectionBar();
@@ -697,9 +689,14 @@ const CalendarPage = (() => {
   }
 
   function selectCurrentWeek() {
+    const today = new Date();
+    const todayStr = ymd(today.getFullYear(), today.getMonth(), today.getDate());
+    const selected = DateSelection.get();
     const base =
+      lastPickedDate ||
+      (selected.length ? selected[selected.length - 1] : null) ||
       focusDate ||
-      ymd(viewYear, viewMonth, Math.min(new Date().getDate(), daysInMonth(viewYear, viewMonth)));
+      todayStr;
     DateSelection.addMany(weekDatesContaining(base));
     updateSelectionBar();
     renderGrid();
