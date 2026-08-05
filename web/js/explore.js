@@ -175,10 +175,14 @@ const ExplorePage = (() => {
           if (dayModalFocusChunk && c.id === dayModalFocusChunk) {
             span.classList.add("is-search-focus");
           }
-          const raw = (c.text || "")
-            .replace(/^\s+/, i === 0 ? "" : "")
-            .replace(/\s+$/, "");
-          span.textContent = i === 0 ? raw : "\n\n" + raw;
+          // display_text 已去掉与前一块的切块重叠；勿再拼全文
+          const raw =
+            c.display_text != null
+              ? String(c.display_text)
+              : i === 0
+                ? String(c.text || "").replace(/\s+$/, "")
+                : "\n\n" + String(c.text || "").replace(/^\s+/, "").replace(/\s+$/, "");
+          span.textContent = raw;
           wrap.appendChild(span);
         });
       } else {

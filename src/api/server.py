@@ -891,6 +891,31 @@ def suggested_questions() -> dict:
         raise HTTPException(status_code=502, detail=f"推荐问题生成失败: {exc}") from exc
 
 
+class UpdateSettingsBody(BaseModel):
+    values: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.get("/api/settings")
+def get_settings() -> dict:
+    """设置页：白名单字段当前值（密钥脱敏）。"""
+    from src.settings import get_settings_for_api
+
+    return get_settings_for_api()
+
+
+@app.put("/api/settings")
+def put_settings(body: UpdateSettingsBody) -> dict:
+    """设置页：写入 user_settings overlay 与 .env（仅白名单）。"""
+    from src.settings import update_settings
+
+    try:
+        return update_settings(body.values or {})
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"保存设置失败: {exc}") from exc
+
+
 @app.get("/api/conversations")
 def list_conversations(limit: int = 50) -> list[dict]:
     rows = get_service().conversation.list_conversations(limit=limit)

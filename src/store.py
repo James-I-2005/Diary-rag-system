@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import os
 import sqlite3
+from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv
@@ -13,9 +15,39 @@ ROOT = Path(__file__).parent.parent
 load_dotenv(ROOT / ".env")
 
 
+def user_settings_path() -> Path:
+    """用户设置覆盖层（不改写 config.yaml 注释）。"""
+    return ROOT / "data" / "user_settings.yaml"
+
+
+def deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    """递归合并 overlay 到 base（overlay 优先）；返回新 dict。"""
+    out = deepcopy(base) if isinstance(base, dict) else {}
+    if not isinstance(overlay, dict):
+        return out
+    for key, val in overlay.items():
+        if key in out and isinstance(out[key], dict) and isinstance(val, dict):
+            out[key] = deep_merge(out[key], val)
+        else:
+            out[key] = deepcopy(val)
+    return out
+
+
 def load_config() -> dict:
     with open(ROOT / "config.yaml", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        base = yaml.safe_load(f) or {}
+    if not isinstance(base, dict):
+        base = {}
+    path = user_settings_path()
+    if not path.is_file():
+        return base
+    try:
+        overlay = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return base
+    if not isinstance(overlay, dict) or not overlay:
+        return base
+    return deep_merge(base, overlay)
 
 
 def resolve_path(relative: str) -> Path:

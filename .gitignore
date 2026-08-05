@@ -46,6 +46,7 @@ data/diary_sinica/
 # ----- 运行时调试 / 召回快照 -----
 data/last_*.json
 data/extract_manifest.json
+data/user_settings.yaml
 data/manifests/
 data/retrieval_runs/
 data/rag_sentences_export.json

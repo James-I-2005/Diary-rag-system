@@ -59,3 +59,10 @@ def get_llm_client(role: str = "answer") -> OpenAI:
 
 def get_llm_model(role: str = "answer") -> str:
     return resolve_llm_section(role)["model"]
+
+
+def clear_llm_cache() -> None:
+    """设置变更后清空客户端缓存，使 Key / base_url / model 立即生效。"""
+    get_llm_client.cache_clear()
+    # resolve 不缓存 model 名；重新 load_dotenv 由调用方负责
+    load_dotenv(ROOT / ".env", override=True)

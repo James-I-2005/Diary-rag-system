@@ -613,8 +613,13 @@ const CalendarPage = (() => {
           const span = document.createElement("span");
           span.className = "day-chunk";
           span.setAttribute("data-chunk-id", c.id);
-          const raw = (c.text || "").replace(/^\s+/, i === 0 ? "" : "").replace(/\s+$/, "");
-          span.textContent = i === 0 ? raw : "\n\n" + raw;
+          const raw =
+            c.display_text != null
+              ? String(c.display_text)
+              : i === 0
+                ? String(c.text || "").replace(/\s+$/, "")
+                : "\n\n" + String(c.text || "").replace(/^\s+/, "").replace(/\s+$/, "");
+          span.textContent = raw;
           wrap.appendChild(span);
         });
       } else {

@@ -136,6 +136,62 @@ def stitch_chunk_texts(
     return "\n\n".join(parts)
 
 
+def annotate_chunk_display_texts(
+    chunks: list[dict[str, Any]],
+    *,
+    max_overlap: int | None = None,
+) -> list[dict[str, Any]]:
+    """
+    为每个 chunk 写入 display_text：相对前一块去掉切块重叠后的可读续写。
+    前端应按顺序直接拼接 display_text（勿再额外插入分隔）。
+    """
+    if not chunks:
+        return []
+    limit = max_overlap if max_overlap is not None else _max_overlap_chars()
+    out: list[dict[str, Any]] = []
+    prev_raw = ""
+    prev_source: str | None = None
+
+    for c in chunks:
+        item = dict(c)
+        raw = c.get("text") or ""
+        src = str(c.get("source_file") or "")
+        if not prev_raw or prev_source != src:
+            if prev_raw and prev_source != src:
+                body = raw.lstrip("\n\r")
+                item["display_text"] = ("\n\n" + body) if body else ""
+            else:
+                item["display_text"] = raw
+        else:
+            a = prev_raw.rstrip()
+            b = raw.lstrip("\n\r")
+            ov = _longest_suffix_prefix_overlap(a, b, limit)
+            if ov > 0:
+                rest = b[ov:]
+                rest = rest.lstrip(" \t")
+                if rest.startswith("\r\n"):
+                    rest = rest[2:]
+                elif rest.startswith("\n") or rest.startswith("\r"):
+                    rest = rest[1:]
+                rest = rest.lstrip(" \t")
+                if not rest:
+                    item["display_text"] = ""
+                elif rest.startswith("\n"):
+                    item["display_text"] = rest
+                elif a and a[-1] in "。！？…」』\"'" and not rest.startswith(
+                    ("，", "、", "；", "：", "」", "』")
+                ):
+                    item["display_text"] = "\n\n" + rest
+                else:
+                    item["display_text"] = rest
+            else:
+                item["display_text"] = "\n\n" + b.lstrip() if b else ""
+        out.append(item)
+        prev_raw = raw
+        prev_source = src
+    return out
+
+
 def get_diary_by_date(date: str) -> dict[str, Any]:
     """拼合某日全部 chunk 原文（相邻块去重叠）。"""
     s = (date or "").strip()
@@ -165,6 +221,7 @@ def get_diary_by_date(date: str) -> dict[str, Any]:
         }
         for r in rows
     ]
+    chunks = annotate_chunk_display_texts(chunks)
     text = stitch_chunk_texts(chunks)
     return {
         "date": s,

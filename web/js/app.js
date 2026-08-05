@@ -570,7 +570,7 @@ async function sendMessage() {
 }
 
 function switchView(name) {
-  const allowed = new Set(["chat", "calendar", "write", "explore"]);
+  const allowed = new Set(["chat", "calendar", "write", "explore", "settings"]);
   const next = allowed.has(name) ? name : "chat";
   if (currentView === "write" && next !== "write" && typeof WritePage !== "undefined") {
     WritePage.flush?.();
@@ -580,10 +580,12 @@ function switchView(name) {
   const cal = $("#view-calendar");
   const write = $("#view-write");
   const explore = $("#view-explore");
+  const settings = $("#view-settings");
   if (chat) chat.hidden = currentView !== "chat";
   if (cal) cal.hidden = currentView !== "calendar";
   if (write) write.hidden = currentView !== "write";
   if (explore) explore.hidden = currentView !== "explore";
+  if (settings) settings.hidden = currentView !== "settings";
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.nav === currentView);
   });
@@ -595,6 +597,9 @@ function switchView(name) {
   }
   if (currentView === "explore" && typeof ExplorePage !== "undefined") {
     ExplorePage.show();
+  }
+  if (currentView === "settings" && typeof SettingsPage !== "undefined") {
+    Promise.resolve(SettingsPage.show()).catch((e) => console.warn(e));
   }
   if (currentView === "chat") {
     closeSidebarMobile();
@@ -785,6 +790,7 @@ async function init() {
   $("#nav-calendar")?.addEventListener("click", () => switchView("calendar"));
   $("#nav-write")?.addEventListener("click", () => switchView("write"));
   $("#nav-explore")?.addEventListener("click", () => switchView("explore"));
+  $("#nav-settings")?.addEventListener("click", () => switchView("settings"));
 
   if (typeof SelectionTag !== "undefined") {
     SelectionTag.bind();
