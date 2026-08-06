@@ -28,7 +28,7 @@ def default_recall_days() -> int:
     try:
         n = int(raw)
     except (TypeError, ValueError):
-        n = 90
+        n = 30
     return max(1, n)
 
 
@@ -57,10 +57,13 @@ def _max_chunk_chars() -> int:
 
 
 def recall_date_window(days: int | None = None) -> tuple[str, str]:
-    """返回 (date_from, date_to)，闭区间，均为 YYYY-MM-DD。"""
+    """返回 (date_from, date_to)，闭区间，均为 YYYY-MM-DD。
+
+    含今天共 N 天：即 [today-(N-1), today]。
+    """
     d = default_recall_days() if days is None else max(1, int(days))
     today = date.today()
-    start = today - timedelta(days=d)
+    start = today - timedelta(days=d - 1)
     return start.isoformat(), today.isoformat()
 
 

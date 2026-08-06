@@ -22,8 +22,8 @@ embedding:
   model: "BAAI/bge-small-zh-v1.5"
   batch_size: 32
 
-# 默认召回时间段（天）：今天往前数 N 天（推荐问题抽样等共用）
-default_recall_days: 90
+# 默认召回时间段（天）：今天往前数 N 天（聊天默认选中、推荐问题抽样等共用）
+default_recall_days: 30
 
 # 聊天空状态推荐问题：在默认召回时间段内随机抽 chunk，轻量 Agent 各生成一问
 suggested_questions:

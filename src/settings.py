@@ -18,15 +18,110 @@ SETTINGS_GROUPS: list[dict[str, str]] = [
     {"id": "main", "label": "常用设置", "hint": "写入 data/user_settings.yaml，覆盖 config 对应项。"},
 ]
 
+# OpenRouter 上精选的国产/中文友好回答模型（聊天用）
+ANSWER_MODEL_CATALOG: list[dict[str, str]] = [
+    {
+        "id": "qwen/qwen3-max-thinking",
+        "label": "Qwen3 Max Thinking",
+        "family": "通义千问",
+        "hint": "深思细想，默认首选",
+    },
+    {
+        "id": "qwen/qwen3-max",
+        "label": "Qwen3 Max",
+        "family": "通义千问",
+        "hint": "旗舰稳健，均衡好用",
+    },
+    {
+        "id": "qwen/qwen3.6-plus",
+        "label": "Qwen3.6 Plus",
+        "family": "通义千问",
+        "hint": "新代升级，体验更佳",
+    },
+    {
+        "id": "qwen/qwen3.7-flash",
+        "label": "Qwen3.7 Flash",
+        "family": "通义千问",
+        "hint": "又快又省，日常陪聊",
+    },
+    {
+        "id": "deepseek/deepseek-v3.2",
+        "label": "DeepSeek V3.2",
+        "family": "DeepSeek",
+        "hint": "性价比高，通用对话",
+    },
+    {
+        "id": "deepseek/deepseek-v4-flash",
+        "label": "DeepSeek V4 Flash",
+        "family": "DeepSeek",
+        "hint": "新代轻量，响应迅速",
+    },
+    {
+        "id": "deepseek/deepseek-r1-0528",
+        "label": "DeepSeek R1",
+        "family": "DeepSeek",
+        "hint": "强推理，适合分析",
+    },
+    {
+        "id": "moonshotai/kimi-k2-0905",
+        "label": "Kimi K2",
+        "family": "月之暗面",
+        "hint": "长文友好，上下文强",
+    },
+    {
+        "id": "z-ai/glm-4.7",
+        "label": "GLM 4.7",
+        "family": "智谱",
+        "hint": "中文自然，表达稳",
+    },
+    {
+        "id": "z-ai/glm-5-turbo",
+        "label": "GLM 5 Turbo",
+        "family": "智谱",
+        "hint": "新代加速，更敏捷",
+    },
+    {
+        "id": "minimax/minimax-m2.5",
+        "label": "MiniMax M2.5",
+        "family": "MiniMax",
+        "hint": "国产备选，可尝鲜",
+    },
+    {
+        "id": "bytedance-seed/seed-2.0-lite",
+        "label": "Seed 2.0 Lite",
+        "family": "字节跳动",
+        "hint": "豆包基座，均衡推荐",
+    },
+    {
+        "id": "bytedance-seed/seed-2.0-mini",
+        "label": "Seed 2.0 Mini",
+        "family": "字节跳动",
+        "hint": "更轻更快，省费用",
+    },
+    {
+        "id": "bytedance-seed/seed-1.6",
+        "label": "Seed 1.6",
+        "family": "字节跳动",
+        "hint": "成熟稳定，长上下文",
+    },
+    {
+        "id": "bytedance-seed/seed-1.6-flash",
+        "label": "Seed 1.6 Flash",
+        "family": "字节跳动",
+        "hint": "闪电响应，日常聊",
+    },
+]
+
 SETTINGS_FIELDS: list[dict[str, Any]] = [
     {
         "id": "llm.answer.model",
         "group": "main",
         "storage": "yaml",
         "path": "llm.answer.model",
-        "type": "string",
-        "label": "回答角色 model",
-        "description": "聊天回答所用模型（llm.answer.model）。",
+        "type": "model_select",
+        "label": "回答模型",
+        "description": "聊天回答所用 OpenRouter 模型；可点「测试」验证连通。",
+        "options": [m["id"] for m in ANSWER_MODEL_CATALOG],
     },
     {
         "id": "default_recall_days",
@@ -35,7 +130,7 @@ SETTINGS_FIELDS: list[dict[str, Any]] = [
         "path": "default_recall_days",
         "type": "int",
         "label": "默认召回天数",
-        "description": "今天往前数 N 天；推荐问题抽样等共用。",
+        "description": "今天往前数 N 天；新建对话默认选中该窗口，推荐问题抽样等共用。不填则按 30。",
         "min": 1,
         "max": 3650,
     },
@@ -205,6 +300,12 @@ def _coerce_and_validate(field: dict[str, Any], value: Any) -> Any:
             raise ValueError(f"「{label}」须为其一：{', '.join(opts)}")
         return s
 
+    if ftype == "model_select":
+        s = str(value if value is not None else "").strip()
+        if not s or "/" not in s:
+            raise ValueError(f"「{label}」须为有效的 OpenRouter 模型 ID")
+        return s
+
     if ftype == "string_list":
         items = _parse_string_list(value)
         if not items:
@@ -256,6 +357,8 @@ def get_settings_for_api() -> dict[str, Any]:
         }
         if f.get("options"):
             meta["options"] = list(f["options"])
+        if f.get("type") == "model_select":
+            meta["catalog"] = list(ANSWER_MODEL_CATALOG)
         if f.get("min") is not None:
             meta["min"] = f["min"]
         if f.get("max") is not None:
@@ -267,11 +370,53 @@ def get_settings_for_api() -> dict[str, Any]:
         "groups": SETTINGS_GROUPS,
         "fields": fields_out,
         "values": values,
+        "model_catalog": list(ANSWER_MODEL_CATALOG),
         "meta": {
             "overlay_path": str(user_settings_path().relative_to(ROOT)).replace("\\", "/"),
             "env_path": ".env",
             "has_overlay": bool(overlay),
         },
+    }
+
+
+def probe_answer_model(model_id: str) -> dict[str, Any]:
+    """用 answer 角色的 Key/base_url 对指定模型发一条极短探测请求。"""
+    from openai import OpenAI
+
+    from src.llm import resolve_llm_section
+
+    mid = (model_id or "").strip()
+    if not mid or "/" not in mid:
+        raise ValueError("模型 ID 无效")
+
+    section = resolve_llm_section("answer")
+    headers = {}
+    if section.get("http_referer"):
+        headers["HTTP-Referer"] = section["http_referer"]
+    if section.get("x_title"):
+        headers["X-Title"] = section["x_title"]
+
+    client = OpenAI(
+        base_url=section["base_url"],
+        api_key=section["api_key"],
+        default_headers=headers or None,
+    )
+    resp = client.chat.completions.create(
+        model=mid,
+        messages=[
+            {
+                "role": "user",
+                "content": "请只回复两个字：可用",
+            }
+        ],
+        temperature=0,
+        max_tokens=32,
+    )
+    reply = ((resp.choices[0].message.content or "") if resp.choices else "").strip()
+    return {
+        "ok": True,
+        "model": mid,
+        "reply": reply[:120],
     }
 
 

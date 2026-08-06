@@ -68,7 +68,7 @@ async function createChatWithDates(dates) {
   await loadConversations();
   activeId = created.id;
   if (typeof DateSelection !== "undefined") {
-    DateSelection.set(dates || []);
+    DateSelection.set(dates || [], { asDefault: false });
     DateSelection.saveForConversation(activeId);
   }
   workspaceTitle.textContent = created.title || "新对话";
@@ -288,11 +288,68 @@ async function exportConversationMd(id, title) {
 
 function escapeHtml(s) {
   const d = document.createElement("div");
-  d.textContent = s;
+  d.textContent = s == null ? "" : String(s);
   return d.innerHTML;
 }
 
-function appendMessage(role, content, { scroll = true } = {}) {
+function openChatReference(dateStr, chunkId) {
+  const day = String(dateStr || "").trim();
+  if (!day) {
+    showError("该参考缺少日期，无法打开原文");
+    return;
+  }
+  if (typeof window.openDiaryDay === "function") {
+    window.openDiaryDay(day, chunkId || "");
+    return;
+  }
+  showError("原文查看组件未加载");
+}
+
+function buildReferencesEl(references) {
+  const list = Array.isArray(references)
+    ? references.filter((r) => r && (r.chunk_id || r.date || r.preview))
+    : [];
+  if (!list.length) return null;
+
+  const section = document.createElement("div");
+  section.className = "message-refs";
+
+  const title = document.createElement("div");
+  title.className = "message-refs-title";
+  title.textContent = `本次参考 · ${list.length}`;
+  section.appendChild(title);
+
+  const ul = document.createElement("ul");
+  ul.className = "message-refs-list";
+  list.forEach((ref, i) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "message-ref-item";
+    const date = String(ref.date || "").trim();
+    const preview = String(ref.preview || "").trim() || "（无预览）";
+    const source = String(ref.source || "").trim();
+    btn.innerHTML = `
+      <span class="message-ref-index">${i + 1}</span>
+      <span class="message-ref-main">
+        <span class="message-ref-date">${escapeHtml(date || "未知日期")}${
+          source ? ` · ${escapeHtml(source)}` : ""
+        }</span>
+        <span class="message-ref-preview">${escapeHtml(preview)}</span>
+      </span>
+    `;
+    btn.title = "查看当日原文";
+    btn.addEventListener("click", () => {
+      openChatReference(date, ref.chunk_id || "");
+    });
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+  section.appendChild(ul);
+  return section;
+}
+
+function appendMessage(role, content, { scroll = true, references = null } = {}) {
   emptyState.classList.add("hidden");
 
   const wrap = document.createElement("div");
@@ -314,6 +371,12 @@ function appendMessage(role, content, { scroll = true } = {}) {
 
   inner.appendChild(roleLabel);
   inner.appendChild(body);
+
+  if (role === "assistant") {
+    const refsEl = buildReferencesEl(references);
+    if (refsEl) inner.appendChild(refsEl);
+  }
+
   wrap.appendChild(inner);
   messagesEl.appendChild(wrap);
 
@@ -447,7 +510,10 @@ async function selectConversation(id) {
     emptyState.classList.add("hidden");
     for (const m of data.messages) {
       if (m.role === "user" || m.role === "assistant") {
-        appendMessage(m.role, m.content, { scroll: false });
+        appendMessage(m.role, m.content, {
+          scroll: false,
+          references: m.references || null,
+        });
       }
     }
     scrollToBottom(true);
@@ -464,7 +530,7 @@ async function createNewChat() {
   await loadConversations();
   activeId = created.id;
   if (typeof DateSelection !== "undefined") {
-    DateSelection.clear();
+    DateSelection.applyDefaultRecall();
     DateSelection.saveForConversation(activeId);
     MiniDatePicker?.render?.();
   }
@@ -503,7 +569,7 @@ async function createChatWithTagStory(opts = {}) {
   await loadConversations();
   activeId = created.id;
   if (typeof DateSelection !== "undefined") {
-    DateSelection.clear();
+    DateSelection.applyDefaultRecall();
     DateSelection.saveForConversation(activeId);
     MiniDatePicker?.render?.();
   }
@@ -550,7 +616,9 @@ async function sendMessage() {
     });
 
     hideTyping();
-    appendMessage("assistant", result.answer);
+    appendMessage("assistant", result.answer, {
+      references: result.references || result.assistant_message?.references || [],
+    });
 
     await loadConversations();
     const conv = conversations.find((c) => c.id === activeId);
@@ -810,7 +878,10 @@ async function init() {
   });
 
   try {
-    await api("/health");
+    const health = await api("/health");
+    if (typeof DateSelection !== "undefined") {
+      DateSelection.setDefaultDays(health?.default_recall_days || 30);
+    }
     await loadSchemes();
     await loadLibraryStatus();
     // 预热日记日期给小型日历着色

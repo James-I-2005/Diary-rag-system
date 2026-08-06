@@ -110,6 +110,43 @@ class ChatResponse(BaseModel):
     dates: list[str] | None = None
     date_from: str | None = None
     date_to: str | None = None
+    references: list[dict[str, Any]] = Field(default_factory=list)
+
+
+def _format_chat_references(chunks: list[dict] | None) -> list[dict[str, Any]]:
+    """将召回 chunk 压成前端「本次参考」列表。"""
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for c in chunks or []:
+        if not isinstance(c, dict):
+            continue
+        cid = str(c.get("chunk_id") or c.get("id") or "").strip()
+        if not cid or cid in seen:
+            continue
+        seen.add(cid)
+        text = str(c.get("text") or "").strip()
+        if not text:
+            matched = c.get("matched_sentences") or []
+            if isinstance(matched, list):
+                parts = [
+                    str(m.get("text") or "").strip()
+                    for m in matched
+                    if isinstance(m, dict) and str(m.get("text") or "").strip()
+                ]
+                text = " / ".join(parts[:2])
+        preview = text.replace("\n", " ").strip()
+        if len(preview) > 100:
+            preview = preview[:99] + "…"
+        out.append(
+            {
+                "chunk_id": cid,
+                "date": str(c.get("date") or "").strip(),
+                "source": str(c.get("source") or "").strip(),
+                "preview": preview,
+                "score": c.get("score"),
+            }
+        )
+    return out
 
 
 class ImportLibraryBody(BaseModel):
@@ -210,8 +247,10 @@ def index() -> FileResponse:
 
 
 @app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict:
+    from src.suggested_questions import default_recall_days
+
+    return {"status": "ok", "default_recall_days": default_recall_days()}
 
 
 @app.get("/api/explore/search")
@@ -895,6 +934,10 @@ class UpdateSettingsBody(BaseModel):
     values: dict[str, Any] = Field(default_factory=dict)
 
 
+class ProbeModelBody(BaseModel):
+    model: str = Field(..., min_length=1)
+
+
 @app.get("/api/settings")
 def get_settings() -> dict:
     """设置页：白名单字段当前值（密钥脱敏）。"""
@@ -914,6 +957,19 @@ def put_settings(body: UpdateSettingsBody) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"保存设置失败: {exc}") from exc
+
+
+@app.post("/api/settings/probe-model")
+def probe_model(body: ProbeModelBody) -> dict:
+    """探测 OpenRouter 上指定回答模型是否可用。"""
+    from src.settings import probe_answer_model
+
+    try:
+        return probe_answer_model(body.model)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"模型不可用: {exc}") from exc
 
 
 @app.get("/api/conversations")
@@ -941,19 +997,32 @@ def get_conversation(conversation_id: str) -> dict:
     row = next((r for r in rows if r["id"] == conversation_id), None)
     title = (row.get("title") if row else None) or "新对话"
 
+    traces = svc.conversation.list_all_retrieval_traces(conversation_id)
+    refs_by_user: dict[str, list[dict]] = {}
+    for t in traces:
+        uid = str(t.get("user_message_id") or "")
+        if not uid:
+            continue
+        refs_by_user[uid] = _format_chat_references(t.get("candidates") or [])
+
+    messages_out: list[dict] = []
+    msgs = list(state.messages)
+    for i, m in enumerate(msgs):
+        item = {
+            "id": m.id,
+            "role": m.role,
+            "content": m.content,
+            "created_at": m.timestamp,
+        }
+        if m.role == "assistant" and i > 0 and msgs[i - 1].role == "user":
+            item["references"] = refs_by_user.get(msgs[i - 1].id) or []
+        messages_out.append(item)
+
     return {
         "id": state.conversation_id,
         "title": title,
         "summary": state.summary,
-        "messages": [
-            {
-                "id": m.id,
-                "role": m.role,
-                "content": m.content,
-                "created_at": m.timestamp,
-            }
-            for m in state.messages
-        ],
+        "messages": messages_out,
     }
 
 
@@ -1057,6 +1126,8 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
     assistant_msg = msgs[-1] if msgs else None
     user_msg = msgs[-2] if len(msgs) >= 2 else None
     sq = result.get("structured_query") or {}
+    retrieval = result.get("retrieval") or {}
+    references = _format_chat_references(retrieval.get("chunks") or [])
 
     return ChatResponse(
         conversation_id=result["conversation_id"],
@@ -1065,6 +1136,7 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
         dates=sq.get("dates") or dates or None,
         date_from=sq.get("date_from") or date_from,
         date_to=sq.get("date_to") or date_to,
+        references=references,
         user_message={
             "id": user_msg.id if user_msg else "",
             "role": "user",
@@ -1076,6 +1148,7 @@ def send_message(conversation_id: str, body: SendMessageBody) -> ChatResponse:
             "role": "assistant",
             "content": result["answer"],
             "created_at": assistant_msg.timestamp if assistant_msg else "",
+            "references": references,
         },
     )
 

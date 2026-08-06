@@ -338,6 +338,10 @@ class ConversationManager:
             )
         return out
 
+    def list_all_retrieval_traces(self, conversation_id: str) -> list[dict]:
+        """会话内全部检索痕迹（按时间正序），供聊天页回显参考来源。"""
+        return self.list_recent_retrieval_traces(conversation_id, limit=10_000)
+
     @staticmethod
     def window_message_count(max_turns: int) -> int:
         """一轮 ≈ user+assistant，窗口消息条数 = 2 * turns。"""

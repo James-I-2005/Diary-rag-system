@@ -853,12 +853,84 @@ const ExplorePage = (() => {
     return s ? s.slice(0, 1) : "?";
   }
 
+  function withPhotoCacheBust(url) {
+    if (!url) return "";
+    const u = String(url);
+    const sep = u.includes("?") ? "&" : "?";
+    return u + sep + "t=" + Date.now();
+  }
+
   function personAvatarHtml(person, sizeClass = "") {
     const color = escapeHtml(person.tag_color || TAG_PALETTE[0]);
     if (person.photo_url) {
-      return `<span class="people-avatar ${sizeClass}" style="border-color:${color}"><img src="${escapeHtml(person.photo_url)}" alt="" /></span>`;
+      const src = escapeHtml(person.photo_url);
+      return `<span class="people-avatar ${sizeClass}" style="border-color:${color}"><img src="${src}" alt="" /></span>`;
     }
     return `<span class="people-avatar ${sizeClass}" style="border-color:${color};background:color-mix(in srgb, ${color} 18%, #ebe6dc)">${escapeHtml(personInitial(person.name))}</span>`;
+  }
+
+  async function uploadEntityPhoto(kind, entityId, file) {
+    if (!file || !entityId) return null;
+    const fd = new FormData();
+    fd.append("file", file);
+    const path =
+      kind === "places"
+        ? `/api/places/${encodeURIComponent(entityId)}/photo`
+        : `/api/people/${encodeURIComponent(entityId)}/photo`;
+    const res = await fetch(path, { method: "POST", body: fd });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const body = await res.json();
+        detail = body.detail || detail;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(
+        typeof detail === "string" ? detail : JSON.stringify(detail)
+      );
+    }
+    const data = await res.json();
+    if (data.photo_url) {
+      data.photo_url = withPhotoCacheBust(data.photo_url);
+    }
+    return data;
+  }
+
+  function bindAvatarUpload(rootEl, kind, entityId, onDone) {
+    const btn = rootEl?.querySelector(".people-avatar-upload");
+    const input = rootEl?.querySelector(".people-avatar-file");
+    if (!btn || !input) return;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      input.click();
+    });
+    input.addEventListener("change", async () => {
+      const file = input.files && input.files[0];
+      input.value = "";
+      if (!file) return;
+      try {
+        btn.classList.add("is-uploading");
+        const updated = await uploadEntityPhoto(kind, entityId, file);
+        onDone?.(updated);
+      } catch (err) {
+        showError?.(err.message || "上传失败");
+      } finally {
+        btn.classList.remove("is-uploading");
+      }
+    });
+  }
+
+  function avatarUploadControlsHtml(entity, kind) {
+    const label = entity.photo_url ? "更换头像" : "上传头像";
+    return `
+      <button type="button" class="people-avatar-upload" title="${label}（点击圆圈）" aria-label="${label}">
+        ${personAvatarHtml(entity)}
+        <span class="people-avatar-badge">${entity.photo_url ? "换" : "＋"}</span>
+      </button>
+      <input type="file" class="people-avatar-file" accept="image/*" hidden />
+    `;
   }
 
   function bindPeopleSearch() {
@@ -1053,15 +1125,28 @@ const ExplorePage = (() => {
         `/people/${encodeURIComponent(personId)}/chunks?limit=80`
       );
       const person = data.person || {};
+      const cached = peopleCache.find((p) => p.id === personId);
+      if (cached?.photo_url && cached.photo_url.includes("?t=")) {
+        person.photo_url = cached.photo_url;
+      }
       detailEl.innerHTML = `
         <div class="people-detail-head">
-          ${personAvatarHtml(person)}
+          ${avatarUploadControlsHtml(person, "people")}
           <div class="people-detail-meta">
             <strong>${escapeHtml(person.name || "")}</strong>
-            <small>绑定片段 ${data.total || 0} · tag 可在「其他 tag → 人物」中管理</small>
+            <small>绑定片段 ${data.total || 0} · 点击头像可上传/更换图片</small>
           </div>
         </div>
       `;
+      bindAvatarUpload(detailEl, "people", personId, (updated) => {
+        const idx = peopleCache.findIndex((p) => p.id === personId);
+        if (idx >= 0) {
+          peopleCache[idx] = { ...peopleCache[idx], ...updated };
+        }
+        activePersonId = personId;
+        applyPeopleFilter();
+        loadPersonDetail(detailEl, personId);
+      });
       const wrap = document.createElement("div");
       wrap.className = "explore-detail-hits";
       renderHitList(
@@ -1285,15 +1370,28 @@ const ExplorePage = (() => {
         `/places/${encodeURIComponent(placeId)}/chunks?limit=80`
       );
       const place = data.place || {};
+      const cached = placesCache.find((p) => p.id === placeId);
+      if (cached?.photo_url && cached.photo_url.includes("?t=")) {
+        place.photo_url = cached.photo_url;
+      }
       detailEl.innerHTML = `
         <div class="people-detail-head">
-          ${placeAvatarHtml(place)}
+          ${avatarUploadControlsHtml(place, "places")}
           <div class="people-detail-meta">
             <strong>${escapeHtml(place.name || "")}</strong>
-            <small>绑定片段 ${data.total || 0} · tag 可在「其他 tag → 地点」中管理</small>
+            <small>绑定片段 ${data.total || 0} · 点击头像可上传/更换图片</small>
           </div>
         </div>
       `;
+      bindAvatarUpload(detailEl, "places", placeId, (updated) => {
+        const idx = placesCache.findIndex((p) => p.id === placeId);
+        if (idx >= 0) {
+          placesCache[idx] = { ...placesCache[idx], ...updated };
+        }
+        activePlaceId = placeId;
+        applyPlacesFilter();
+        loadPlaceDetail(detailEl, placeId);
+      });
       const wrap = document.createElement("div");
       wrap.className = "explore-detail-hits";
       renderHitList(
@@ -2317,5 +2415,12 @@ const ExplorePage = (() => {
     openTagPickerModal,
     openNameGrepModal,
     openTagDetailModal,
+    openExploreDay,
   };
 })();
+
+window.openDiaryDay = (dateStr, focusChunkId) => {
+  if (typeof ExplorePage !== "undefined" && ExplorePage.openExploreDay) {
+    return ExplorePage.openExploreDay(dateStr, focusChunkId);
+  }
+};

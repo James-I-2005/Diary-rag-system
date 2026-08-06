@@ -8,6 +8,7 @@ const SettingsPage = (() => {
   let dirty = false;
   let saving = false;
   let data = null;
+  let probeBusy = false;
 
   function $(sel) {
     return document.querySelector(sel);
@@ -40,6 +41,81 @@ const SettingsPage = (() => {
     return v;
   }
 
+  function modelCatalog(field) {
+    const list = field.catalog || data?.model_catalog || [];
+    return Array.isArray(list) ? list : [];
+  }
+
+  function renderModelSelect(field) {
+    const fid = field.id;
+    const current = String(fieldValue(fid) || "").trim();
+    const catalog = modelCatalog(field);
+    const byFamily = {};
+    for (const m of catalog) {
+      const fam = m.family || "其它";
+      (byFamily[fam] || (byFamily[fam] = [])).push(m);
+    }
+    const known = new Set(catalog.map((m) => m.id));
+    if (current && !known.has(current)) {
+      (byFamily["当前自定义"] || (byFamily["当前自定义"] = [])).push({
+        id: current,
+        label: current,
+        family: "当前自定义",
+        hint: "不在精选列表中，仍可继续使用",
+      });
+    }
+
+    const families = Object.keys(byFamily);
+    const groupsHtml = families
+      .map((fam) => {
+        const cards = byFamily[fam]
+          .map((m) => {
+            const checked = m.id === current ? "checked" : "";
+            const active = m.id === current ? "is-active" : "";
+            return `
+              <label class="settings-model-card ${active}" data-model-id="${escapeHtml(m.id)}">
+                <input
+                  type="radio"
+                  name="settings-answer-model"
+                  data-fid="${escapeHtml(fid)}"
+                  data-type="model_select"
+                  value="${escapeHtml(m.id)}"
+                  ${checked}
+                />
+                <span class="settings-model-card-body">
+                  <span class="settings-model-name">${escapeHtml(m.label || m.id)}</span>
+                  <span class="settings-model-id">${escapeHtml(m.id)}</span>
+                  <span class="settings-model-hint">${escapeHtml(m.hint || "")}</span>
+                  <span class="settings-model-probe" data-probe-for="${escapeHtml(m.id)}"></span>
+                </span>
+              </label>`;
+          })
+          .join("");
+        return `
+          <div class="settings-model-family">
+            <h3 class="settings-model-family-title">${escapeHtml(fam)}</h3>
+            <div class="settings-model-grid">${cards}</div>
+          </div>`;
+      })
+      .join("");
+
+    return `
+      <div class="settings-field settings-field-models" data-fid="${escapeHtml(fid)}">
+        <div class="settings-field-label-row">
+          <span class="settings-field-label">${escapeHtml(field.label)}</span>
+          <button type="button" class="settings-probe-btn" id="settings-probe-selected">
+            测试当前选中
+          </button>
+        </div>
+        ${
+          field.description
+            ? `<p class="settings-field-desc">${escapeHtml(field.description)}</p>`
+            : ""
+        }
+        <div class="settings-model-catalog">${groupsHtml}</div>
+      </div>`;
+  }
+
   function renderField(field) {
     const fid = field.id;
     const val = fieldValue(fid);
@@ -47,6 +123,10 @@ const SettingsPage = (() => {
       ? `<p class="settings-field-desc">${escapeHtml(field.description)}</p>`
       : "";
     const idAttr = `settings-field-${fid.replace(/\./g, "-")}`;
+
+    if (field.type === "model_select") {
+      return renderModelSelect(field);
+    }
 
     if (field.type === "secret") {
       const masked = val?.masked || "";
@@ -181,6 +261,12 @@ const SettingsPage = (() => {
         values[fid] = el.value === "" ? null : Number(el.value);
       } else if (type === "secret") {
         values[fid] = el.value;
+      } else if (type === "model_select") {
+        if (el.type === "radio") {
+          if (el.checked) values[fid] = el.value;
+        } else {
+          values[fid] = el.value;
+        }
       } else {
         values[fid] = el.value;
       }
@@ -188,12 +274,80 @@ const SettingsPage = (() => {
     return values;
   }
 
+  function selectedModelId() {
+    const el = document.querySelector(
+      'input[name="settings-answer-model"][data-type="model_select"]:checked'
+    );
+    return el ? el.value : "";
+  }
+
+  function setProbeStatus(modelId, text, kind) {
+    const el = document.querySelector(
+      `.settings-model-probe[data-probe-for="${CSS.escape(modelId)}"]`
+    );
+    if (!el) return;
+    el.textContent = text || "";
+    el.dataset.kind = kind || "";
+  }
+
+  async function probeModel(modelId) {
+    if (!modelId || probeBusy) return;
+    probeBusy = true;
+    const btn = $("#settings-probe-selected");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "测试中…";
+    }
+    setProbeStatus(modelId, "探测中…", "pending");
+    setStatus(`正在测试 ${modelId}…`);
+    try {
+      const res = await api("/settings/probe-model", {
+        method: "POST",
+        body: JSON.stringify({ model: modelId }),
+      });
+      const reply = (res.reply || "").trim();
+      setProbeStatus(
+        modelId,
+        reply ? `可用 · ${reply}` : "可用",
+        "ok"
+      );
+      setStatus(`${modelId} 可用`, "ok");
+    } catch (err) {
+      setProbeStatus(modelId, `失败 · ${err.message || "不可用"}`, "error");
+      setStatus(err.message || "模型测试失败", "error");
+    } finally {
+      probeBusy = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "测试当前选中";
+      }
+    }
+  }
+
   function bindFieldEvents() {
     const body = $("#settings-body");
     if (!body) return;
     body.querySelectorAll("input, textarea, select").forEach((el) => {
       el.addEventListener("input", () => setDirty(true));
-      el.addEventListener("change", () => setDirty(true));
+      el.addEventListener("change", () => {
+        setDirty(true);
+        if (el.dataset.type === "model_select" && el.type === "radio") {
+          body.querySelectorAll(".settings-model-card").forEach((card) => {
+            card.classList.toggle(
+              "is-active",
+              card.getAttribute("data-model-id") === el.value
+            );
+          });
+        }
+      });
+    });
+    $("#settings-probe-selected")?.addEventListener("click", () => {
+      const mid = selectedModelId();
+      if (!mid) {
+        setStatus("请先选择一个模型", "error");
+        return;
+      }
+      probeModel(mid).catch((e) => console.warn(e));
     });
   }
 
@@ -226,12 +380,22 @@ const SettingsPage = (() => {
     setStatus("正在保存…");
     try {
       const values = collectValues();
-      // 密钥空串表示不修改：仍传给后端（后端会跳过）
       data = await api("/settings", {
         method: "PUT",
         body: JSON.stringify({ values }),
       });
       render();
+      const days = data?.values?.["default_recall_days"];
+      if (typeof DateSelection !== "undefined" && days != null) {
+        DateSelection.setDefaultDays(days);
+        if (DateSelection.isUsingDefault?.()) {
+          DateSelection.applyDefaultRecall(days);
+          if (typeof window.persistActiveDates === "function") {
+            window.persistActiveDates();
+          }
+          MiniDatePicker?.render?.();
+        }
+      }
       setStatus("已保存，部分项立即生效", "ok");
       if (typeof showError === "function") {
         showError("设置已保存");

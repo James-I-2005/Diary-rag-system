@@ -6,6 +6,162 @@
 const DateSelection = (() => {
   let selected = new Set();
   const listeners = new Set();
+  /** 当前是否处于「默认召回窗口」态（用户未手动改过） */
+  let usingDefault = false;
+  let defaultDays = 30;
+
+  function notify() {
+    for (const fn of listeners) {
+      try {
+        fn(get());
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+
+  function get() {
+    return [...selected].sort();
+  }
+
+  function set(dates, opts = {}) {
+    selected = new Set(
+      (dates || []).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(String(d)))
+    );
+    usingDefault = !!opts.asDefault;
+    notify();
+  }
+
+  function toggle(dateStr) {
+    if (selected.has(dateStr)) selected.delete(dateStr);
+    else selected.add(dateStr);
+    usingDefault = false;
+    notify();
+  }
+
+  function addMany(dates) {
+    for (const d of dates || []) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) selected.add(d);
+    }
+    usingDefault = false;
+    notify();
+  }
+
+  function clear() {
+    selected.clear();
+    usingDefault = false;
+    notify();
+  }
+
+  function has(dateStr) {
+    return selected.has(dateStr);
+  }
+
+  function onChange(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  }
+
+  function storageKey(cid) {
+    return cid ? `rag_dates_${cid}` : "rag_dates_current";
+  }
+
+  function modeKey(cid) {
+    return cid ? `rag_dates_mode_${cid}` : "rag_dates_mode_current";
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+
+  function toYmd(dt) {
+    return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+  }
+
+  /** 今天往前数 days 天（含今天），闭区间日历日列表。 */
+  function buildDefaultDates(days) {
+    const n = Math.max(1, parseInt(days, 10) || defaultDays);
+    const out = [];
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      out.push(toYmd(d));
+    }
+    return out;
+  }
+
+  function setDefaultDays(n) {
+    const v = Math.max(1, parseInt(n, 10) || 30);
+    defaultDays = v;
+  }
+
+  function getDefaultDays() {
+    return defaultDays;
+  }
+
+  function isUsingDefault() {
+    return usingDefault;
+  }
+
+  function applyDefaultRecall(days) {
+    if (days != null) setDefaultDays(days);
+    set(buildDefaultDates(defaultDays), { asDefault: true });
+  }
+
+  function saveForConversation(cid) {
+    if (!cid) return;
+    localStorage.setItem(storageKey(cid), JSON.stringify(get()));
+    localStorage.setItem(modeKey(cid), usingDefault ? "default" : selected.size ? "custom" : "all");
+  }
+
+  function loadForConversation(cid) {
+    if (!cid) {
+      applyDefaultRecall();
+      return;
+    }
+    try {
+      const mode = localStorage.getItem(modeKey(cid));
+      const raw = localStorage.getItem(storageKey(cid));
+      if (mode === "all") {
+        set([], { asDefault: false });
+        return;
+      }
+      if (mode === "custom") {
+        const parsed = raw ? JSON.parse(raw) : [];
+        set(Array.isArray(parsed) ? parsed : [], { asDefault: false });
+        return;
+      }
+      // mode=default、缺失或旧数据：应用默认召回窗口
+      applyDefaultRecall();
+    } catch {
+      applyDefaultRecall();
+    }
+  }
+
+  return {
+    get,
+    set,
+    toggle,
+    addMany,
+    clear,
+    has,
+    onChange,
+    saveForConversation,
+    loadForConversation,
+    applyDefaultRecall,
+    setDefaultDays,
+    getDefaultDays,
+    isUsingDefault,
+    buildDefaultDates,
+  };
+})();
+
+/** 日历页多选：与聊天召回 DateSelection 互不共享、不持久化。 */
+const CalendarSelection = (() => {
+  let selected = new Set();
+  const listeners = new Set();
 
   function notify() {
     for (const fn of listeners) {
@@ -55,39 +211,7 @@ const DateSelection = (() => {
     return () => listeners.delete(fn);
   }
 
-  function storageKey(cid) {
-    return cid ? `rag_dates_${cid}` : "rag_dates_current";
-  }
-
-  function saveForConversation(cid) {
-    if (!cid) return;
-    localStorage.setItem(storageKey(cid), JSON.stringify(get()));
-  }
-
-  function loadForConversation(cid) {
-    if (!cid) {
-      set([]);
-      return;
-    }
-    try {
-      const raw = localStorage.getItem(storageKey(cid));
-      set(raw ? JSON.parse(raw) : []);
-    } catch {
-      set([]);
-    }
-  }
-
-  return {
-    get,
-    set,
-    toggle,
-    addMany,
-    clear,
-    has,
-    onChange,
-    saveForConversation,
-    loadForConversation,
-  };
+  return { get, set, toggle, addMany, clear, has, onChange };
 })();
 
 const CalendarPage = (() => {
@@ -191,7 +315,7 @@ const CalendarPage = (() => {
     for (let d = 1; d <= dim; d++) {
       const dateStr = ymd(viewYear, viewMonth, d);
       const has = diaryDates.has(dateStr);
-      const checked = DateSelection.has(dateStr);
+      const checked = CalendarSelection.has(dateStr);
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className =
@@ -211,7 +335,7 @@ const CalendarPage = (() => {
       btn.addEventListener("click", () => {
         if (selectMode) {
           lastPickedDate = dateStr;
-          DateSelection.toggle(dateStr);
+          CalendarSelection.toggle(dateStr);
           renderGrid();
           updateSelectionBar();
           return;
@@ -644,13 +768,13 @@ const CalendarPage = (() => {
   function updateSelectionBar() {
     const el = $("#cal-selection-summary");
     if (el) {
-      const n = DateSelection.get().length;
+      const n = CalendarSelection.get().length;
       el.textContent = n ? `已选 ${n} 天` : "未选择日期";
     }
     const btn = $("#cal-new-chat");
-    if (btn) btn.disabled = DateSelection.get().length === 0;
+    if (btn) btn.disabled = CalendarSelection.get().length === 0;
     const exportBtn = $("#cal-export-diary");
-    if (exportBtn) exportBtn.disabled = DateSelection.get().length === 0;
+    if (exportBtn) exportBtn.disabled = CalendarSelection.get().length === 0;
   }
 
   function updateSelectModeUi() {
@@ -696,25 +820,25 @@ const CalendarPage = (() => {
   function selectCurrentWeek() {
     const today = new Date();
     const todayStr = ymd(today.getFullYear(), today.getMonth(), today.getDate());
-    const selected = DateSelection.get();
+    const selected = CalendarSelection.get();
     const base =
       lastPickedDate ||
       (selected.length ? selected[selected.length - 1] : null) ||
       focusDate ||
       todayStr;
-    DateSelection.addMany(weekDatesContaining(base));
+    CalendarSelection.addMany(weekDatesContaining(base));
     updateSelectionBar();
     renderGrid();
   }
 
   function selectCurrentMonth() {
-    DateSelection.addMany(monthDates(viewYear, viewMonth));
+    CalendarSelection.addMany(monthDates(viewYear, viewMonth));
     updateSelectionBar();
     renderGrid();
   }
 
   function selectDiaryInMonth() {
-    DateSelection.addMany(
+    CalendarSelection.addMany(
       monthDates(viewYear, viewMonth).filter((d) => diaryDates.has(d))
     );
     updateSelectionBar();
@@ -722,7 +846,7 @@ const CalendarPage = (() => {
   }
 
   async function newChatWithSelection() {
-    const dates = DateSelection.get();
+    const dates = CalendarSelection.get();
     if (!dates.length) {
       showError("请先勾选至少一个日期");
       return;
@@ -733,7 +857,7 @@ const CalendarPage = (() => {
   }
 
   async function exportDiarySelection() {
-    const dates = DateSelection.get();
+    const dates = CalendarSelection.get();
     if (!dates.length) {
       showError("请先勾选至少一个日期");
       return;
@@ -780,7 +904,7 @@ const CalendarPage = (() => {
     } finally {
       if (btn) {
         btn.textContent = "导出原文 ZIP";
-        btn.disabled = DateSelection.get().length === 0;
+        btn.disabled = CalendarSelection.get().length === 0;
       }
     }
   }
@@ -797,7 +921,7 @@ const CalendarPage = (() => {
     $("#cal-select-month")?.addEventListener("click", selectCurrentMonth);
     $("#cal-select-diary-month")?.addEventListener("click", selectDiaryInMonth);
     $("#cal-clear-selection")?.addEventListener("click", () => {
-      DateSelection.clear();
+      CalendarSelection.clear();
       updateSelectionBar();
       renderGrid();
     });
@@ -815,9 +939,11 @@ const CalendarPage = (() => {
       if (!currentInsightDate) return;
       loadDayInsights(currentInsightDate, true, true);
     });
-    DateSelection.onChange(() => {
+    CalendarSelection.onChange(() => {
       updateSelectionBar();
       renderGrid();
+    });
+    DateSelection.onChange(() => {
       MiniDatePicker.render();
     });
     updateSelectModeUi();
@@ -826,6 +952,9 @@ const CalendarPage = (() => {
   async function show() {
     bind();
     bindDayImages();
+    // 进入日历页时不带入聊天召回选中；本页选择从空开始
+    CalendarSelection.clear();
+    setSelectMode(false);
     showMonthView();
     try {
       // 打开日历前先做跨日归档，确保昨日写作已入库
@@ -930,7 +1059,14 @@ const MiniDatePicker = (() => {
 
     if (summary) {
       const n = DateSelection.get().length;
-      summary.textContent = n ? `召回：已选 ${n} 天` : "召回：不限日期";
+      if (DateSelection.isUsingDefault?.()) {
+        const days = DateSelection.getDefaultDays?.() || n;
+        summary.textContent = `召回：近 ${days} 天`;
+      } else if (n) {
+        summary.textContent = `召回：已选 ${n} 天`;
+      } else {
+        summary.textContent = "召回：不限日期";
+      }
     }
   }
 
@@ -963,8 +1099,21 @@ const MiniDatePicker = (() => {
     $("#btn-date-picker-toggle")?.addEventListener("click", () => {
       const panel = $("#mini-cal-panel");
       if (!panel) return;
+      const opening = panel.hidden;
       panel.hidden = !panel.hidden;
-      if (!panel.hidden) render();
+      if (opening) {
+        // 打开时：若仍是默认窗口则按最新天数刷新选中，并滚到当月
+        if (DateSelection.isUsingDefault?.()) {
+          DateSelection.applyDefaultRecall();
+          if (typeof window.persistActiveDates === "function") {
+            window.persistActiveDates();
+          }
+        }
+        const now = new Date();
+        viewYear = now.getFullYear();
+        viewMonth = now.getMonth();
+        render();
+      }
     });
   }
 
