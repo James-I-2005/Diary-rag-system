@@ -4,7 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Memory Assistant</title>
+  <script>
+    (function () {
+      try {
+        var map = { moon: "paper", sakura: "linen", mist: "sage", aurora: "ink" };
+        var t = localStorage.getItem("memory-assistant-theme") || "paper";
+        t = map[t] || t;
+        if (["paper", "linen", "sage", "ink"].indexOf(t) < 0) t = "paper";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/themes.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
@@ -405,8 +417,54 @@
           仅保留常用项。保存后写入 <code>data/user_settings.yaml</code>（覆盖
           <code>config.yaml</code> 对应项，不破坏原文件注释）。
         </p>
+        <section class="theme-panel" aria-label="界面色系">
+          <h2 class="theme-panel-title">纸色</h2>
+          <p class="theme-panel-hint">安静的纸面氛围，只改变外观，不影响检索与数据。</p>
+          <div class="theme-panel-options">
+            <button type="button" class="theme-option" data-theme-option="paper" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">和纸</span>
+                <span class="theme-option-desc">晨光燕麦色</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option" data-theme-option="linen" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">麻布</span>
+                <span class="theme-option-desc">雾灰亚麻</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option" data-theme-option="sage" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">苔色</span>
+                <span class="theme-option-desc">淡鼠尾草</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option" data-theme-option="ink" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">茶墨</span>
+                <span class="theme-option-desc">温炭茶褐</span>
+              </span>
+            </button>
+          </div>
+        </section>
         <div class="settings-body" id="settings-body">
           <p class="settings-loading">加载设置中…</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-dock" aria-label="快速切换纸色">
+      <div class="theme-dock-inner">
+        <p class="theme-dock-label">纸色</p>
+        <div class="theme-swatches">
+          <button type="button" class="theme-swatch" data-theme-option="paper" title="和纸" aria-label="和纸" aria-pressed="false"></button>
+          <button type="button" class="theme-swatch" data-theme-option="linen" title="麻布" aria-label="麻布" aria-pressed="false"></button>
+          <button type="button" class="theme-swatch" data-theme-option="sage" title="苔色" aria-label="苔色" aria-pressed="false"></button>
+          <button type="button" class="theme-swatch" data-theme-option="ink" title="茶墨" aria-label="茶墨" aria-pressed="false"></button>
         </div>
       </div>
     </div>
@@ -603,6 +661,7 @@
     </div>
   </div>
 
+  <script src="/static/js/theme.js"></script>
   <script src="/static/js/user-tag.js"></script>
   <script src="/static/js/tag-mention.js"></script>
   <script src="/static/js/selection-tag.js"></script>
