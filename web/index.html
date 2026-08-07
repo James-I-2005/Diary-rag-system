@@ -10,11 +10,27 @@
         var map = { moon: "paper", sakura: "linen", mist: "sage", aurora: "ink" };
         var t = localStorage.getItem("memory-assistant-theme") || "paper";
         t = map[t] || t;
-        if (["paper", "linen", "sage", "ink"].indexOf(t) < 0) t = "paper";
+        if (["paper", "linen", "sage", "ink", "beni", "miyabi"].indexOf(t) < 0) t = "paper";
         document.documentElement.setAttribute("data-theme", t);
+        var f = localStorage.getItem("memory-assistant-font") || "twkai";
+        if (["twkai", "songti", "heiti", "kaiti", "fangsong", "system"].indexOf(f) < 0) {
+          f = "twkai";
+        }
+        document.documentElement.setAttribute("data-font", f);
+        var stacks = {
+          twkai: '"TW-Kai", "TW-Kai-98", "KaiTi", "標楷體", serif',
+          songti: '"Noto Serif SC", "Songti SC", "SimSun", serif',
+          heiti: '"Noto Sans SC", "Microsoft YaHei", sans-serif',
+          kaiti: '"KaiTi", "STKaiti", "TW-Kai", serif',
+          fangsong: '"FangSong", "STFangsong", serif',
+          system: 'system-ui, "Segoe UI", "Microsoft YaHei", sans-serif'
+        };
+        document.documentElement.style.setProperty("--font", stacks[f] || stacks.twkai);
       } catch (e) {}
     })();
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="/static/css/style.css" />
   <link rel="stylesheet" href="/static/css/themes.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -60,8 +76,8 @@
 
         <section class="message-area" id="message-area">
           <div class="empty-state" id="empty-state">
-            <h2>你好！</h2>
-            <p>今天想回忆些什么？</p>
+            <h2>今晚想回想什么</h2>
+            <p>这里是安静的纸页。写下问题，记忆会慢慢回来。</p>
             <ul class="example-questions" id="example-questions" aria-live="polite">
               <li class="example-questions-hint">正在生成推荐问题…</li>
             </ul>
@@ -449,6 +465,62 @@
                 <span class="theme-option-desc">温炭茶褐</span>
               </span>
             </button>
+            <button type="button" class="theme-option" data-theme-option="beni" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">唐紅</span>
+                <span class="theme-option-desc">鸟居朱红 · 烫金 · 螺钿</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option" data-theme-option="miyabi" aria-pressed="false">
+              <span class="theme-option-swatch" aria-hidden="true"></span>
+              <span class="theme-option-meta">
+                <span class="theme-option-name">雅</span>
+                <span class="theme-option-desc">藤紫 · 金砂 · 十二单</span>
+              </span>
+            </button>
+          </div>
+        </section>
+        <section class="theme-panel font-panel" aria-label="界面字体">
+          <h2 class="theme-panel-title">字体</h2>
+          <p class="theme-panel-hint">默认使用全字库正楷体。选择后立即生效，仅保存在本机浏览器。</p>
+          <div class="theme-panel-options font-panel-options">
+            <button type="button" class="theme-option font-option is-active" data-font-option="twkai" aria-pressed="true">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style='font-family: "TW-Kai", "KaiTi", serif'>正楷</span>
+                <span class="theme-option-desc">全字库正楷体（默认）</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option font-option" data-font-option="songti" aria-pressed="false">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style='font-family: "Noto Serif SC", "Songti SC", "SimSun", serif'>宋体</span>
+                <span class="theme-option-desc">思源宋体 / 明朝</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option font-option" data-font-option="heiti" aria-pressed="false">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style='font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif'>黑体</span>
+                <span class="theme-option-desc">思源黑体 / 无衬线</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option font-option" data-font-option="kaiti" aria-pressed="false">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style='font-family: "KaiTi", "STKaiti", serif'>楷体</span>
+                <span class="theme-option-desc">系统楷体</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option font-option" data-font-option="fangsong" aria-pressed="false">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style='font-family: "FangSong", "STFangsong", serif'>仿宋</span>
+                <span class="theme-option-desc">系统仿宋</span>
+              </span>
+            </button>
+            <button type="button" class="theme-option font-option" data-font-option="system" aria-pressed="false">
+              <span class="theme-option-meta">
+                <span class="theme-option-name" style="font-family: system-ui, sans-serif">系统</span>
+                <span class="theme-option-desc">系统默认 UI 字体</span>
+              </span>
+            </button>
           </div>
         </section>
         <div class="settings-body" id="settings-body">
@@ -465,6 +537,8 @@
           <button type="button" class="theme-swatch" data-theme-option="linen" title="麻布" aria-label="麻布" aria-pressed="false"></button>
           <button type="button" class="theme-swatch" data-theme-option="sage" title="苔色" aria-label="苔色" aria-pressed="false"></button>
           <button type="button" class="theme-swatch" data-theme-option="ink" title="茶墨" aria-label="茶墨" aria-pressed="false"></button>
+          <button type="button" class="theme-swatch" data-theme-option="beni" title="唐紅" aria-label="唐紅" aria-pressed="false"></button>
+          <button type="button" class="theme-swatch" data-theme-option="miyabi" title="雅" aria-label="雅" aria-pressed="false"></button>
         </div>
       </div>
     </div>
@@ -662,6 +736,7 @@
   </div>
 
   <script src="/static/js/theme.js"></script>
+  <script src="/static/js/font.js"></script>
   <script src="/static/js/user-tag.js"></script>
   <script src="/static/js/tag-mention.js"></script>
   <script src="/static/js/selection-tag.js"></script>

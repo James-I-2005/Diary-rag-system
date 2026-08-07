@@ -27,10 +27,10 @@
   --radius: 6px;
   --radius-sm: 4px;
   --shadow-input: 0 0 0 1px var(--border-input);
-  --font: "TW-Kai", "TW-Kai-98", "全字庫正楷體", "DFKai-SB", "KaiTi", "標楷體", serif;
+  --font: "TW-Kai", "TW-Kai-98", "??????", "DFKai-SB", "KaiTi", "???", serif;
 }
 
-/* TW-Kai font — see web/fonts/NOTICE.txt */
+/* TW-Kai font ? see web/fonts/NOTICE.txt */
 @font-face {
   font-family: "TW-Kai";
   src: url("/static/fonts/TW-Kai-98_1.ttf") format("truetype");
@@ -1050,7 +1050,7 @@ button {
   display: flex;
   flex-direction: column;
   padding: 14px 16px 12px;
-  background: linear-gradient(165deg, #fafbfc 0%, #eef1f4 100%);
+  background: var(--bg-soft);
   overflow: hidden;
 }
 
@@ -1071,7 +1071,7 @@ button {
 .day-side-slot {
   flex: 1 1 0;
   min-width: 0;
-  background: #f3f4f6;
+  background: var(--bg-soft);
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--border);
@@ -1084,7 +1084,7 @@ button {
   display: flex;
   flex-direction: column;
   padding: 14px 16px 12px;
-  background: linear-gradient(180deg, #f7f5f2 0%, #f0ebe4 100%);
+  background: transparent;
   overflow-y: auto;
 }
 
@@ -1405,25 +1405,25 @@ button {
   display: inline;
 }
 
-/* 选区 �?添加�?tag */
+/* ?? ??????tag */
 .tag-select-fab {
   position: fixed;
   right: 20px;
   bottom: 88px;
   z-index: 115;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: 2px;
   border: 1px solid var(--border);
-  background: #1f1a14;
-  color: #fff;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-weight: 500;
+  box-shadow: none;
   cursor: pointer;
 }
 
 .tag-select-fab:hover {
-  background: #3a3228;
+  background: var(--bg-soft);
 }
 
 .tag-select-pop {
@@ -1500,7 +1500,7 @@ button {
   color: var(--text-secondary);
 }
 
-/* Tag 管理页（探索 · 其他 tag�?*/
+/* Tag ?????? ? ?? tag??*/
 .tag-mgmt {
   display: flex;
   flex-direction: column;
@@ -1679,7 +1679,7 @@ button {
   color: var(--text-secondary);
 }
 
-/* 紧凑横排：文件夹�?tag 同高同宽风格 */
+/* ??????????tag ?????? */
 .tag-mgmt-grid {
   display: flex;
   flex-wrap: wrap;
@@ -1996,7 +1996,7 @@ button {
   background: #3d362c;
 }
 
-/* 「更多…」→ 紧凑 Tag 管理弹层（复�?tag-mgmt CRUD�?*/
+/* ?????? ?? Tag ????????tag-mgmt CRUD??*/
 .tag-mgmt-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2129,7 +2129,7 @@ button {
   }
 }
 
-/* 创建 tag �?�?�?tag 名做紧凑 grep（与探索搜索同构�?*/
+/* ?? tag ??????tag ???? grep??????????*/
 .tag-name-grep-backdrop {
   position: fixed;
   inset: 0;
@@ -2253,7 +2253,7 @@ button {
   }
 }
 
-/* Tag 详情：绑�?chunk 列表 + 故事入口侧栏 */
+/* Tag ??????chunk ?? + ?????? */
 .tag-detail-backdrop {
   position: fixed;
   inset: 0;
@@ -2417,7 +2417,7 @@ button {
   line-height: 1.4;
 }
 
-/* 聊天等内容中�?@tag�?提及方框 */
+/* ????????@tag?????? */
 .tag-mention {
   display: inline-block;
   margin: 0 1px;
@@ -2531,11 +2531,11 @@ button {
 }
 
 .calendar-legend .dot.has {
-  background: #1aa87a;
+  background: var(--accent);
 }
 
 .calendar-legend .dot.empty {
-  background: #d0d4d8;
+  background: color-mix(in srgb, var(--text-secondary) 28%, transparent);
 }
 
 .calendar-grid {
@@ -2591,23 +2591,26 @@ button {
 }
 
 .cal-day.has-diary {
-  background: #e6f6ef;
-  border-color: #b8e5d2;
+  background: transparent;
+  border-color: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .cal-day.has-diary:hover {
-  background: #d5f0e4;
-  transform: translateY(-1px);
+  background: var(--accent-soft);
+  transform: none;
 }
 
 .cal-day.no-diary {
-  background: #eef0f2;
-  border-color: #e2e5e8;
-  color: #8a8f96;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+  opacity: 0.55;
 }
 
 .cal-day.no-diary:hover {
-  background: #e6e8eb;
+  background: var(--accent-soft);
+  opacity: 0.85;
 }
 
 .cal-day.is-today .cal-day-num {
@@ -2799,9 +2802,9 @@ button {
 }
 
 .mini-cal-day.checked {
-  background: #0f766e;
-  color: #fff;
-  border-color: #0f766e;
+  background: var(--accent);
+  color: var(--bg-elevated);
+  border-color: var(--accent);
 }
 
 .mini-cal-hint {
@@ -2810,12 +2813,9 @@ button {
   color: var(--text-secondary);
 }
 
-/* ===== Write diary · manuscript mode ===== */
+/* ===== Write diary ? manuscript mode ===== */
 .write-app {
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(196, 168, 120, 0.18), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(120, 140, 120, 0.12), transparent 50%),
-    #f3efe6;
+  background: transparent;
   flex-direction: column;
 }
 
@@ -2925,8 +2925,8 @@ button {
   gap: 16px;
 }
 
-/* 写作页的三个页面必须互斥显示�?
-   1 文稿总览�? 文稿编辑�? 聊天模式�?*/
+/* ????????????????
+   1 ?????? ?????? ??????*/
 .write-mode-papers[hidden],
 .write-editor[hidden],
 .write-mode-chat[hidden] {
@@ -3179,7 +3179,7 @@ button {
   }
 }
 
-/* ===== Write diary · chat mode (WeChat-style) ===== */
+/* ===== Write diary ? chat mode (WeChat-style) ===== */
 .write-mode-chat {
   flex: 1;
   min-height: 0;
@@ -3416,7 +3416,7 @@ button {
 
 /* ===== Explore ===== */
 .explore-app {
-  background: #f7f5f1;
+  background: transparent;
   flex-direction: column;
 }
 
@@ -3711,7 +3711,7 @@ button {
   font-size: 18px;
 }
 
-/* —�?探索 · 人物头像�?—�?*/
+/* ????? ? ?????????*/
 .people-board {
   flex: 1;
   min-height: 0;
@@ -4111,7 +4111,7 @@ button {
   text-overflow: ellipsis;
 }
 
-/* 搜索结果 �?当日日记预览（略小于全屏�?*/
+/* ???? ????????????????*/
 .explore-day-backdrop {
   position: fixed;
   inset: 0;

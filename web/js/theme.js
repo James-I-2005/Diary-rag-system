@@ -3,7 +3,7 @@
  */
 (function () {
   const KEY = "memory-assistant-theme";
-  const THEMES = ["paper", "linen", "sage", "ink"];
+  const THEMES = ["paper", "linen", "sage", "ink", "beni", "miyabi"];
   const LEGACY = {
     moon: "paper",
     sakura: "linen",

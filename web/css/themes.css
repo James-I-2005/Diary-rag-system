@@ -1,6 +1,6 @@
 /**
- * 纸本日记 · 侘寂 / MUJI 视觉层
- * 依据 doc/front-end.md：温暖纸感、安静留白、弱界面感。
+ * 纸本日记 · 编辑式 zine 视觉层
+ * 依据 doc/front-end/version2.md：Less Interface. More Story.
  * 仅覆盖视觉，不改变布局与业务逻辑。
  */
 
@@ -154,6 +154,103 @@ html[data-theme="ink"] {
   --paper-border: rgba(120, 100, 70, 0.2);
   --paper-ink: #2c271f;
   --paper-muted: #978970;
+}
+
+
+/* 唐紅 · 神社朱红 × 纯白 × 烫金 · 间 */
+html[data-theme="beni"] {
+  --bg-sidebar: #ffffff;
+  --bg-sidebar-hover: #f5f5f5;
+  --bg-sidebar-active: #eeeeee;
+  --text-sidebar: #3a2a28;
+  --text-sidebar-muted: #9a7c78;
+  --sidebar-line: rgba(196, 30, 58, 0.18);
+  --sidebar-line-strong: rgba(196, 30, 58, 0.4);
+
+  --bg-main: #ffffff;
+  --bg-canvas: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-soft: #f7f7f7;
+  --bg-hover: #f0f0f0;
+  --bg-user: transparent;
+  --bg-input: #ffffff;
+  --bg-nav: #ffffff;
+
+  --border: rgba(212, 175, 55, 0.45);
+  --border-input: rgba(212, 175, 55, 0.65);
+  --text-primary: #2a221f;
+  --text-secondary: #7a6560;
+  /* 鸟居朱红：暖、饱满、偏橙的朱红 */
+  --accent: #c41e3a;
+  --accent-hover: #a81830;
+  --accent-soft: rgba(196, 30, 58, 0.07);
+  --accent-glow: transparent;
+  /* 耀眼烫金 */
+  --gold: #d4af37;
+  --gold-bright: #e8c85a;
+  --gold-deep: #a8892e;
+  --gold-soft: rgba(212, 175, 55, 0.28);
+  --line-crimson: #c41e3a;
+  --line-gold: #d4af37;
+  --lacquer: #ffffff;
+  --raden: rgba(170, 210, 220, 0.14);
+
+  --paper-top: #ffffff;
+  --paper-bottom: #f7f7f7;
+  --paper-line: rgba(196, 30, 58, 0.1);
+  --paper-border: rgba(212, 175, 55, 0.55);
+  --paper-ink: #2a221f;
+  --paper-muted: #9a8078;
+
+  --pattern-asanoha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cg fill='none' stroke='%23c41e3a' stroke-width='0.6' opacity='0.09'%3E%3Cpath d='M28 0 L56 16 L56 48 L28 64 L0 48 L0 16 Z'/%3E%3Cpath d='M28 64 L56 80 L56 112 L28 128 L0 112 L0 80 Z'/%3E%3Cpath d='M28 16 L42 24 L42 40 L28 48 L14 40 L14 24 Z'/%3E%3C/g%3E%3C/svg%3E");
+  --pattern-shippo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='12' fill='none' stroke='%23d4af37' stroke-width='0.55' opacity='0.14'/%3E%3Ccircle cx='0' cy='0' r='12' fill='none' stroke='%23d4af37' stroke-width='0.55' opacity='0.1'/%3E%3Ccircle cx='40' cy='0' r='12' fill='none' stroke='%23d4af37' stroke-width='0.55' opacity='0.1'/%3E%3Ccircle cx='0' cy='40' r='12' fill='none' stroke='%23d4af37' stroke-width='0.55' opacity='0.1'/%3E%3Ccircle cx='40' cy='40' r='12' fill='none' stroke='%23d4af37' stroke-width='0.55' opacity='0.1'/%3E%3C/svg%3E");
+}
+
+/* 雅 · 百人一首式平安宫廷：藤紫 · 唐红点缀 · 金砂 · 纯白 */
+html[data-theme="miyabi"] {
+  --bg-sidebar: #ffffff;
+  --bg-sidebar-hover: #f5f5f5;
+  --bg-sidebar-active: #eeeeee;
+  --text-sidebar: #3a3038;
+  --text-sidebar-muted: #8a7a88;
+  --sidebar-line: rgba(107, 76, 122, 0.16);
+  --sidebar-line-strong: rgba(107, 76, 122, 0.32);
+
+  --bg-main: #ffffff;
+  --bg-canvas: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-soft: #f7f7f7;
+  --bg-hover: #f0f0f0;
+  --bg-user: transparent;
+  --bg-input: #ffffff;
+  --bg-nav: #ffffff;
+
+  --border: rgba(184, 150, 70, 0.4);
+  --border-input: rgba(184, 150, 70, 0.55);
+  --text-primary: #2c2628;
+  --text-secondary: #7a6c78;
+  /* 藤紫为主色锚点 */
+  --accent: #6b4c7a;
+  --accent-hover: #563c62;
+  --accent-soft: rgba(107, 76, 122, 0.09);
+  --accent-glow: transparent;
+  /* 唐红点缀（十二单内侧） */
+  --crimson: #a61c1c;
+  --crimson-soft: rgba(166, 28, 28, 0.1);
+  /* 金砂 */
+  --gold: #c5a059;
+  --gold-bright: #d8b86a;
+  --gold-soft: rgba(197, 160, 89, 0.3);
+  --line-gold: #c5a059;
+  --moss: #8a9a78;
+  --moss-soft: rgba(138, 154, 120, 0.12);
+
+  --paper-top: #ffffff;
+  --paper-bottom: #f7f7f7;
+  --paper-line: rgba(107, 76, 122, 0.1);
+  --paper-border: rgba(197, 160, 89, 0.5);
+  --paper-ink: #2c2628;
+  --paper-muted: #9a8a90;
 }
 
 /* —— 纸张氛围（无炫光、无玻璃） —— */
@@ -668,6 +765,16 @@ body::after {
   background: #d4c4a8;
 }
 
+.theme-swatch[data-theme-option="beni"] {
+  background:
+    linear-gradient(135deg, #c41e3a 0 40%, #d4af37 40% 48%, #ffffff 48% 100%);
+}
+
+.theme-swatch[data-theme-option="miyabi"] {
+  background:
+    linear-gradient(135deg, #6b4c7a 0 38%, #a61c1c 38% 46%, #c5a059 46% 52%, #ffffff 52% 100%);
+}
+
 .theme-panel {
   margin: 0 0 28px;
   padding: 0 0 20px;
@@ -750,6 +857,16 @@ body::after {
   background: #d4c4a8;
 }
 
+.theme-option[data-theme-option="beni"] .theme-option-swatch {
+  background:
+    linear-gradient(135deg, #c41e3a 0 40%, #d4af37 40% 48%, #ffffff 48% 100%);
+}
+
+.theme-option[data-theme-option="miyabi"] .theme-option-swatch {
+  background:
+    linear-gradient(135deg, #6b4c7a 0 38%, #a61c1c 38% 46%, #c5a059 46% 52%, #ffffff 52% 100%);
+}
+
 .theme-option-meta {
   display: flex;
   flex-direction: column;
@@ -768,6 +885,15 @@ body::after {
   color: var(--text-secondary);
 }
 
+.font-option .theme-option-name {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.font-panel-options .font-option {
+  min-height: 52px;
+}
+
 @media (max-width: 720px) {
   .theme-dock {
     right: 10px;
@@ -780,5 +906,1708 @@ body::after {
 
   .messages {
     padding: 24px 16px 40px;
+  }
+}
+
+/* =========================================================
+   Editorial v2 — magazine spread, silence, typography-first
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* 排版尺度：杂志式层级，少用粗体 */
+.workspace-title,
+.settings-title,
+.write-page-title,
+.calendar-month-title,
+.day-reader-heading h2,
+.day-panel-header h2,
+.explore-empty,
+.logo-text {
+  font-weight: 500 !important;
+}
+
+.workspace-header {
+  padding: 18px 28px 14px;
+  min-height: 56px;
+}
+
+.workspace-title {
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+}
+
+.scheme-picker label {
+  letter-spacing: 0.08em;
+  font-size: 11px;
+}
+
+.scheme-picker select {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  padding: 4px 2px;
+  max-width: 240px;
+}
+
+.scheme-picker select:hover,
+.scheme-picker select:focus {
+  border-bottom-color: var(--accent);
+  outline: none;
+}
+
+/* 空态：不对称、留白、像扉页 */
+.empty-state {
+  max-width: 28rem;
+  margin: 0 0 0 clamp(12px, 8vw, 72px);
+  padding: 108px 24px 48px;
+  text-align: left;
+}
+
+.empty-state h2 {
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: 400 !important;
+  letter-spacing: 0.18em;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.9;
+  letter-spacing: 0.04em;
+  margin: 0 0 40px;
+  max-width: 18em;
+}
+
+.example-questions {
+  align-items: stretch;
+  gap: 0;
+  max-width: 22rem;
+}
+
+.example-questions button {
+  font-size: 14px;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  padding: 16px 2px;
+}
+
+.example-questions-hint {
+  letter-spacing: 0.06em;
+  padding: 16px 2px;
+}
+
+/* 对话区：书页宽、呼吸间距 */
+.message-area {
+  background: transparent;
+}
+
+.messages {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 40px clamp(20px, 5vw, 48px) 56px;
+}
+
+.message {
+  margin-bottom: 36px;
+  gap: 0;
+}
+
+.message.assistant .message-inner {
+  padding: 0 0 0 2px;
+}
+
+.message.assistant .message-content {
+  color: var(--text-primary);
+  opacity: 0.92;
+}
+
+.message.user .message-inner {
+  margin-left: 0;
+  padding-left: 16px;
+  border-left-width: 1px;
+  border-left-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.message-role {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  font-weight: 400 !important;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+.message-content {
+  font-size: 15.5px;
+  line-height: 1.95;
+}
+
+.message-content p {
+  margin: 0 0 0.9em;
+}
+
+.message-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 输入：像在纸上写字 */
+.input-area {
+  padding: 8px clamp(20px, 5vw, 48px) 18px;
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+
+.composer {
+  max-width: 38rem;
+}
+
+.date-picker-bar {
+  opacity: 0.75;
+}
+
+.btn-date-picker,
+.btn-date-clear {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  border: none;
+  background: transparent;
+  padding: 4px 2px;
+}
+
+.btn-date-picker:hover,
+.btn-date-clear:hover {
+  color: var(--accent);
+  background: transparent;
+}
+
+.input-box {
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 8px 0 6px !important;
+}
+
+.input-box:focus-within {
+  border-bottom-color: var(--accent) !important;
+}
+
+.input-box textarea {
+  background: transparent;
+  font-size: 15px;
+  line-height: 1.7;
+  min-height: 1.7em;
+}
+
+.btn-send {
+  background: transparent !important;
+  color: var(--accent) !important;
+  opacity: 0.7;
+  box-shadow: none !important;
+}
+
+.btn-send:hover:not(:disabled) {
+  background: transparent !important;
+  opacity: 1;
+  color: var(--accent-hover) !important;
+}
+
+.btn-send:disabled {
+  opacity: 0.25;
+}
+
+.input-hint {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  text-align: left;
+  max-width: 38rem;
+  margin: 6px auto 0;
+}
+
+/* 底栏：安静导航 */
+.bottom-nav {
+  height: 52px;
+  background: color-mix(in srgb, var(--bg-nav) 92%, transparent);
+  border-top: 1px solid var(--border);
+}
+
+.nav-item {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 400;
+  gap: 3px;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.nav-item:hover {
+  background: transparent;
+  opacity: 1;
+}
+
+.nav-item.active {
+  font-weight: 500;
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.nav-icon {
+  font-size: 14px;
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.nav-item.active .nav-icon {
+  opacity: 0.85;
+  filter: none;
+}
+
+/* 侧栏：目录感 */
+.sidebar {
+  border-right: 1px solid var(--sidebar-line);
+}
+
+.logo {
+  padding: 14px 12px 10px;
+  margin-bottom: 4px;
+}
+
+.logo-text {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+
+.logo-icon {
+  opacity: 0.55;
+  font-size: 15px;
+}
+
+.btn-new-chat,
+.btn-import {
+  border: none;
+  border-bottom: 1px solid var(--sidebar-line);
+  border-radius: 0;
+  padding: 12px 10px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  justify-content: flex-start;
+}
+
+.btn-new-chat .icon,
+.btn-import .icon {
+  opacity: 0.5;
+  font-size: 14px;
+}
+
+.conv-item {
+  border-radius: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid transparent;
+  transition: background var(--dur-breathe) var(--ease-breathe);
+}
+
+.conv-item.active {
+  background: transparent;
+  border-bottom-color: var(--sidebar-line-strong);
+}
+
+.conv-title {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+.conv-meta {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.sidebar-hint {
+  letter-spacing: 0.12em;
+  font-size: 10px;
+}
+
+/* —— 日历：月历像手账纸，非仪表盘 —— */
+.calendar-app {
+  background: transparent !important;
+}
+
+.calendar-pane,
+.day-reader {
+  background: transparent !important;
+  border-right: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.calendar-pane {
+  padding: 28px clamp(20px, 4vw, 40px) 20px !important;
+}
+
+.calendar-toolbar {
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.calendar-month-title {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.16em;
+  min-width: auto;
+}
+
+.cal-nav {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 20px;
+}
+
+.cal-nav:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.calendar-actions {
+  gap: 6px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.cal-action {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 4px !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary) !important;
+}
+
+.cal-action:hover {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+  background: transparent !important;
+}
+
+.cal-action.primary {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+.cal-action.primary:hover {
+  color: var(--accent-hover) !important;
+}
+
+.calendar-legend {
+  margin-bottom: 18px;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+}
+
+.calendar-legend .dot.has {
+  background: var(--accent) !important;
+  border-radius: 1px;
+}
+
+.calendar-legend .dot.empty {
+  background: color-mix(in srgb, var(--text-secondary) 25%, transparent) !important;
+}
+
+.cal-weekdays {
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.cal-day {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  min-height: 52px;
+  transition: background var(--dur-breathe) var(--ease-breathe);
+}
+
+.cal-day:hover {
+  background: var(--accent-soft) !important;
+}
+
+.cal-day.has-diary {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.cal-day.today {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.cal-day .num,
+.cal-day-num {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.month-side-slot,
+.day-side-slot {
+  background: transparent !important;
+  border-left: 1px solid var(--border);
+  padding: 28px 22px 20px !important;
+}
+
+.day-side-poetic {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.day-side-title {
+  font-weight: 400 !important;
+  letter-spacing: 0.18em !important;
+  font-size: 11px !important;
+  text-transform: none !important;
+}
+
+.day-summary {
+  font-size: 14px !important;
+  line-height: 1.9 !important;
+  color: var(--text-primary) !important;
+}
+
+.day-verse {
+  font-size: 15px;
+  line-height: 2;
+  font-style: italic;
+  color: var(--text-primary);
+  opacity: 0.88;
+  border: none;
+  padding: 8px 0 8px 14px;
+  border-left: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+.btn-poetic-refresh {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  letter-spacing: 0.08em;
+  padding: 4px 0;
+}
+
+/* 日读：像打开日记正文 */
+.day-reader-header {
+  padding: 24px 32px 12px;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.day-reader-heading h2 {
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  font-weight: 400 !important;
+  letter-spacing: 0.12em;
+}
+
+.day-reader-body {
+  padding: 28px clamp(24px, 5vw, 48px) 48px;
+}
+
+.day-text {
+  font-size: 16px !important;
+  line-height: 2 !important;
+  max-width: 40rem;
+}
+
+.day-image-strip {
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+
+.day-image-thumb {
+  border-radius: 2px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  opacity: 0.92;
+  transition: opacity var(--dur-breathe) var(--ease-breathe);
+}
+
+.day-image-thumb:hover {
+  opacity: 1;
+  border-color: var(--border-input) !important;
+  transform: none;
+}
+
+.day-panel {
+  border: none;
+  background: transparent;
+}
+
+.day-panel-header h2 {
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+/* —— 写作：手账本，非工具栏产品 —— */
+.write-app {
+  background: transparent !important;
+}
+
+.write-shell {
+  max-width: 52rem;
+  padding: 28px clamp(18px, 4vw, 40px) 16px;
+}
+
+.write-toolbar {
+  margin-bottom: 28px;
+  align-items: baseline;
+}
+
+.write-page-title {
+  font-size: clamp(1.35rem, 2.5vw, 1.7rem) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.16em !important;
+  color: var(--text-primary) !important;
+}
+
+.btn-write-tool,
+.btn-write-mode,
+.btn-write-back,
+.btn-write-delete {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  letter-spacing: 0.06em;
+  padding: 8px 2px !important;
+}
+
+.btn-write-tool:hover,
+.btn-write-mode:hover,
+.btn-write-back:hover {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+  background: transparent !important;
+}
+
+.btn-write-tool.active {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--accent) !important;
+  background: transparent !important;
+}
+
+.btn-write-mode {
+  border-radius: 0 !important;
+}
+
+.btn-write-mode .mode-hint {
+  border-left-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.manuscript-card {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+
+.write-paper {
+  border-radius: 1px !important;
+  box-shadow: none !important;
+}
+
+.write-title-input {
+  font-weight: 400 !important;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.write-mode-chat,
+.write-chat-contacts,
+.write-chat-thread {
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-color: var(--border) !important;
+}
+
+.write-chat-contacts {
+  background: var(--bg-soft) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+/* —— 探索：记忆地图，非面板堆叠 —— */
+.explore-app {
+  background: transparent !important;
+}
+
+.explore-tabs {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border);
+  padding: 0 clamp(16px, 4vw, 36px);
+  gap: 4px;
+}
+
+.explore-tab {
+  flex: 0 1 auto;
+  padding: 18px 14px 12px;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  font-weight: 400;
+  border-bottom-width: 1px;
+}
+
+.explore-tab.active {
+  font-weight: 500 !important;
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.explore-panel {
+  padding: 28px clamp(18px, 4vw, 40px) 32px;
+}
+
+.explore-search-bar {
+  margin-bottom: 24px;
+  gap: 12px;
+  max-width: 36rem;
+}
+
+.explore-search-bar input {
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 10px 2px !important;
+  box-shadow: none !important;
+}
+
+.explore-search-bar input:focus {
+  border-bottom-color: var(--accent) !important;
+  outline: none;
+}
+
+.btn-explore-search,
+.btn-explore-add-tag {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  letter-spacing: 0.08em;
+  padding: 10px 4px !important;
+}
+
+.btn-explore-search:hover,
+.btn-explore-add-tag:hover:not(:disabled) {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+.explore-empty {
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+  font-weight: 400 !important;
+  padding: 32px 4px;
+}
+
+.tag-mgmt-btn,
+.tag-mgmt-chip {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.tag-mgmt-chip {
+  border: 1px solid var(--border) !important;
+  border-radius: 2px !important;
+  padding: 6px 10px !important;
+}
+
+.tag-mgmt-pending {
+  background: var(--accent-soft) !important;
+  color: var(--text-primary) !important;
+  border-radius: 2px;
+}
+
+/* 弹层：安静纸笺 */
+.modal,
+.explore-day-modal,
+.tag-detail-modal,
+.tag-mgmt-modal,
+.tag-name-grep-modal {
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  border: 1px solid var(--border) !important;
+  background: var(--bg-elevated) !important;
+}
+
+.modal h2,
+.tag-detail-heading h2,
+.tag-mgmt-modal h2,
+#tag-name-grep-title {
+  font-weight: 400 !important;
+  letter-spacing: 0.12em;
+}
+
+.btn-modal-cancel,
+.btn-modal-ok,
+.settings-save-btn {
+  border-radius: 0 !important;
+  letter-spacing: 0.1em;
+  box-shadow: none !important;
+}
+
+.btn-modal-cancel {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.btn-modal-ok,
+.settings-save-btn {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+.btn-modal-ok:hover,
+.settings-save-btn:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--accent-hover) !important;
+  border-bottom-color: var(--accent-hover) !important;
+}
+
+.tag-select-fab {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.08em;
+}
+
+.tag-select-pop {
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+
+.mini-cal-day.checked {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: var(--bg-elevated) !important;
+}
+
+.mini-cal-panel {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+
+/* 设置页：编辑序言感 */
+.settings-shell {
+  max-width: 40rem;
+  padding: 8px clamp(20px, 4vw, 36px) 40px;
+}
+
+.settings-header {
+  padding-top: 28px;
+}
+
+.settings-title {
+  font-size: 1.5rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.16em;
+}
+
+.settings-lead {
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+  margin-bottom: 28px;
+}
+
+.settings-group-title {
+  font-weight: 400 !important;
+  letter-spacing: 0.1em;
+  font-size: 14px;
+}
+
+.settings-model-card,
+.settings-field input,
+.settings-field select,
+.settings-field textarea {
+  border-radius: 2px !important;
+  box-shadow: none !important;
+}
+
+/* 主题切换：更克制 */
+.theme-dock-inner {
+  border-radius: 2px;
+  padding: 8px 10px 10px;
+}
+
+.theme-dock-label {
+  letter-spacing: 0.2em;
+}
+
+@media (max-width: 768px) {
+  .empty-state {
+    margin-left: 0;
+    padding-top: 72px;
+  }
+
+  .workspace-header {
+    padding: 14px 16px;
+  }
+
+  .day-reader-body,
+  .calendar-pane {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* =========================================================
+   唐紅专属 — 神社朱红 × 烫金细边 × 螺钿漆器 × 间
+   ========================================================= */
+
+html[data-theme="beni"] body {
+  background-color: #ffffff;
+  background-image:
+    var(--pattern-asanoha),
+    none;
+  background-size: 56px 97px, auto;
+}
+
+html[data-theme="beni"] body::before {
+  opacity: 0.028;
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="beni"] .messages {
+  max-width: 36rem;
+  padding: 56px clamp(28px, 7vw, 72px) 72px;
+}
+
+html[data-theme="beni"] .empty-state {
+  max-width: 26rem;
+  margin: 0 0 0 clamp(24px, 10vw, 96px);
+  padding: 120px 28px 56px;
+  position: relative;
+}
+
+html[data-theme="beni"] .composer,
+html[data-theme="beni"] .input-hint {
+  max-width: 36rem;
+}
+
+html[data-theme="beni"] .settings-shell,
+html[data-theme="beni"] .write-shell {
+  max-width: 44rem;
+}
+
+html[data-theme="beni"] .calendar-pane {
+  padding: 36px clamp(28px, 5vw, 56px) 28px !important;
+}
+
+html[data-theme="beni"] .day-reader-body,
+html[data-theme="beni"] .explore-panel {
+  padding: 36px clamp(28px, 6vw, 64px) 56px !important;
+}
+
+html[data-theme="beni"] .empty-state h2,
+html[data-theme="beni"] .calendar-month-title,
+html[data-theme="beni"] .write-page-title,
+html[data-theme="beni"] .settings-title,
+html[data-theme="beni"] .day-reader-heading h2,
+html[data-theme="beni"] .logo-text,
+html[data-theme="beni"] .modal h2,
+html[data-theme="beni"] .tag-detail-heading h2,
+html[data-theme="beni"] #tag-name-grep-title {
+  color: var(--accent) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em;
+}
+
+html[data-theme="beni"] .workspace-title {
+  color: var(--accent);
+  opacity: 0.8;
+  letter-spacing: 0.16em;
+}
+
+html[data-theme="beni"] .nav-item.active {
+  color: var(--accent);
+}
+
+html[data-theme="beni"] .day-side-title {
+  color: var(--accent) !important;
+  letter-spacing: 0.2em !important;
+}
+
+html[data-theme="beni"] .modal,
+html[data-theme="beni"] .explore-day-modal,
+html[data-theme="beni"] .tag-detail-modal,
+html[data-theme="beni"] .tag-mgmt-modal,
+html[data-theme="beni"] .tag-name-grep-modal,
+html[data-theme="beni"] .mini-cal-panel,
+html[data-theme="beni"] .tag-select-pop,
+html[data-theme="beni"] .theme-dock-inner,
+html[data-theme="beni"] .conv-menu {
+  border: 1px solid var(--gold) !important;
+  background:
+    radial-gradient(ellipse 80% 50% at 12% 18%, var(--raden), transparent 42%),
+    radial-gradient(ellipse 60% 40% at 88% 82%, rgba(212, 175, 55, 0.07), transparent 45%),
+    #ffffff !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  border-radius: 2px !important;
+}
+
+html[data-theme="beni"] .manuscript-card,
+html[data-theme="beni"] .write-paper,
+html[data-theme="beni"] .day-reader {
+  border: 1px solid var(--gold) !important;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(232, 200, 90, 0.12) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 58%, rgba(232, 200, 90, 0.1) 0 0.8px, transparent 1.2px),
+    radial-gradient(circle at 44% 78%, rgba(170, 210, 220, 0.16) 0 1.2px, transparent 2px),
+    radial-gradient(ellipse at 80% 20%, var(--raden), transparent 40%),
+    linear-gradient(160deg, #ffffff 0%, #ffffff 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--gold) 25%, transparent),
+    0 1px 0 color-mix(in srgb, var(--accent) 8%, transparent) !important;
+  border-radius: 2px !important;
+}
+
+html[data-theme="beni"] .manuscript-card {
+  border-left: 2px solid var(--accent) !important;
+}
+
+html[data-theme="beni"] .example-questions button {
+  border: none !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--gold) 40%, transparent), transparent) top / 100% 1px no-repeat,
+    transparent !important;
+  box-shadow: none !important;
+  max-width: 22rem;
+}
+
+html[data-theme="beni"] .example-questions button:hover {
+  color: var(--accent);
+  background:
+    linear-gradient(90deg, transparent, var(--gold), transparent) top / 100% 1px no-repeat,
+    var(--accent-soft) !important;
+}
+
+html[data-theme="beni"] .write-paper {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent),
+    inset 0 0 40px rgba(212, 175, 55, 0.04) !important;
+}
+
+html[data-theme="beni"] .workspace-header,
+html[data-theme="beni"] .bottom-nav,
+html[data-theme="beni"] .sidebar-footer,
+html[data-theme="beni"] .explore-tabs,
+html[data-theme="beni"] .day-reader-header,
+html[data-theme="beni"] .settings-group,
+html[data-theme="beni"] .theme-panel {
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent) !important;
+}
+
+html[data-theme="beni"] .sidebar {
+  background:
+    var(--pattern-shippo),
+    #ffffff;
+  background-size: 40px 40px, auto;
+  border-right: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+html[data-theme="beni"] .input-box {
+  border: none !important;
+  border-bottom: 1px solid var(--gold) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="beni"] .input-box:focus-within {
+  border-bottom-color: var(--accent) !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 50%, transparent) !important;
+}
+
+html[data-theme="beni"] .scheme-picker select {
+  border-bottom: 1px solid var(--gold);
+}
+
+html[data-theme="beni"] .scheme-picker select:focus,
+html[data-theme="beni"] .scheme-picker select:hover {
+  border-bottom-color: var(--accent);
+}
+
+html[data-theme="beni"] .message.user .message-inner {
+  border-left: 2px solid var(--accent);
+  padding-left: 20px;
+}
+
+html[data-theme="beni"] .message.assistant .message-inner {
+  border-left: 1px solid var(--gold);
+  padding-left: 20px;
+}
+
+html[data-theme="beni"] .message-role {
+  color: var(--accent);
+  opacity: 0.75;
+  letter-spacing: 0.22em;
+}
+
+html[data-theme="beni"] .btn-send {
+  color: var(--accent) !important;
+}
+
+html[data-theme="beni"] .empty-state::after {
+  content: "記";
+  position: absolute;
+  top: 88px;
+  right: max(4px, 2vw);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gold);
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  transform: rotate(-9deg);
+  opacity: 0.55;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 6%, #ffffff);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent);
+  font-family: var(--font);
+}
+
+html[data-theme="beni"] .tag-mgmt-chip,
+html[data-theme="beni"] .tag-pill,
+html[data-theme="beni"] .tag-pill-compact,
+html[data-theme="beni"] .tag-pill-tile,
+html[data-theme="beni"] .day-panel-meta {
+  border: 1.5px solid var(--gold) !important;
+  color: var(--accent) !important;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.12), transparent 55%),
+    color-mix(in srgb, var(--accent) 8%, #ffffff) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+  letter-spacing: 0.08em;
+}
+
+html[data-theme="beni"] .tag-mgmt-chip,
+html[data-theme="beni"] .tag-pill,
+html[data-theme="beni"] .tag-pill-compact {
+  padding: 5px 10px !important;
+}
+
+html[data-theme="beni"] .cal-day.has-diary .cal-day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  min-height: 1.6em;
+  padding: 2px 4px;
+  font-size: 12px;
+  border: 1.5px solid var(--gold) !important;
+  color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 8%, #ffffff) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) !important;
+}
+
+html[data-theme="beni"] .cal-day.has-diary {
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="beni"] .cal-day.is-today {
+  box-shadow: none;
+}
+
+html[data-theme="beni"] .cal-day.is-today .cal-day-num {
+  border: 1.5px solid var(--gold);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+html[data-theme="beni"] .calendar-legend .dot.has {
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+html[data-theme="beni"] .mini-cal-day.checked {
+  border: 1.5px solid var(--gold) !important;
+  color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 14%, #ffffff) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent) !important;
+}
+
+html[data-theme="beni"] .day-panel-meta {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+html[data-theme="beni"] .cal-action {
+  border-bottom-color: color-mix(in srgb, var(--gold) 50%, transparent) !important;
+}
+
+html[data-theme="beni"] .cal-action.primary,
+html[data-theme="beni"] .cal-action:hover {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+html[data-theme="beni"] .day-verse {
+  border-left: 1px solid var(--gold);
+  padding-left: 16px;
+}
+
+html[data-theme="beni"] .day-image-thumb {
+  border: 1px solid var(--gold) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent) !important;
+}
+
+html[data-theme="beni"] .explore-tab.active {
+  color: var(--accent);
+  border-bottom: 1px solid var(--gold);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+html[data-theme="beni"] .btn-explore-search,
+html[data-theme="beni"] .btn-explore-add-tag,
+html[data-theme="beni"] .btn-write-tool,
+html[data-theme="beni"] .btn-write-mode,
+html[data-theme="beni"] .btn-write-back,
+html[data-theme="beni"] .btn-modal-cancel {
+  border-bottom-color: color-mix(in srgb, var(--gold) 55%, transparent) !important;
+}
+
+html[data-theme="beni"] .btn-explore-search:hover,
+html[data-theme="beni"] .btn-explore-add-tag:hover:not(:disabled),
+html[data-theme="beni"] .btn-write-tool:hover,
+html[data-theme="beni"] .btn-write-mode:hover,
+html[data-theme="beni"] .btn-write-tool.active {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+html[data-theme="beni"] .btn-modal-ok,
+html[data-theme="beni"] .settings-save-btn {
+  color: var(--accent) !important;
+  border-bottom: 1px solid var(--gold) !important;
+  letter-spacing: 0.14em;
+}
+
+html[data-theme="beni"] .btn-modal-ok:hover,
+html[data-theme="beni"] .settings-save-btn:hover:not(:disabled) {
+  color: var(--accent-hover) !important;
+  border-bottom-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="beni"] .btn-new-chat,
+html[data-theme="beni"] .btn-import {
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+}
+
+html[data-theme="beni"] .btn-new-chat:hover,
+html[data-theme="beni"] .btn-import:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+html[data-theme="beni"] .conv-item.active {
+  border-bottom: 1px solid var(--gold);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+html[data-theme="beni"] .tag-select-fab {
+  color: var(--accent) !important;
+  border: 1px solid var(--gold) !important;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.1), transparent 60%),
+    #ffffff !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) !important;
+}
+
+html[data-theme="beni"] .theme-dock-label {
+  color: var(--accent);
+  opacity: 0.75;
+  letter-spacing: 0.22em;
+}
+
+html[data-theme="beni"] .theme-option.is-active,
+html[data-theme="beni"] .font-option.is-active {
+  border: 1px solid var(--gold) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, #ffffff);
+}
+
+html[data-theme="beni"] .conversation-list {
+  padding-left: 6px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  margin-left: 8px;
+}
+
+@media (max-width: 720px) {
+  html[data-theme="beni"] .empty-state {
+    margin-left: 0;
+    padding-top: 80px;
+  }
+
+  html[data-theme="beni"] .empty-state::after {
+    top: 52px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 17px;
+  }
+
+  html[data-theme="beni"] .messages {
+    padding: 36px 20px 48px;
+  }
+}
+
+/* =========================================================
+   MIYABI — Heian court card: fuji purple x crimson x gold dust x ma
+   ========================================================= */
+
+html[data-theme="miyabi"] body {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(197, 160, 89, 0.18) 0 0.7px, transparent 1.1px),
+    radial-gradient(circle at 38% 62%, rgba(197, 160, 89, 0.12) 0 0.55px, transparent 0.95px),
+    radial-gradient(circle at 71% 28%, rgba(197, 160, 89, 0.14) 0 0.65px, transparent 1.05px),
+    radial-gradient(circle at 88% 76%, rgba(197, 160, 89, 0.1) 0 0.5px, transparent 0.9px),
+    radial-gradient(circle at 54% 44%, rgba(197, 160, 89, 0.1) 0 0.45px, transparent 0.85px),
+    none;
+  background-size:
+    180px 220px,
+    210px 190px,
+    160px 240px,
+    200px 170px,
+    140px 160px,
+    auto;
+}
+
+html[data-theme="miyabi"] body::before {
+  opacity: 0.03;
+}
+
+html[data-theme="miyabi"] .messages {
+  max-width: 34rem;
+  padding: 64px clamp(32px, 8vw, 80px) 80px;
+}
+
+html[data-theme="miyabi"] .empty-state {
+  max-width: 24rem;
+  margin: 0 0 0 clamp(28px, 12vw, 110px);
+  padding: 128px 24px 64px;
+  position: relative;
+  text-align: left;
+}
+
+html[data-theme="miyabi"] .composer,
+html[data-theme="miyabi"] .input-hint {
+  max-width: 34rem;
+}
+
+html[data-theme="miyabi"] .calendar-pane {
+  padding: 40px clamp(28px, 5vw, 56px) 28px !important;
+}
+
+html[data-theme="miyabi"] .day-reader-body,
+html[data-theme="miyabi"] .explore-panel {
+  padding: 40px clamp(28px, 6vw, 64px) 64px !important;
+}
+
+/* Titles: fuji purple, quiet */
+html[data-theme="miyabi"] .empty-state h2,
+html[data-theme="miyabi"] .calendar-month-title,
+html[data-theme="miyabi"] .write-page-title,
+html[data-theme="miyabi"] .settings-title,
+html[data-theme="miyabi"] .day-reader-heading h2,
+html[data-theme="miyabi"] .logo-text,
+html[data-theme="miyabi"] .modal h2,
+html[data-theme="miyabi"] .tag-detail-heading h2,
+html[data-theme="miyabi"] #tag-name-grep-title {
+  color: var(--accent) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.16em;
+}
+
+html[data-theme="miyabi"] .workspace-title {
+  color: var(--accent);
+  opacity: 0.78;
+  letter-spacing: 0.18em;
+}
+
+html[data-theme="miyabi"] .nav-item.active {
+  color: var(--accent);
+}
+
+html[data-theme="miyabi"] .day-side-title {
+  color: var(--accent) !important;
+}
+
+/* Gold thin frames + kasane edge (purple / crimson layers) */
+html[data-theme="miyabi"] .modal,
+html[data-theme="miyabi"] .explore-day-modal,
+html[data-theme="miyabi"] .tag-detail-modal,
+html[data-theme="miyabi"] .tag-mgmt-modal,
+html[data-theme="miyabi"] .tag-name-grep-modal,
+html[data-theme="miyabi"] .mini-cal-panel,
+html[data-theme="miyabi"] .tag-select-pop,
+html[data-theme="miyabi"] .theme-dock-inner,
+html[data-theme="miyabi"] .conv-menu,
+html[data-theme="miyabi"] .manuscript-card,
+html[data-theme="miyabi"] .write-paper {
+  border: 1px solid var(--gold) !important;
+  border-radius: 1px !important;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(197, 160, 89, 0.14) 0 0.6px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(197, 160, 89, 0.1) 0 0.5px, transparent 0.9px),
+    linear-gradient(165deg, #ffffff 0%, #ffffff 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--gold) 22%, transparent),
+    0 1px 0 0 color-mix(in srgb, var(--accent) 18%, transparent),
+    0 2px 0 0 color-mix(in srgb, var(--crimson) 35%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .manuscript-card {
+  border-left: 2px solid var(--accent) !important;
+}
+
+html[data-theme="miyabi"] .day-reader {
+  border-right: 1px solid color-mix(in srgb, var(--gold) 45%, transparent) !important;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(197, 160, 89, 0.1) 0 0.55px, transparent 1px),
+    transparent !important;
+}
+
+html[data-theme="miyabi"] .example-questions button {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 40%, transparent) !important;
+  max-width: 20rem;
+}
+
+html[data-theme="miyabi"] .example-questions button:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="miyabi"] .workspace-header,
+html[data-theme="miyabi"] .bottom-nav,
+html[data-theme="miyabi"] .sidebar-footer,
+html[data-theme="miyabi"] .explore-tabs,
+html[data-theme="miyabi"] .day-reader-header,
+html[data-theme="miyabi"] .settings-group,
+html[data-theme="miyabi"] .theme-panel {
+  border-color: color-mix(in srgb, var(--gold) 48%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .sidebar {
+  background: #ffffff;
+  border-right: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--gold) 30%, transparent);
+}
+
+html[data-theme="miyabi"] .month-side-slot,
+html[data-theme="miyabi"] .day-side-slot {
+  background: color-mix(in srgb, var(--moss-soft) 80%, #f7f7f7) !important;
+  border-left: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+html[data-theme="miyabi"] .input-box {
+  border: none !important;
+  border-bottom: 1px solid var(--gold) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="miyabi"] .input-box:focus-within {
+  border-bottom-color: var(--accent) !important;
+}
+
+html[data-theme="miyabi"] .scheme-picker select {
+  border-bottom: 1px solid var(--gold);
+}
+
+html[data-theme="miyabi"] .scheme-picker select:focus,
+html[data-theme="miyabi"] .scheme-picker select:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* Dialogue: purple annotation / gold companion line */
+html[data-theme="miyabi"] .message.user .message-inner {
+  border-left: 2px solid var(--accent);
+  padding-left: 20px;
+}
+
+html[data-theme="miyabi"] .message.assistant .message-inner {
+  border-left: 1px solid var(--gold);
+  padding-left: 20px;
+}
+
+html[data-theme="miyabi"] .message-role {
+  color: var(--accent);
+  opacity: 0.72;
+  letter-spacing: 0.2em;
+}
+
+html[data-theme="miyabi"] .btn-send {
+  color: var(--accent) !important;
+}
+
+/* Empty state seal: crimson with gold rim (miyabi) */
+html[data-theme="miyabi"] .empty-state::after {
+  content: "雅";
+  position: absolute;
+  top: 96px;
+  right: max(8px, 3vw);
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--gold);
+  border-radius: 2px;
+  color: var(--crimson);
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  transform: rotate(-8deg);
+  opacity: 0.5;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--crimson) 6%, #ffffff);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--crimson) 40%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent);
+  font-family: var(--font);
+}
+
+/* Seals: crimson + gold for tags/dates; purple for quieter meta */
+html[data-theme="miyabi"] .tag-mgmt-chip,
+html[data-theme="miyabi"] .tag-pill,
+html[data-theme="miyabi"] .tag-pill-compact,
+html[data-theme="miyabi"] .tag-pill-tile {
+  border: 1.5px solid var(--gold) !important;
+  color: var(--crimson) !important;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(197, 160, 89, 0.14), transparent 55%),
+    color-mix(in srgb, var(--crimson) 7%, #ffffff) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crimson) 32%, transparent) !important;
+  letter-spacing: 0.08em;
+  padding: 5px 10px !important;
+}
+
+html[data-theme="miyabi"] .day-panel-meta {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 12px;
+  margin-top: 6px;
+  border: 1.5px solid var(--gold) !important;
+  color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 6%, #ffffff) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .cal-day.has-diary .cal-day-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  min-height: 1.6em;
+  padding: 2px 4px;
+  font-size: 12px;
+  border: 1.5px solid var(--gold) !important;
+  color: var(--crimson) !important;
+  background: color-mix(in srgb, var(--crimson) 7%, #ffffff) !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--crimson) 30%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .cal-day.has-diary {
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+html[data-theme="miyabi"] .cal-day.is-today .cal-day-num {
+  border: 1.5px solid var(--gold);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+html[data-theme="miyabi"] .calendar-legend .dot.has {
+  background: var(--crimson) !important;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+html[data-theme="miyabi"] .mini-cal-day.checked {
+  border: 1.5px solid var(--gold) !important;
+  color: var(--crimson) !important;
+  background: color-mix(in srgb, var(--crimson) 12%, #ffffff) !important;
+}
+
+html[data-theme="miyabi"] .cal-action {
+  border-bottom-color: color-mix(in srgb, var(--gold) 45%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .cal-action.primary,
+html[data-theme="miyabi"] .cal-action:hover {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+html[data-theme="miyabi"] .day-verse {
+  border-left: 1px solid var(--gold);
+  padding-left: 16px;
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+html[data-theme="miyabi"] .day-image-thumb {
+  border: 1px solid var(--gold) !important;
+}
+
+html[data-theme="miyabi"] .explore-tab.active {
+  color: var(--accent);
+  border-bottom: 1px solid var(--gold);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+html[data-theme="miyabi"] .btn-explore-search,
+html[data-theme="miyabi"] .btn-explore-add-tag,
+html[data-theme="miyabi"] .btn-write-tool,
+html[data-theme="miyabi"] .btn-write-mode,
+html[data-theme="miyabi"] .btn-write-back,
+html[data-theme="miyabi"] .btn-modal-cancel {
+  border-bottom-color: color-mix(in srgb, var(--gold) 50%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .btn-explore-search:hover,
+html[data-theme="miyabi"] .btn-explore-add-tag:hover:not(:disabled),
+html[data-theme="miyabi"] .btn-write-tool:hover,
+html[data-theme="miyabi"] .btn-write-mode:hover,
+html[data-theme="miyabi"] .btn-write-tool.active {
+  color: var(--accent) !important;
+  border-bottom-color: var(--accent) !important;
+}
+
+html[data-theme="miyabi"] .btn-modal-ok,
+html[data-theme="miyabi"] .settings-save-btn {
+  color: var(--accent) !important;
+  border-bottom: 1px solid var(--gold) !important;
+  letter-spacing: 0.14em;
+}
+
+html[data-theme="miyabi"] .btn-modal-ok:hover,
+html[data-theme="miyabi"] .settings-save-btn:hover:not(:disabled) {
+  color: var(--accent-hover) !important;
+  border-bottom-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="miyabi"] .btn-new-chat,
+html[data-theme="miyabi"] .btn-import {
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+html[data-theme="miyabi"] .btn-new-chat:hover,
+html[data-theme="miyabi"] .btn-import:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+html[data-theme="miyabi"] .conv-item.active {
+  border-bottom: 1px solid var(--gold);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+html[data-theme="miyabi"] .tag-select-fab {
+  color: var(--accent) !important;
+  border: 1px solid var(--gold) !important;
+  background: #ffffff !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+html[data-theme="miyabi"] .theme-dock-label {
+  color: var(--accent);
+  opacity: 0.75;
+  letter-spacing: 0.22em;
+}
+
+html[data-theme="miyabi"] .theme-option.is-active,
+html[data-theme="miyabi"] .font-option.is-active {
+  border: 1px solid var(--gold) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, #ffffff);
+}
+
+html[data-theme="miyabi"] .conversation-list {
+  padding-left: 6px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  margin-left: 8px;
+}
+
+@media (max-width: 720px) {
+  html[data-theme="miyabi"] .empty-state {
+    margin-left: 0;
+    padding-top: 84px;
+  }
+
+  html[data-theme="miyabi"] .empty-state::after {
+    top: 56px;
+    right: 12px;
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+
+  html[data-theme="miyabi"] .messages {
+    padding: 40px 20px 56px;
   }
 }
